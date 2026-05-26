@@ -9,9 +9,9 @@
 
 🌐 **项目官网**: <https://www.zjzwfw.cloud/ITOpsAgentinfo>
 
-<img width="1920" height="1080" alt="0cpuy-fbfi3" src="docs-assets/0-3.gif" />
+<img alt="0cpuy-fbfi3" src="docs-assets/0-3.gif" style="max-width: 100%; height: auto;" />
 
-<img width="1920" height="1080" alt="0cpuy-fbfi3" src="docs-assets/screenshot-2026-05-25-143839.png" />
+<img alt="0cpuy-fbfi3" src="docs-assets/screenshot-2026-05-25-143839.png" style="max-width: 100%; height: auto;" />
 
 ## 项目简介
 
@@ -129,7 +129,7 @@ cd frontend && npm install && npm run dev
 
 > ⚠️ 首次登录后系统会强制要求修改密码
 
-<img width="1842" height="957" alt="image" src="https://github.com/user-attachments/assets/befe8ad6-b39f-4881-8b9b-e4f17356767a" />
+<img alt="image" src="https://github.com/user-attachments/assets/befe8ad6-b39f-4881-8b9b-e4f17356767a" style="max-width: 100%; height: auto;" />
 
 ## 功能模块
 
@@ -137,7 +137,7 @@ cd frontend && npm install && npm run dev
 
 系统概览，展示服务器、告警、任务等核心指标。
 
-<img width="1662" height="957" alt="屏幕截图 2026-05-18 144450" src="docs-assets/0-4.png" />
+<img alt="屏幕截图 2026-05-18 144450" src="docs-assets/0-4.png" style="max-width: 100%; height: auto;" />
 
 ### Web 终端
 
@@ -146,7 +146,7 @@ cd frontend && npm install && npm run dev
 - 窗口大小自适应
 - 连接状态可视化
 
-<img width="1830" height="958" alt="image" src="https://github.com/user-attachments/assets/a81f3e5c-8b6f-4e9c-9a1d-2f3c4d5e6f7a" />
+<img alt="image" src="https://github.com/user-attachments/assets/a81f3e5c-8b6f-4e9c-9a1d-2f3c4d5e6f7a" style="max-width: 100%; height: auto;" />
 
 ### 主机管理
 
@@ -155,7 +155,7 @@ cd frontend && npm install && npm run dev
 - 一键采集主机信息（OS/CPU/内存/磁盘/IP）
 - 服务器卡片展示分组标签和硬件信息
 
-<img width="1830" height="958" alt="image" src="docs-assets/0-3.png" />
+<img alt="image" src="docs-assets/0-3.png" style="max-width: 100%; height: auto;" />
 
 ### 服务器管理
 
@@ -165,7 +165,7 @@ cd frontend && npm install && npm run dev
 - 14 项系统合规检查（CPU/内存/磁盘/网络/服务/安全等）
 - 命令历史和合规历史 JSON 导出
 
-<img width="1667" height="956" alt="屏幕截图 2026-05-18 144417" src="文档引用图片/0 (1).gif" />
+<img alt="屏幕截图 2026-05-18 144417" src="docs-assets/0-1.gif" style="max-width: 100%; height: auto;" />
 
 ### Agent 管理
 
@@ -173,7 +173,7 @@ cd frontend && npm install && npm run dev
 - 支持自定义创建 Agent，配置系统提示词、模型、温度参数
 - Agent 测试与执行历史追踪
 
-<img width="1838" height="957" alt="image" src="docs-assets/0-2.png" />
+<img alt="image" src="docs-assets/0-2.png" style="max-width: 100%; height: auto;" />
 
 ### 工作流编排
 
@@ -182,7 +182,7 @@ cd frontend && npm install && npm run dev
 - 支持上下文传递、服务器选择
 - 执行顺序拓扑排序，视觉位置优先
 
-<img width="1820" height="953" alt="屏幕截图 2026-05-18 144326" src="docs-assets/0-7.png" />
+<img alt="屏幕截图 2026-05-18 144326" src="docs-assets/0-7.png" style="max-width: 100%; height: auto;" />
 
 ### 任务执行
 
@@ -191,7 +191,7 @@ cd frontend && npm install && npm run dev
 - 支持暂停/继续/取消
 - 自动生成 Markdown 执行报告
 
-<img width="1828" height="943" alt="image" src="https://github.com/user-attachments/assets/aa036b31-3c10-4322-a4d0-fb7e7028ddaf" />
+<img alt="image" src="https://github.com/user-attachments/assets/aa036b31-3c10-4322-a4d0-fb7e7028ddaf" style="max-width: 100%; height: auto;" />
 
 ### 告警中心
 
@@ -213,7 +213,7 @@ cd frontend && npm install && npm run dev
 - 自动注入 LLM 对话上下文
 - 批量导入/导出
 
-<img width="1827" height="960" alt="image" src="https://github.com/user-attachments/assets/ef28798f-8819-4aa4-b254-0b9212982620" />
+<img alt="image" src="https://github.com/user-attachments/assets/ef28798f-8819-4aa4-b254-0b9212982620" style="max-width: 100%; height: auto;" />
 
 ### AI Copilot
 
@@ -221,7 +221,7 @@ cd frontend && npm install && npm run dev
 - 自动感知系统告警、服务器、任务状态
 - 基于规则的快速响应 + LLM 深度分析
 
-<img width="1835" height="954" alt="image" src="https://github.com/user-attachments/assets/5d67682e-f5f7-413e-b677-106aea1dfb33" />
+<img alt="image" src="https://github.com/user-attachments/assets/5d67682e-f5f7-413e-b677-106aea1dfb33" style="max-width: 100%; height: auto;" />
 
 ### 定时任务
 
