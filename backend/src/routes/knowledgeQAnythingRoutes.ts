@@ -14,7 +14,16 @@ function maskApiKey(key: string | undefined): string {
   return key.substring(0, 8) + '...' + key.substring(key.length - 4);
 }
 
-function validateQAnythingConfig(config: any): string | null {
+interface QAnythingConfig {
+  enabled: boolean;
+  apiBase: string;
+  apiKey: string;
+  kbId: string;
+  mode: string;
+  topK: number;
+}
+
+function validateQAnythingConfig(config: QAnythingConfig): string | null {
   if (config.enabled) {
     if (!config.apiBase || !config.apiBase.trim()) {
       return 'API 地址不能为空';
@@ -121,7 +130,7 @@ router.post('/config', (req: Request, res: Response) => {
       try {
         const existingConfig = JSON.parse(existingSetting.value);
         originalApiKey = existingConfig.apiKey || '';
-      } catch (e) {
+      } catch {
         // 忽略解析错误
       }
     }
@@ -199,9 +208,9 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
         fileName: req.file.originalname,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Failed to upload document:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
 
@@ -230,11 +239,11 @@ router.post('/upload-batch', upload.array('files', 10), async (req: Request, res
             status: result.status,
             success: true,
           };
-        } catch (error: any) {
+        } catch (error) {
           return {
             fileName: file.originalname,
             success: false,
-            error: error.message,
+            error: (error as Error).message,
           };
         }
       }));
@@ -250,9 +259,9 @@ router.post('/upload-batch', upload.array('files', 10), async (req: Request, res
         failed: results.filter((r) => !r.success).length,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Failed to batch upload documents:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
 
@@ -266,9 +275,9 @@ router.get('/document/:fileId', async (req: Request, res: Response) => {
       success: true,
       data: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Failed to get document status:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
 
@@ -282,9 +291,9 @@ router.delete('/document/:fileId', async (req: Request, res: Response) => {
       success: true,
       message: '文档已删除',
     });
-  } catch (error: any) {
+  } catch (error) {
     logger.error('Failed to delete document:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: (error as Error).message });
   }
 });
 

@@ -40,13 +40,14 @@ class ServerInfoCollector {
 
     let conn: Client | null = null;
 
-    return new Promise(async (resolve) => {
-      try {
-        conn = await sshPool.acquire(serverId);
-      } catch (error) {
+    return new Promise((resolve) => {
+      sshPool.acquire(serverId).then((connection) => {
+        conn = connection;
+      }).catch((error) => {
         resolve({ success: false, error: error instanceof Error ? error.message : 'Failed to acquire SSH connection' });
         return;
-      }
+      }).then(() => {
+        if (!conn) return;
 
       let isResolved = false;
 
@@ -120,6 +121,7 @@ class ServerInfoCollector {
           stream.stderr.on('data', () => { /* ignore stderr */ });
         });
       }
+      });
     });
   }
 
