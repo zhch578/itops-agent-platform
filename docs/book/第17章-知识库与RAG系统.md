@@ -1,5 +1,24 @@
 # 第17章 知识库与RAG系统
 
+
+## 作者
+
+**谭策** — 独立开发者 | AIOps 领域探索者
+
+- 🌐 项目官网：[ITOpsAgentinfo](https://www.zjzwfw.cloud/ITOpsAgentinfo)
+- 📝 博客：[zjzwfw.cloud](https://www.zjzwfw.cloud/)
+- 📧 邮箱：<huawei_network@foxmail.com>
+- 💬 微信公众号：**IT Online**
+
+<p align="left">
+  <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online 微信公众号">
+</p>
+
+## 许可证
+
+[MIT](./LICENSE) © 谭策
+
+
 ## 本章导读
 
 在运维场景中，LLM（大语言模型）虽然具备广泛的通用知识，但缺乏对企业特定环境、历史故障记录、内部流程规范的了解。RAG（Retrieval-Augmented Generation，检索增强生成）技术通过在生成答案之前先从知识库中检索相关文档，将企业私有知识注入到 LLM 的上下文中，从而显著提升回答的准确性和相关性。

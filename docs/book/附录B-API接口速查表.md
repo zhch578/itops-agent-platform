@@ -1,5 +1,24 @@
 # 附录B API接口速查表
 
+## 作者
+
+**谭策** — 独立开发者 | AIOps 领域探索者
+
+- 🌐 项目官网：[ITOpsAgentinfo](https://www.zjzwfw.cloud/ITOpsAgentinfo)
+- 📝 博客：[zjzwfw.cloud](https://www.zjzwfw.cloud/)
+- 📧 邮箱：<huawei_network@foxmail.com>
+- 💬 微信公众号：**IT Online**
+
+<p align="left">
+  <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online 微信公众号">
+</p>
+
+## 许可证
+
+[MIT](./LICENSE) © 谭策
+
+
+
 ## B.1 概述
 
 本速查表按功能分类列出 ITOps Agent Platform 后端的所有 RESTful API 接口。所有接口（除认证、Webhook 和健康检查外）均需要通过 `Bearer Token` 认证，即在请求头中添加 `Authorization: Bearer <token>`。

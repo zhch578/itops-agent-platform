@@ -1,5 +1,22 @@
 # 第十九章 Docker容器化与部署
 
+## 作者
+
+**谭策** — 独立开发者 | AIOps 领域探索者
+
+- 🌐 项目官网：[ITOpsAgentinfo](https://www.zjzwfw.cloud/ITOpsAgentinfo)
+- 📝 博客：[zjzwfw.cloud](https://www.zjzwfw.cloud/)
+- 📧 邮箱：<huawei_network@foxmail.com>
+- 💬 微信公众号：**IT Online**
+
+<p align="left">
+  <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online 微信公众号">
+</p>
+
+## 许可证
+
+[MIT](./LICENSE) © 谭策
+
 ## 本章导读
 
 ITOps Agent Platform 采用完全容器化的部署方案，前后端各自独立构建、独立运行，通过 Docker Compose 进行服务编排。本章将深入剖析项目的容器化架构，从多阶段 Dockerfile 构建到 Nginx 反向代理配置，从 Docker Compose 服务编排到生产环境最佳实践，帮助读者全面掌握项目的部署体系。

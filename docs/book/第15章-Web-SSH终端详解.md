@@ -1,5 +1,22 @@
 # 第15章 Web SSH终端详解
 
+## 作者
+
+**谭策** — 独立开发者 | AIOps 领域探索者
+
+- 🌐 项目官网：[ITOpsAgentinfo](https://www.zjzwfw.cloud/ITOpsAgentinfo)
+- 📝 博客：[zjzwfw.cloud](https://www.zjzwfw.cloud/)
+- 📧 邮箱：<huawei_network@foxmail.com>
+- 💬 微信公众号：**IT Online**
+
+<p align="left">
+  <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online 微信公众号">
+</p>
+
+## 许可证
+
+[MIT](./LICENSE) © 谭策
+
 ## 本章导读
 
 在现代IT运维中，传统SSH客户端（如PuTTY、iTerm、OpenSSH）虽然功能强大，但需要本地安装、难以集中管理、无法与Web平台集成。ITOps Agent Platform 提供了基于浏览器的Web SSH终端，让运维人员可以在统一的Web界面中直接操作远程服务器，同时配合权限控制、命令审计、连接池管理等企业级特性。

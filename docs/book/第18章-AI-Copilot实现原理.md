@@ -1,5 +1,23 @@
 # 第18章 AI Copilot实现原理
 
+## 作者
+
+**谭策** — 独立开发者 | AIOps 领域探索者
+
+- 🌐 项目官网：[ITOpsAgentinfo](https://www.zjzwfw.cloud/ITOpsAgentinfo)
+- 📝 博客：[zjzwfw.cloud](https://www.zjzwfw.cloud/)
+- 📧 邮箱：<huawei_network@foxmail.com>
+- 💬 微信公众号：**IT Online**
+
+<p align="left">
+  <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online 微信公众号">
+</p>
+
+## 许可证
+
+[MIT](./LICENSE) © 谭策
+
+
 ## 本章导读
 
 AI Copilot 是 ITOps Agent Platform 的智能助手入口。与专用的 Agent（如故障诊断 Agent、巡检 Agent）不同，Copilot 是一个通用型助手，采用自然语言交互方式，能够理解用户的意图并自动从系统中获取相关数据，提供运维咨询、状态查询、操作建议等服务。

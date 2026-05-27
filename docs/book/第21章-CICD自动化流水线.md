@@ -1,5 +1,22 @@
 # 第二十一章 CI/CD自动化流水线
 
+## 作者
+
+**谭策** — 独立开发者 | AIOps 领域探索者
+
+- 🌐 项目官网：[ITOpsAgentinfo](https://www.zjzwfw.cloud/ITOpsAgentinfo)
+- 📝 博客：[zjzwfw.cloud](https://www.zjzwfw.cloud/)
+- 📧 邮箱：<huawei_network@foxmail.com>
+- 💬 微信公众号：**IT Online**
+
+<p align="left">
+  <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online 微信公众号">
+</p>
+
+## 许可证
+
+[MIT](./LICENSE) © 谭策
+
 ## 本章导读
 
 CI/CD（持续集成/持续交付）是现代软件工程的基石。ITOps Agent Platform 使用 GitHub Actions 构建了完整的自动化流水线，涵盖代码质量检查、测试验证、Docker 镜像构建、镜像仓库推送和发布说明生成。本章将深入分析项目的三个 GitHub Actions 工作流文件，帮助你理解从零到发布的完整 CI/CD 链路。
