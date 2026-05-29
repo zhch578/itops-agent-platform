@@ -1,22 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import { AlertService, AlertRule, AlertSeverity } from './alertService';
-import db from '../models/database';
+import { initializeDatabase } from '../models/database';
 
 describe('AlertService', () => {
   let alertService: AlertService;
 
+  beforeAll(() => {
+    // Initialize the database for tests
+    process.env.NODE_ENV = 'test';
+    initializeDatabase();
+  });
+
   beforeEach(() => {
-    // 确保 settings 表存在（测试环境可能没有初始化）
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        key TEXT UNIQUE NOT NULL,
-        value TEXT,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    
     // 清除数据库中的规则，确保每个测试从干净状态开始
+    const { db } = require('../models/database');
     db.prepare("DELETE FROM settings WHERE key = 'alert_rules'").run();
     
     alertService = new AlertService();
