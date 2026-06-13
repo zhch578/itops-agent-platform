@@ -510,7 +510,7 @@ class AlertAutoAnalyzer {
   }
 
   /** AI 分析诊断输出 */
-  private async aiAnalyze(alertTitle: string, alertContent: string, rawOutput: string): Promise<{ diagnosis: string; summary: string }> {
+  private async aiAnalyze(alertTitle: string, alertContent: string, rawOutput: string): Promise<{ diagnosis: string; summary: string; remediationCommands?: string[]; riskLevel?: 'low' | 'medium' | 'high' }> {
     // ── 查知识库获取相关历史方案 ──
     let knowledgeContext = '';
     try {
@@ -527,15 +527,76 @@ class AlertAutoAnalyzer {
       }
     } catch { /* 知识库表可能不存在 */ }
 
-    const systemPrompt = '你是一个网络运维专家。根据告警信息和设备诊断输出，判断根因并给出修复建议。先写一行摘要（50字内），再写详细诊断。4. 参考历史知识库中的方案，优先推荐已验证的修复方式';
-    const prompt = `## 告警信息\n**标题**: ${alertTitle}\n**内容**: ${alertContent || '(无详细内容)'}${knowledgeContext}\n\n## 设备诊断输出\n${rawOutput.substring(0, 8000)}\n\n## 要求\n1. 判断根因\n2. 分析异常指标\n3. 给出修复建议\n4. 参考历史知识库中的方案，优先推荐已验证的修复方式`;
+    const systemPrompt = `你是一个网络运维专家。根据告警信息和设备诊断输出，判断根因并给出修复建议。
+你需要返回两部分内容：
+1. 诊断报告（自然语言）
+2. 修复命令（JSON 格式，可执行）
+
+输出格式要求：
+- 第一行：摘要（50字内）
+- 然后：详细诊断报告
+- 最后：一个 JSON 代码块，包含修复命令
+
+JSON 格式示例：
+\`\`\`json
+{
+  "remediation_commands": [
+    "systemctl restart nginx",
+    "journalctl -u nginx --no-pager -n 50"
+  ],
+  "risk_level": "medium",
+  "description": "重启 Nginx 服务并检查日志"
+}
+\`\`\`
+
+risk_level 说明：
+- low: 只读操作、查看日志、检查状态
+- medium: 重启服务、清理临时文件
+- high: 删除数据、修改配置、影响业务`;
+
+    const prompt = `## 告警信息
+**标题**: ${alertTitle}
+**内容**: ${alertContent || '(无详细内容)'}
+${knowledgeContext}
+
+## 设备诊断输出
+${rawOutput.substring(0, 8000)}
+
+## 要求
+1. 判断根因
+2. 分析异常指标
+3. 给出修复建议
+4. **必须**在诊断报告最后输出一个 JSON 代码块，包含可执行的修复命令
+5. 修复命令应该是具体的 shell 命令，可以直接在设备上执行
+6. 评估风险等级（low/medium/high）
+7. 参考历史知识库中的方案，优先推荐已验证的修复方式`;
 
     try {
       const text = await generateCompletion(prompt, systemPrompt, 0.3);
       // 第一行为摘要
       const lines = text.trim().split('\n');
       const summary = lines[0].replace(/^[#*]*\s*/, '').substring(0, 100);
-      return { diagnosis: text, summary };
+
+      // 提取 JSON 代码块中的修复命令
+      let remediationCommands: string[] | undefined;
+      let riskLevel: 'low' | 'medium' | 'high' | undefined;
+
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)```/);
+      if (jsonMatch && jsonMatch[1]) {
+        try {
+          const jsonData = JSON.parse(jsonMatch[1].trim());
+          if (Array.isArray(jsonData.remediation_commands)) {
+            remediationCommands = jsonData.remediation_commands;
+          }
+          if (['low', 'medium', 'high'].includes(jsonData.risk_level)) {
+            riskLevel = jsonData.risk_level;
+          }
+        } catch (parseErr) {
+          logger.warn('Failed to parse remediation JSON:', parseErr);
+        }
+      }
+
+      return { diagnosis: text, summary, remediationCommands, riskLevel };
     } catch (err: any) {
       logger.error('AI analysis failed:', err);
       return {
@@ -622,7 +683,7 @@ class AlertAutoAnalyzer {
 
       // AI 分析
       logger.info(`🤖 AI 分析告警: ${alert.title}`);
-      const { diagnosis, summary } = await this.aiAnalyze(alert.title, alert.content || '', rawOutput);
+      const { diagnosis, summary, remediationCommands, riskLevel } = await this.aiAnalyze(alert.title, alert.content || '', rawOutput);
       record.diagnosis = diagnosis;
       record.summary = summary;
       record.status = 'completed';
@@ -632,8 +693,36 @@ class AlertAutoAnalyzer {
 
       logger.info(`✅ 告警自动分析完成: ${alertId} → ${summary}`);
 
-      // ── SSH 设备 → 自动触发修复工作流 ──
-      if (device.auth_method === 'ssh') {
+      // ── AI 修复工作流（优先使用 AI 建议的修复命令） ──
+      if (device.auth_method === 'ssh' && remediationCommands && remediationCommands.length > 0) {
+        try {
+          logger.info(`🔧 [AI Remediation] AI 建议了 ${remediationCommands.length} 条修复命令，创建修复工作流`);
+
+          // 动态导入避免循环依赖
+          const { aiRemediationService } = await import('./aiRemediationService');
+
+          const remediation = await aiRemediationService.createAndExecute({
+            alertId,
+            alertTitle: alert.title,
+            alertContent: alert.content || '',
+            alertSeverity: alert.severity || 'medium',
+            deviceId: device.id,
+            deviceName: device.name,
+            deviceIp: device.ip_address,
+            deviceType: device.device_type,
+            diagnosis,
+            remediationCommands,
+            riskLevel: riskLevel || 'medium',
+          });
+
+          if (remediation) {
+            logger.info(`✅ [AI Remediation] 修复工作流已创建: taskId=${remediation.task_id}, 等待审批`);
+          }
+        } catch (remediationErr: any) {
+          logger.error(`❌ [AI Remediation] 创建修复工作流失败: ${remediationErr.message}`, remediationErr);
+        }
+      } else if (device.auth_method === 'ssh') {
+        // AI 没有给出修复命令，尝试匹配预设策略
         try {
           const matching = await remediationService.matchAlertToPolicies({
             id: alertId,

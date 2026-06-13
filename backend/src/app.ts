@@ -47,6 +47,8 @@ import sshKeyRoutes from './routes/sshKeyRoutes';
 import topologyRoutes from './routes/topologyRoutes';
 import changeRoutes from './routes/changeRoutes';
 import aiModelRoutes from './routes/aiModelRoutes';
+import approvalRoutes from './routes/approvalRoutes';
+import aiRemediationRoutes from './routes/aiRemediationRoutes';
 import { schedulerService } from './services/schedulerService';
 import { reportService } from './services/reportService';
 import { copilotService } from './services/copilotService';
@@ -71,6 +73,7 @@ import { alertAutoAnalyzer } from './services/alertAutoAnalyzer';
 import { alertCorrelationService } from './services/alertCorrelationService';
 import { setServerInstances } from './services/restartService';
 import { checkDbskiterAvailability } from './services/dbskiterService';
+import { timeoutApproval } from './services/workflowExecutor';
 import { queueService } from './services/queueService';
 import importExportRouter from './routes/importExportRoutes';
 import alertAutoRouter from './routes/alertAutoRoutes';
@@ -153,6 +156,7 @@ async function initializeApp() {
   
   initTokenBlacklist();
   startCircuitBreakerCleanup();
+  startApprovalTimeoutChecker();
   
   logger.info('✅ Application initialization complete');
 }
@@ -259,6 +263,8 @@ app.use('/api/ssh-keys', rateLimiter, sshKeyRoutes);
 app.use('/api/topology', rateLimiter, topologyRoutes);
 app.use('/api/changes', rateLimiter, changeRoutes);
 app.use('/api/ai-models', rateLimiter, aiModelRoutes);
+app.use('/api/approvals', rateLimiter, approvalRoutes);
+app.use('/api/ai-remediations', rateLimiter, aiRemediationRoutes);
 app.use('/api', rateLimiter, alertAutoRouter);
 app.use('/api', rateLimiter, linkageRouter);
 app.use('/api', rateLimiter, networkDiscoveryRouter);
@@ -269,6 +275,32 @@ app.use(errorHandler);
 
 const PORT = env.PORT;
 const HOST = process.env.HOST || '0.0.0.0';
+
+// 审批超时检查器
+let approvalTimeoutInterval: NodeJS.Timeout | null = null;
+
+function startApprovalTimeoutChecker() {
+  // 每 30 秒检查一次超时的审批请求
+  approvalTimeoutInterval = setInterval(async () => {
+    try {
+      const expiredApprovals = db.prepare(`
+        SELECT id FROM approval_requests
+        WHERE status = 'pending'
+        AND timeout_at IS NOT NULL
+        AND timeout_at < datetime('now', 'localtime')
+      `).all() as Array<{ id: string }>;
+
+      for (const approval of expiredApprovals) {
+        logger.info(`⏰ Approval ${approval.id} timed out, processing...`);
+        await timeoutApproval(approval.id);
+      }
+    } catch (error) {
+      logger.error('Error in approval timeout checker:', error);
+    }
+  }, 30000);
+
+  logger.info('✅ Approval timeout checker started (checking every 30s)');
+}
 
 // 等待数据库初始化完成后再启动 HTTP 服务器，避免竞态
 async function startServer() {
@@ -293,6 +325,11 @@ const gracefulShutdown = async (signal: string) => {
     logger.error('Graceful shutdown timed out, forcing exit');
     process.exit(1);
   }, 30000);
+
+  // 停止审批超时检查器
+  if (approvalTimeoutInterval) {
+    clearInterval(approvalTimeoutInterval);
+  }
 
   try {
     await Promise.all([

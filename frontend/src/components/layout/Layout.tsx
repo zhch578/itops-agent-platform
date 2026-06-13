@@ -85,6 +85,7 @@ const navigationGroups = [
       { name: 'Agent管理', href: '/agents', icon: Bot },
       { name: '工作流', href: '/workflows', icon: GitBranch },
       { name: '任务执行', href: '/tasks', icon: Play },
+      { name: '审批中心', href: '/approvals', icon: ShieldCheck },
       { name: '脚本中心', href: '/scripts', icon: FileCode },
       { name: '定时任务', href: '/scheduled-tasks', icon: Clock },
     ]
@@ -113,6 +114,7 @@ const navigationGroups = [
       { name: '修复效果仪表盘', href: '/remediation-dashboard', icon: BarChart3 },
       { name: '修复执行记录', href: '/remediation-executions', icon: ListChecks },
       { name: '自愈工作台', href: '/remediation-workbench', icon: Workflow },
+      { name: 'AI 修复记录', href: '/ai-remediations', icon: Lightbulb },
     ]
   },
   {

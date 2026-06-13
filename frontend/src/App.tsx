@@ -50,6 +50,8 @@ const AIModels = lazy(() => import('./pages/AIModels'));
 const SNMPPage = lazy(() => import('./pages/SNMP'));
 const NetworkDiscoveryPage = lazy(() => import('./pages/NetworkDiscovery'));
 const AlertCorrelationGroupsPage = lazy(() => import('./pages/AlertCorrelationGroups'));
+const Approvals = lazy(() => import('./pages/Approvals'));
+const AiRemediations = lazy(() => import('./pages/AiRemediations'));
 const FrontendTests = lazy(() => import('./pages/FrontendTests'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -131,6 +133,8 @@ function App() {
                   <Route path="snmp" element={<SuspenseRoute><ProtectedRoute><SNMPPage /></ProtectedRoute></SuspenseRoute>} />
                   <Route path="network-discovery" element={<SuspenseRoute><ProtectedRoute><NetworkDiscoveryPage /></ProtectedRoute></SuspenseRoute>} />
                   <Route path="alert-correlation-groups" element={<SuspenseRoute><ProtectedRoute><AlertCorrelationGroupsPage /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="approvals" element={<SuspenseRoute><ProtectedRoute><Approvals /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="ai-remediations" element={<SuspenseRoute><ProtectedRoute><AiRemediations /></ProtectedRoute></SuspenseRoute>} />
                   </Route>
                   <Route path="*" element={<SuspenseRoute><NotFound /></SuspenseRoute>} />
                 </Routes>

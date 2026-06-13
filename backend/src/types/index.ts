@@ -1,10 +1,23 @@
+export interface ApprovalConfig {
+  description: string;
+  timeout: number;
+  timeoutAction: 'reject' | 'wait';
+  approvers: string[];
+}
+
 export interface WorkflowNode {
   id: string;
   type: string;
   data: {
     label: string;
-    agentId: string;
+    agentId?: string;
     allowFailure?: boolean;
+    approvalConfig?: ApprovalConfig;
+    description?: string;
+    avatar?: string;
+    prompt?: string;
+    inputKey?: string;
+    outputKey?: string;
   };
   position: {
     x: number;
@@ -16,6 +29,7 @@ export interface WorkflowEdge {
   id: string;
   source: string;
   target: string;
+  animated?: boolean;
 }
 
 export interface Workflow {
@@ -76,6 +90,35 @@ export interface Task {
   start_time?: string;
   end_time?: string;
   logs?: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  task_id: string;
+  node_id: string;
+  node_label: string;
+  description: string;
+  status: 'pending' | 'approved' | 'rejected' | 'timeout';
+  requested_by: string;
+  approved_by?: string;
+  approved_at?: string;
+  reject_reason?: string;
+  timeout_at?: string;
+  timeout_action: 'reject' | 'wait';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExecutionContext {
+  variables: Record<string, unknown>;
+  previousResults: Array<{ nodeId: string; status: string; output?: string; error?: string }>;
+  metadata: {
+    taskId: string;
+    workflowName: string;
+    currentNodeId?: string;
+    executionDepth: number;
+    startTime: string;
+  };
 }
 
 export interface CommandExecutionResult {
