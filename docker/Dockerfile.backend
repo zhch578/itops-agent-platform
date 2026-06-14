@@ -7,6 +7,10 @@
 # ============================================================
 FROM node:20-slim AS builder
 
+# Use Aliyun Debian mirror for faster and more reliable apt access in China
+# Note: Must use HTTP (not HTTPS) because node:20-slim lacks ca-certificates
+RUN sed -i 's|http://deb.debian.org/debian|http://mirrors.aliyun.com/debian|g; s|http://security.debian.org/debian-security|http://mirrors.aliyun.com/debian-security|g' /etc/apt/sources.list.d/debian.sources
+
 WORKDIR /app
 
 # Install build dependencies for native modules (better-sqlite3)
@@ -33,6 +37,10 @@ RUN npm run build
 # ============================================================
 FROM node:20-slim
 
+# Use Aliyun Debian mirror for faster and more reliable apt access in China
+# Note: Must use HTTP (not HTTPS) because node:20-slim lacks ca-certificates
+RUN sed -i 's|http://deb.debian.org/debian|http://mirrors.aliyun.com/debian|g; s|http://security.debian.org/debian-security|http://mirrors.aliyun.com/debian-security|g' /etc/apt/sources.list.d/debian.sources
+
 # Labels for public registry (replace with your actual info)
 LABEL maintainer="谭策 <huawei_network@foxmail.com>" \
       org.opencontainers.image.title="ITOps Agent Platform Backend" \
@@ -50,11 +58,18 @@ ENV NODE_ENV=production \
     PORT=3001 \
     HOST=0.0.0.0
 
-# Install runtime dependencies (SQLite library for better-sqlite3) and gosu for privilege dropping
+# Install runtime dependencies (SQLite library, Python for dbskiter, gosu for privilege dropping)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libsqlite3-0 \
+    python3 \
+    python3-pip \
     gosu \
     && rm -rf /var/lib/apt/lists/*
+
+# 安装 dbskiter（数据库运维 Agent 依赖），构建时失败不阻塞镜像构建
+# Debian 12 (bookworm) 使用 PEP 668 限制系统级 pip 安装，需要 --break-system-packages
+RUN python3 -m pip install --upgrade pip --break-system-packages || true
+RUN python3 -m pip install dbskiter --break-system-packages || true
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist

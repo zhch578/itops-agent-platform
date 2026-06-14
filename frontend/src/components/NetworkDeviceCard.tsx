@@ -1,4 +1,4 @@
-import { Network, MoreHorizontal, Cpu, Wifi, History, Play, Settings, Edit, Trash2 } from 'lucide-react';
+import { Network, MoreHorizontal, Cpu, MemoryStick, Wifi, History, Play, Settings, Edit, Trash2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
 interface NetworkDevice {
@@ -17,6 +17,8 @@ interface NetworkDevice {
   last_inspection_result?: string;
   created_at: string;
   updated_at: string;
+  snmp_enabled?: number;
+  snmp_credential_name?: string;
 }
 
 interface NetworkDeviceCardProps {
@@ -24,6 +26,8 @@ interface NetworkDeviceCardProps {
   onEdit: (device: NetworkDevice) => void;
   onDelete: (device: NetworkDevice) => void;
   onInspect: (device: NetworkDevice, type: 'standard' | 'custom' | 'full') => void;
+  onSnmpInspect?: (device: NetworkDevice) => void;
+  onSnmpTestConnection?: (device: NetworkDevice) => void;
   onTestConnection: (device: NetworkDevice) => void;
   onHistory: (device: NetworkDevice) => void;
 }
@@ -43,7 +47,7 @@ const roleIcons: Record<string, { icon: string; label: string }> = {
   ap: { icon: '📡', label: 'AP' }
 };
 
-export default function NetworkDeviceCard({ device, onEdit, onDelete, onInspect, onTestConnection, onHistory }: NetworkDeviceCardProps) {
+export default function NetworkDeviceCard({ device, onEdit, onDelete, onInspect, onSnmpInspect, onSnmpTestConnection, onTestConnection, onHistory }: NetworkDeviceCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -138,6 +142,17 @@ export default function NetworkDeviceCard({ device, onEdit, onDelete, onInspect,
                   <Settings className="w-3 h-3" />
                   自定义巡检
                 </button>
+                {device.snmp_enabled === 1 && onSnmpInspect && (
+                  <>
+                    <button
+                      onClick={() => { setShowMenu(false); onSnmpInspect(device); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                    >
+                      <Cpu className="w-3 h-3" />
+                      SNMP 巡检
+                    </button>
+                  </>
+                )}
                 <div className="border-t border-border my-1" />
                 <button
                   onClick={() => { setShowMenu(false); onTestConnection(device); }}
@@ -173,7 +188,7 @@ export default function NetworkDeviceCard({ device, onEdit, onDelete, onInspect,
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className={`px-2 py-0.5 text-xs font-medium rounded ${vendor.bgClass} ${vendor.color}`}>
             {vendor.icon} {vendor.label}
           </span>
@@ -185,6 +200,12 @@ export default function NetworkDeviceCard({ device, onEdit, onDelete, onInspect,
           <span className="px-2 py-0.5 text-xs text-text-secondary bg-background border border-border rounded">
             {role.icon} {role.label}
           </span>
+          {device.snmp_enabled === 1 && (
+            <span className="px-2 py-0.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded" title={device.snmp_credential_name ? `SNMP: ${device.snmp_credential_name}` : 'SNMP'}
+            >
+              SNMP
+            </span>
+          )}
         </div>
 
         <div className="space-y-2 text-xs">
@@ -215,13 +236,23 @@ export default function NetworkDeviceCard({ device, onEdit, onDelete, onInspect,
       </div>
 
       <div className="border-t border-border px-4 py-2 flex items-center justify-between bg-background/50">
-        <button
-          onClick={() => onInspect(device, 'standard')}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
-        >
-          <Play className="w-3 h-3" />
-          一键巡检
-        </button>
+        {device.snmp_enabled === 1 && onSnmpTestConnection ? (
+          <button
+            onClick={() => onSnmpTestConnection(device)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
+          >
+            <Wifi className="w-3 h-3" />
+            SNMP 测试连接
+          </button>
+        ) : (
+          <button
+            onClick={() => onInspect(device, 'standard')}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+          >
+            <Play className="w-3 h-3" />
+            一键巡检
+          </button>
+        )}
         <div className="flex items-center gap-1">
           <button
             onClick={() => onTestConnection(device)}

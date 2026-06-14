@@ -22,8 +22,8 @@ const v005SSHKeyPasswordSupport: Migration = {
         password TEXT,
         private_key TEXT,
         description TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT (datetime('now','localtime')),
+        updated_at DATETIME DEFAULT (datetime('now','localtime'))
       );
 
       INSERT INTO ssh_keys_new (id, name, auth_type, key_type, fingerprint, private_key, description, created_at, updated_at)
@@ -53,8 +53,8 @@ const v005SSHKeyPasswordSupport: Migration = {
         fingerprint TEXT,
         private_key TEXT NOT NULL,
         description TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT (datetime('now','localtime')),
+        updated_at DATETIME DEFAULT (datetime('now','localtime'))
       );
 
       INSERT INTO ssh_keys_backup (id, name, key_type, fingerprint, private_key, description, created_at, updated_at)

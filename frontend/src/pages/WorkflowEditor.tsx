@@ -23,7 +23,7 @@ import '@xyflow/react/dist/style.css';
 import { 
   Save, Trash2, ArrowLeft, Play, Download, Upload, 
   Copy, Undo, Redo, Settings, AlertCircle,
-  Layers
+  Layers, Shield
 } from 'lucide-react';
 import api from '../lib/api';
 import { useToast } from '../contexts/ToastContext';
@@ -91,8 +91,36 @@ const AgentNode = ({ data, selected }: { data: any; selected: boolean }) => {
   );
 };
 
+const ApprovalNode = ({ data, selected }: { data: any; selected: boolean }) => {
+  return (
+    <div
+      className={`
+        px-4 py-3 rounded-lg shadow-md border-2 min-w-[200px]
+        ${selected ? 'border-orange-500 bg-orange-500/10 ring-2 ring-orange-500/30' : 'border-orange-400 bg-orange-50'}
+        transition-all duration-200
+      `}
+    >
+      <Handle type="target" position={Position.Left} className="w-3 h-3 bg-orange-500" />
+      <div className="flex items-center gap-2 mb-2">
+        <Shield className="w-6 h-6 text-orange-600" />
+        <span className="font-semibold text-text-primary text-sm">{data.label || '审批节点'}</span>
+      </div>
+      {data.description && (
+        <div className="text-xs text-text-secondary mb-2 line-clamp-2">{data.description}</div>
+      )}
+      {data.approvalConfig && (
+        <div className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded border border-orange-200">
+          ⏱️ 超时: {data.approvalConfig.timeout || 3600}秒
+        </div>
+      )}
+      <Handle type="source" position={Position.Right} className="w-3 h-3 bg-orange-500" />
+    </div>
+  );
+};
+
 const nodeTypes: NodeTypes = {
   agent: AgentNode,
+  approval: ApprovalNode,
 };
 
 function WorkflowEditorContent() {
@@ -246,18 +274,44 @@ function WorkflowEditorContent() {
     (event: React.DragEvent) => {
       event.preventDefault();
 
+      if (!reactFlowWrapper.current) return;
+
+      const nodeType = event.dataTransfer.getData('application/reactflow/nodeType');
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      // 审批节点
+      if (nodeType === 'approval') {
+        const newNode: Node = {
+          id: `node-${Date.now()}`,
+          type: 'approval',
+          position,
+          data: {
+            label: '审批节点',
+            description: '请确认是否继续执行',
+            approvalConfig: {
+              description: '请确认是否继续执行',
+              timeout: 3600,
+              timeoutAction: 'reject',
+              approvers: ['admin'],
+            },
+          },
+          connectable: true,
+        };
+        setNodes((nds) => nds.concat(newNode));
+        return;
+      }
+
+      // Agent 节点
       const agentId = event.dataTransfer.getData('application/reactflow/agentId');
       const agentName = event.dataTransfer.getData('application/reactflow/agentName');
       const agentAvatar = event.dataTransfer.getData('application/reactflow/agentAvatar');
       const agentDescription = event.dataTransfer.getData('application/reactflow/agentDescription');
       const agentSystemPrompt = event.dataTransfer.getData('application/reactflow/agentSystemPrompt');
 
-      if (typeof agentId !== 'string' || !reactFlowWrapper.current) return;
-
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
+      if (typeof agentId !== 'string') return;
 
       const newNode: Node = {
         id: `node-${Date.now()}`,
@@ -541,17 +595,43 @@ function WorkflowEditorContent() {
           <div className="p-4 border-b border-border">
             <h3 className="font-semibold flex items-center gap-2">
               <Layers className="w-4 h-4" />
-              可用Agent
+              可用节点
             </h3>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-3">
+              {/* 审批节点拖拽入口 */}
+              <div
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData('application/reactflow/nodeType', 'approval');
+                  event.dataTransfer.effectAllowed = 'move';
+                }}
+                className="p-3 rounded-lg border border-orange-400 bg-orange-50 hover:border-orange-500 hover:bg-orange-100 cursor-move transition-all"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="w-5 h-5 text-orange-600" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-text-primary text-sm">审批节点</div>
+                    <div className="text-xs text-text-secondary">人工确认</div>
+                  </div>
+                </div>
+                <div className="text-xs text-text-secondary line-clamp-2 mt-1">
+                  暂停工作流等待人工审批，支持超时自动拒绝
+                </div>
+              </div>
+
+              {/* Agent 节点列表 */}
+              <div className="pt-3 border-t border-border">
+                <div className="text-xs font-semibold text-text-secondary mb-2">Agent 节点</div>
+              </div>
               {(agents || []).filter(a => a.enabled === 1).map((agent) => (
                 <div
                   key={agent.id}
                   draggable
                   onDragStart={(event) => {
+                    event.dataTransfer.setData('application/reactflow/nodeType', 'agent');
                     event.dataTransfer.setData('application/reactflow/agentId', agent.id);
                     event.dataTransfer.setData('application/reactflow/agentName', agent.name);
                     event.dataTransfer.setData('application/reactflow/agentAvatar', agent.avatar || '🤖');
@@ -576,8 +656,8 @@ function WorkflowEditorContent() {
                 </div>
               ))}
               {(agents || []).filter(a => a.enabled === 1).length === 0 && (
-                <div className="text-center py-8 text-text-secondary">
-                  <p>暂无可用Agent</p>
+                <div className="text-center py-4 text-text-secondary">
+                  <p className="text-xs">暂无可用Agent</p>
                 </div>
               )}
             </div>
@@ -647,88 +727,175 @@ function WorkflowEditorContent() {
                   />
                 </div>
 
-                {/* 输入输出配置 */}
-                <div className="pt-3 border-t border-border">
-                  <h4 className="text-sm font-semibold text-text-primary mb-3">数据流转配置</h4>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm text-text-secondary mb-1 flex items-center gap-1">
-                        <span className="text-blue-500">←</span>
-                        输入键名
-                      </label>
-                      <input
-                        type="text"
-                        value={(selectedNode.data?.inputKey as string) || ''}
-                        onChange={(e) => {
-                          setNodes((nds) =>
-                            nds.map((n) =>
-                              n.id === selectedNode.id
-                                ? { ...n, data: { ...n.data, inputKey: e.target.value } }
-                                : n
-                            )
-                          );
-                          setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, inputKey: e.target.value } } : null);
-                        }}
-                        placeholder="例如: input, message"
-                        className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none text-sm"
-                      />
-                      <p className="text-xs text-text-secondary mt-1">从上一节点接收的数据键</p>
+                {/* 审批节点配置 */}
+                {selectedNode.type === 'approval' && (
+                  <div className="pt-3 border-t border-border">
+                    <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-orange-500" />
+                      审批配置
+                    </h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm text-text-secondary mb-1">审批说明</label>
+                        <textarea
+                          value={(selectedNode.data?.approvalConfig as any)?.description || ''}
+                          onChange={(e) => {
+                            const newConfig = {
+                              ...(selectedNode.data?.approvalConfig as any),
+                              description: e.target.value,
+                            };
+                            setNodes((nds) =>
+                              nds.map((n) =>
+                                n.id === selectedNode.id
+                                  ? { ...n, data: { ...n.data, approvalConfig: newConfig } }
+                                  : n
+                              )
+                            );
+                            setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, approvalConfig: newConfig } } : null);
+                          }}
+                          placeholder="向审批人说明需要确认的内容"
+                          rows={2}
+                          className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none resize-none text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-text-secondary mb-1">超时时间（秒）</label>
+                        <input
+                          type="number"
+                          value={(selectedNode.data?.approvalConfig as any)?.timeout || 3600}
+                          onChange={(e) => {
+                            const newConfig = {
+                              ...(selectedNode.data?.approvalConfig as any),
+                              timeout: parseInt(e.target.value) || 3600,
+                            };
+                            setNodes((nds) =>
+                              nds.map((n) =>
+                                n.id === selectedNode.id
+                                  ? { ...n, data: { ...n.data, approvalConfig: newConfig } }
+                                  : n
+                              )
+                            );
+                            setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, approvalConfig: newConfig } } : null);
+                          }}
+                          min={60}
+                          className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                        />
+                        <p className="text-xs text-text-secondary mt-1">超时后自动拒绝，0 表示不超时</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm text-text-secondary mb-1">超时行为</label>
+                        <select
+                          value={(selectedNode.data?.approvalConfig as any)?.timeoutAction || 'reject'}
+                          onChange={(e) => {
+                            const newConfig = {
+                              ...(selectedNode.data?.approvalConfig as any),
+                              timeoutAction: e.target.value,
+                            };
+                            setNodes((nds) =>
+                              nds.map((n) =>
+                                n.id === selectedNode.id
+                                  ? { ...n, data: { ...n.data, approvalConfig: newConfig } }
+                                  : n
+                              )
+                            );
+                            setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, approvalConfig: newConfig } } : null);
+                          }}
+                          className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                        >
+                          <option value="reject">自动拒绝</option>
+                          <option value="wait">继续等待</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Agent 节点配置 */}
+                {selectedNode.type !== 'approval' && (
+                  <>
+                    {/* 输入输出配置 */}
+                    <div className="pt-3 border-t border-border">
+                      <h4 className="text-sm font-semibold text-text-primary mb-3">数据流转配置</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm text-text-secondary mb-1 flex items-center gap-1">
+                            <span className="text-blue-500">←</span>
+                            输入键名
+                          </label>
+                          <input
+                            type="text"
+                            value={(selectedNode.data?.inputKey as string) || ''}
+                            onChange={(e) => {
+                              setNodes((nds) =>
+                                nds.map((n) =>
+                                  n.id === selectedNode.id
+                                    ? { ...n, data: { ...n.data, inputKey: e.target.value } }
+                                    : n
+                                )
+                              );
+                              setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, inputKey: e.target.value } } : null);
+                            }}
+                            placeholder="例如: input, message"
+                            className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                          />
+                          <p className="text-xs text-text-secondary mt-1">从上一节点接收的数据键</p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm text-text-secondary mb-1 flex items-center gap-1">
+                            <span className="text-green-500">→</span>
+                            输出键名
+                          </label>
+                          <input
+                            type="text"
+                            value={(selectedNode.data?.outputKey as string) || ''}
+                            onChange={(e) => {
+                              setNodes((nds) =>
+                                nds.map((n) =>
+                                  n.id === selectedNode.id
+                                    ? { ...n, data: { ...n.data, outputKey: e.target.value } }
+                                    : n
+                                )
+                              );
+                              setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, outputKey: e.target.value } } : null);
+                            }}
+                            placeholder="例如: result, output"
+                            className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                          />
+                          <p className="text-xs text-text-secondary mt-1">传递给下一节点的数据键</p>
+                        </div>
+                      </div>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm text-text-secondary mb-1 flex items-center gap-1">
-                        <span className="text-green-500">→</span>
-                        输出键名
-                      </label>
-                      <input
-                        type="text"
-                        value={(selectedNode.data?.outputKey as string) || ''}
+                    <div className="pt-3 border-t border-border">
+                      <label className="block text-sm text-text-secondary mb-2">自定义Prompt</label>
+                      <textarea
+                        value={(selectedNode.data?.prompt as string) || ''}
                         onChange={(e) => {
                           setNodes((nds) =>
                             nds.map((n) =>
                               n.id === selectedNode.id
-                                ? { ...n, data: { ...n.data, outputKey: e.target.value } }
+                                ? { ...n, data: { ...n.data, prompt: e.target.value } }
                                 : n
                             )
                           );
-                          setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, outputKey: e.target.value } } : null);
+                          setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, prompt: e.target.value } } : null);
                         }}
-                        placeholder="例如: result, output"
-                        className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none text-sm"
+                        placeholder="覆盖Agent的系统提示词（可选）"
+                        rows={4}
+                        className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none resize-none font-mono text-sm"
                       />
-                      <p className="text-xs text-text-secondary mt-1">传递给下一节点的数据键</p>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="pt-3 border-t border-border">
-                  <label className="block text-sm text-text-secondary mb-2">自定义Prompt</label>
-                  <textarea
-                    value={(selectedNode.data?.prompt as string) || ''}
-                    onChange={(e) => {
-                      setNodes((nds) =>
-                        nds.map((n) =>
-                          n.id === selectedNode.id
-                            ? { ...n, data: { ...n.data, prompt: e.target.value } }
-                            : n
-                        )
-                      );
-                      setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, prompt: e.target.value } } : null);
-                    }}
-                    placeholder="覆盖Agent的系统提示词（可选）"
-                    rows={4}
-                    className="w-full px-3 py-2 rounded bg-background border border-border focus:border-primary focus:outline-none resize-none font-mono text-sm"
-                  />
-                </div>
-                
-                <div className="pt-2 border-t border-border">
-                  <div className="text-xs text-text-secondary space-y-1">
-                    <p>• ID: {String(selectedNode.id)}</p>
-                    <p>• Agent ID: {String(selectedNode.data?.agentId || '-')}</p>
-                    <p>• 位置: ({Math.round(selectedNode.position.x)}, {Math.round(selectedNode.position.y)})</p>
-                  </div>
-                </div>
+                    
+                    <div className="pt-2 border-t border-border">
+                      <div className="text-xs text-text-secondary space-y-1">
+                        <p>• ID: {String(selectedNode.id)}</p>
+                        <p>• Agent ID: {String(selectedNode.data?.agentId || '-')}</p>
+                        <p>• 位置: ({Math.round(selectedNode.position.x)}, {Math.round(selectedNode.position.y)})</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

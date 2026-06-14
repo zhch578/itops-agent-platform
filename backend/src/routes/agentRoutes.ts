@@ -193,7 +193,7 @@ const PRESET_TEST_INPUTS: Record<string, string> = {
 // 测试Agent执行
 router.post('/:id/test', async (req: Request, res: Response) => {
   try {
-    const { input, serverId, serverIds, context } = req.body;
+    const { input, serverId, serverIds, context, databaseId } = req.body;
     const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(req.params.id);
     
     if (!agent) {
@@ -208,15 +208,16 @@ router.post('/:id/test', async (req: Request, res: Response) => {
     let status = 'success';
     let errorMessage = null;
     
-    // 构建上下文 - 优先使用serverIds，如果没有则使用serverId
-    const executionContext = {
+    // 构建上下文
+    const executionContext: Record<string, unknown> = {
       ...context,
-      serverIds: serverIds && serverIds.length > 0 ? serverIds : (serverId ? [serverId] : undefined)
+      serverIds: serverIds && serverIds.length > 0 ? serverIds : (serverId ? [serverId] : undefined),
+      databaseId: databaseId || undefined
     };
     
     try {
-      // 检查是否是服务器相关的Agent，如果是，就用增强的执行器
-      if (agentName.includes('服务器') || agentName.includes('巡检')) {
+      // 检查是否是服务器相关Agent或数据库运维Agent，如果是，就用增强的执行器
+      if (agentName.includes('服务器') || agentName.includes('巡检') || agentName.includes('数据库运维')) {
         output = await executeAgentNode((agent as { id: string }).id, input, executionContext);
       } else {
         // 其他Agent用LLM执行
@@ -233,7 +234,7 @@ router.post('/:id/test', async (req: Request, res: Response) => {
     // 保存执行记录
     db.prepare(`
       INSERT INTO agent_executions (id, agent_id, agent_name, input_text, output_text, status, error_message, execution_time_ms, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now','localtime'))
     `).run(
       executionId,
       req.params.id,
@@ -243,15 +244,15 @@ router.post('/:id/test', async (req: Request, res: Response) => {
       status,
       errorMessage,
       executionTime,
-      JSON.stringify({ test: true, context: executionContext, serverId, serverIds })
+      JSON.stringify({ test: true, context: executionContext, serverId, serverIds, databaseId })
     );
     
     // 更新Agent使用统计
     db.prepare(`
       UPDATE agents 
       SET usage_count = usage_count + 1, 
-          last_used_at = CURRENT_TIMESTAMP,
-          updated_at = CURRENT_TIMESTAMP
+          last_used_at = datetime('now','localtime'),
+          updated_at = datetime('now','localtime')
       WHERE id = ?
     `).run(req.params.id);
     
@@ -263,7 +264,8 @@ router.post('/:id/test', async (req: Request, res: Response) => {
         status,
         executionTime,
         metadata: {
-          serverId
+          serverId,
+          databaseId
         }
       }
     });
@@ -311,7 +313,7 @@ router.put('/:id', requireRole('admin', 'operator'), (req: Request, res: Respons
           model = ?, temperature = ?, enabled = ?, 
           category = ?, tags = ?, description = ?, api_provider = ?,
           primary_model_id = ?, fallback_model_id = ?,
-          updated_at = CURRENT_TIMESTAMP
+          updated_at = datetime('now','localtime')
       WHERE id = ?
     `).run(
       name, avatar, role, system_prompt, 

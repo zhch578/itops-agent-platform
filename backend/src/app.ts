@@ -37,13 +37,18 @@ import remediationExecutionRoutes from './routes/remediationExecutionRoutes';
 import remediationAuditRoutes from './routes/remediationAuditRoutes';
 import backupRoutes from './routes/backupRoutes';
 import databaseRoutes from './routes/databaseRoutes';
+import dbConnectionsRoutes from './routes/dbConnectionsRoutes';
 import knowledgeQAnythingRoutes from './routes/knowledgeQAnythingRoutes';
 import vncRoutes from './routes/vncRoutes';
 import networkDeviceRoutes from './routes/networkDeviceRoutes';
+import networkAdvancedRoutes from './routes/networkAdvancedRoutes';
+import snmpRoutes from './routes/snmpRoutes';
 import sshKeyRoutes from './routes/sshKeyRoutes';
 import topologyRoutes from './routes/topologyRoutes';
 import changeRoutes from './routes/changeRoutes';
 import aiModelRoutes from './routes/aiModelRoutes';
+import approvalRoutes from './routes/approvalRoutes';
+import aiRemediationRoutes from './routes/aiRemediationRoutes';
 import { schedulerService } from './services/schedulerService';
 import { reportService } from './services/reportService';
 import { copilotService } from './services/copilotService';
@@ -59,10 +64,22 @@ import { env } from './utils/env';
 import { logger } from './utils/logger';
 import { initTokenBlacklist } from './services/tokenBlacklist';
 import { startCircuitBreakerCleanup } from './services/llmService';
+import { credentialService } from './services/credentialService';
 import { healthService } from './services/healthService';
 import { backupService } from './services/backupService';
+import { selfMonitorService } from './services/selfMonitorService';
+import { snmpPollingService } from './services/snmpPollingService';
+import { alertAutoAnalyzer } from './services/alertAutoAnalyzer';
+import { alertCorrelationService } from './services/alertCorrelationService';
 import { setServerInstances } from './services/restartService';
+import { checkDbskiterAvailability } from './services/dbskiterService';
+import { timeoutApproval } from './services/workflowExecutor';
+import { queueService } from './services/queueService';
 import importExportRouter from './routes/importExportRoutes';
+import alertAutoRouter from './routes/alertAutoRoutes';
+import linkageRouter from './routes/linkageRoutes';
+import networkDiscoveryRouter from './routes/networkDiscoveryRoutes';
+import alertCorrelationRouter from './routes/alertCorrelationRoutes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -93,6 +110,9 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 import { initAlertService } from './services/alertService';
 
 async function initializeApp() {
+  // 启动时仅检测 dbskiter，不在运行期自动安装依赖
+  checkDbskiterAvailability().catch(() => { /* 错误已在函数内部记录 */ });
+
   await initializeDatabase();
   
   // 初始化各个服务
@@ -104,8 +124,39 @@ async function initializeApp() {
   notificationService.init();
   remediationService.init();
   backupService.init();
+  // Initialize credential service (encrypted storage for API keys)
+  credentialService.init();
+  
+  // Migrate existing plaintext API keys from settings table to encrypted credentials
+  try {
+    const migrationResult = credentialService.migrateFromSettings();
+    if (migrationResult.migrated > 0) {
+      logger.warn(`⚠️ Migrated ${migrationResult.migrated} API keys from plaintext settings to encrypted credentials`);
+      logger.warn('⚠️ Old plaintext keys remain in settings table for backwards compatibility');
+      logger.warn('⚠️ It is recommended to remove them via admin/cleanup-settings endpoint once migration is verified');
+    }
+  } catch (migrationError) {
+    logger.warn('Credential migration encountered errors (non-fatal)', migrationError as Error);
+  }
+
+  // Initialize queue service (async task execution)
+  queueService.init();
+  
+  // Initialize self-monitor service (periodic health checks)
+  selfMonitorService.init();
+  
+  // Initialize SNMP polling service (periodic device inspection)
+  snmpPollingService.start();
+  
+  // Initialize alert auto-analyzer (AI-powered alert diagnosis)
+  alertAutoAnalyzer.start();
+  
+  // Initialize alert correlation service
+  alertCorrelationService.start();
+  
   initTokenBlacklist();
   startCircuitBreakerCleanup();
+  startApprovalTimeoutChecker();
   
   logger.info('✅ Application initialization complete');
 }
@@ -144,8 +195,8 @@ app.get('/health/ready', async (_req, res) => {
 // 以下所有路由都需要认证
 app.use(authenticateToken);
 
-// Auth相关接口 - 允许未修改密码的用户访问
-app.use('/api/auth', rateLimiter, authRoutes);
+// 注意: /api/auth 路由已在公开路由中注册（line 118），此处不重复注册
+// 已认证的用户通过公开路由的 authRoutes 访问
 
 // 健康检查接口（已认证）- 无需强制改密码检查
 app.get('/api/health/summary', (_req, res) => {
@@ -155,6 +206,18 @@ app.get('/api/health/summary', (_req, res) => {
 app.get('/api/health/history', (_req, res) => {
   const history = healthService.getHealthHistory();
   res.json({ success: true, data: history });
+});
+app.get('/api/health/monitor', async (_req, res) => {
+  const report = selfMonitorService.getLastReport();
+  if (!report) {
+    res.json({ success: false, message: 'No monitor report yet, service still initializing' });
+    return;
+  }
+  res.json({ success: true, data: report });
+});
+app.get('/api/health/monitor/alerts', (_req, res) => {
+  const alerts = selfMonitorService.getAlertHistory();
+  res.json({ success: true, data: alerts });
 });
 
 // 以下所有路由需要检查是否已修改初始密码
@@ -189,20 +252,55 @@ app.use('/api/remediation-executions', rateLimiter, remediationExecutionRoutes);
 app.use('/api/remediation-audits', rateLimiter, remediationAuditRoutes);
 app.use('/api/backups', rateLimiter, backupRoutes);
 app.use('/api/database', rateLimiter, databaseRoutes);
+app.use('/api/db-connections', rateLimiter, dbConnectionsRoutes);
 app.use('/api/knowledge/qanything', rateLimiter, knowledgeQAnythingRoutes);
 app.use('/api/import-export', rateLimiter, importExportRouter);
 app.use('/api/vnc', rateLimiter, vncRoutes);
 app.use('/api/network-devices', rateLimiter, networkDeviceRoutes);
+app.use('/api/network-advanced', rateLimiter, networkAdvancedRoutes);
+app.use('/api/snmp', rateLimiter, snmpRoutes);
 app.use('/api/ssh-keys', rateLimiter, sshKeyRoutes);
 app.use('/api/topology', rateLimiter, topologyRoutes);
 app.use('/api/changes', rateLimiter, changeRoutes);
 app.use('/api/ai-models', rateLimiter, aiModelRoutes);
+app.use('/api/approvals', rateLimiter, approvalRoutes);
+app.use('/api/ai-remediations', rateLimiter, aiRemediationRoutes);
+app.use('/api', rateLimiter, alertAutoRouter);
+app.use('/api', rateLimiter, linkageRouter);
+app.use('/api', rateLimiter, networkDiscoveryRouter);
+app.use('/api', rateLimiter, alertCorrelationRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = env.PORT;
 const HOST = process.env.HOST || '0.0.0.0';
+
+// 审批超时检查器
+let approvalTimeoutInterval: NodeJS.Timeout | null = null;
+
+function startApprovalTimeoutChecker() {
+  // 每 30 秒检查一次超时的审批请求
+  approvalTimeoutInterval = setInterval(async () => {
+    try {
+      const expiredApprovals = db.prepare(`
+        SELECT id FROM approval_requests
+        WHERE status = 'pending'
+        AND timeout_at IS NOT NULL
+        AND timeout_at < datetime('now', 'localtime')
+      `).all() as Array<{ id: string }>;
+
+      for (const approval of expiredApprovals) {
+        logger.info(`⏰ Approval ${approval.id} timed out, processing...`);
+        await timeoutApproval(approval.id);
+      }
+    } catch (error) {
+      logger.error('Error in approval timeout checker:', error);
+    }
+  }, 30000);
+
+  logger.info('✅ Approval timeout checker started (checking every 30s)');
+}
 
 // 等待数据库初始化完成后再启动 HTTP 服务器，避免竞态
 async function startServer() {
@@ -228,6 +326,11 @@ const gracefulShutdown = async (signal: string) => {
     process.exit(1);
   }, 30000);
 
+  // 停止审批超时检查器
+  if (approvalTimeoutInterval) {
+    clearInterval(approvalTimeoutInterval);
+  }
+
   try {
     await Promise.all([
       new Promise<void>((resolve) => httpServer.close(() => {
@@ -245,6 +348,15 @@ const gracefulShutdown = async (signal: string) => {
 
     backupService.stopAutoBackup();
     logger.info('Backup service stopped');
+
+    await queueService.shutdown();
+    logger.info('Queue service stopped');
+
+    selfMonitorService.shutdown();
+    logger.info('Self-monitor service stopped');
+
+    alertCorrelationService.stop();
+    logger.info('Alert correlation service stopped');
 
     db.close();
     logger.info('Database connection closed');

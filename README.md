@@ -42,7 +42,7 @@ graph TB
     Nginx --> Express["Express 后端<br/>31个路由 | 20+个服务 | JWT认证"]
     React <-->|"WebSocket 实时通信"| Express
     Express --> SQLite[("SQLite 数据库<br/>39张表 | AES-256加密")]
-    Express --> LLM["🤖 LLM API<br/>豆包 | OpenAI"]
+    Express --> LLM["🤖 LLM 模型池<br/>豆包 | DeepSeek | 通义千问<br/>OpenAI | 智谱 | 本地模型"]
     Express --> SSH["🖥️ SSH 远程服务器"]
     Express --> Webhook["🚨 告警 Webhook<br/>Prometheus | Zabbix"]
     Express --> Notify["📬 通知渠道<br/>邮件 | 企业微信 | 钉钉"]
@@ -55,6 +55,8 @@ graph TB
 
 - **多 Agent 协作** — 9 个预设运维 Agent，支持自定义创建，覆盖告警、诊断、巡检、变更等场景
 - **可视化工作流** — 拖拽式编排，支持串行/并行/条件分支，实时 WebSocket 推送执行进度
+- **HITL 人工审批** — 工作流支持审批节点，暂停执行等待人工确认，支持超时自动拒绝/等待，审批请求自动推送企业微信/钉钉/邮箱
+- **AI 智能修复闭环** — 告警自动触发 AI 分析 → 自动生成结构化修复命令 → 审批节点确认 → 自动执行修复 → 验证结果反馈
 - **Web SSH 终端** — 基于 xterm.js 的交互式远程终端，支持实时输入输出、窗口自适应、双向实时通信
 - **主机管理增强** — 多级分组树形结构、CSV/JSON 批量导入、SSH 自动信息采集（CPU/内存/磁盘/OS）
 - **数据导入导出** — 支持 CSV/JSON 格式批量导入服务器，导出告警、审计日志、报表数据
@@ -95,13 +97,36 @@ graph TB
 
 ## 支持的 AI 模型
 
-| 类型 | 提供商/框架 | 支持情况 | 推荐场景 |
-|------|------------|---------|---------|
-| **国内云 API** | 火山引擎 · 豆包 (Doubao) | ✅ 完全支持 | 国内用户推荐，稳定快速 |
-| **国际云 API** | OpenAI (GPT-4o 等) | ✅ 完全支持 | 有外网环境用户 |
-| **本地部署** | Ollama / LM Studio / vLLM | ✅ 完全支持 | 数据安全要求高，内网部署 |
+项目支持国内外绝大多数主流大模型，通过 AI 模型池统一管理，支持主备降级链。
 
-**本地模型推荐**：Qwen2.5、Llama3、DeepSeek-Coder、Yi、ChatGLM、Phi-3 等开源大模型（兼容 OpenAI 接口）。
+| 类型 | 提供商/模型 | 接入方式 | 推荐场景 |
+|------|------------|---------|---------|
+| **国内云 API** | 火山引擎 · 豆包 (Doubao) | 原生 API | 国内用户推荐，稳定快速 |
+| **国内云 API** | 阿里云 · 通义千问 (Qwen) | OpenAI 兼容 | 国内企业级应用 |
+| **国内云 API** | DeepSeek (深度求索) | OpenAI 兼容 | 代码生成、推理能力强 |
+| **国内云 API** | 智谱 AI (GLM-4) | OpenAI 兼容 | 中文理解优秀 |
+| **国内云 API** | Moonshot · Kimi | OpenAI 兼容 | 长文本处理 |
+| **国内云 API** | 百度 · 文心一言 | OpenAI 兼容 | 国内企业应用 |
+| **国内云 API** | 零一万物 (Yi) | OpenAI 兼容 | 开源模型 |
+| **国内云 API** | 百川智能 (Baichuan) | OpenAI 兼容 | 开源模型 |
+| **国际云 API** | OpenAI (GPT-4o, o1, o3) | 原生 API | 有外网环境用户 |
+| **国际云 API** | Anthropic Claude | OpenAI 兼容层 | 复杂推理任务 |
+| **国际云 API** | Meta Llama | Ollama/vLLM | 开源模型 |
+| **国际云 API** | Mistral | OpenAI 兼容 | 开源模型 |
+| **本地部署** | Ollama | OpenAI 兼容 | 数据安全要求高，内网部署 |
+| **本地部署** | LM Studio | OpenAI 兼容 | 桌面端本地模型 |
+| **本地部署** | vLLM | OpenAI 兼容 | 高性能推理服务 |
+| **本地部署** | 其他 OpenAI 兼容接口 | OpenAI 兼容 | 任意兼容服务 |
+
+**本地模型推荐**：Qwen2.5、Llama3、DeepSeek-Coder、Yi、ChatGLM、Phi-3、Mistral 等开源大模型。
+
+**特性**：
+- ✅ AI 模型池统一管理，支持添加任意数量模型
+- ✅ 主备模型降级链（primary_model_id + fallback_model_id）
+- ✅ 每个提供商独立熔断器，防止单点故障
+- ✅ 拖拽排序定义优先级
+- ✅ 模型连通性测试验证
+- ✅ API Key 继承机制，减少重复配置
 
 ## 技术栈
 
@@ -350,6 +375,25 @@ npm run dev
 - 报告模板管理
 - 报告查看与下载
 
+### 审批中心（HITL）
+
+- 工作流支持人工审批节点，可在工作流编排中拖拽添加
+- 审批节点支持配置：审批说明、超时时间、超时行为（自动拒绝/继续等待）
+- 统一审批中心页面，展示待审批、已通过、已拒绝的审批请求
+- 审批操作：通过/拒绝（需填写原因）
+- 审批请求自动推送通知（企业微信、钉钉、邮箱）
+- 支持从手机移动端快速审批
+- WebSocket 实时推送审批状态变更
+
+### AI 修复记录
+
+- AI 分析告警后自动生成结构化修复命令（JSON 格式）
+- 自动创建修复工作流：[审批节点] → [执行修复 Agent 节点]
+- 根据风险等级自动设置审批超时时间（low: 30分钟, medium: 1小时, high: 2小时）
+- 展示完整修复流程：诊断报告、修复命令、风险等级、执行状态
+- 支持查看执行结果和错误信息
+- 与告警、任务系统深度集成
+
 ## 项目结构
 
 ```
@@ -357,15 +401,15 @@ npm run dev
 │   └── src/
 │       ├── app.ts                  # Express 应用入口
 │       ├── models/database.ts      # SQLite 数据库初始化和预设数据
-│       ├── routes/                 # API 路由（31 个模块）
-│       ├── services/               # 业务逻辑（20+ 个服务）
+│       ├── routes/                 # API 路由（32 个模块）
+│       ├── services/               # 业务逻辑（20+ 个服务，含 aiRemediationService）
 │       ├── middleware/             # 中间件（6 个：auth, errorHandler, rateLimiter, validation, trace, commandFilter）
 │       ├── websocket/              # WebSocket 实时通信
 │       └── utils/                  # 工具函数
 ├── frontend/
 │   └── src/
 │       ├── App.tsx                 # React 应用入口
-│       ├── pages/                  # 页面组件（27 个）
+│       ├── pages/                  # 页面组件（28 个，含 Approvals、AiRemediations）
 │       ├── components/             # 通用组件
 │       ├── contexts/               # React Context
 │       ├── hooks/                  # 自定义 Hooks

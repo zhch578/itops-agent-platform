@@ -41,7 +41,7 @@ graph TB
     end
 
     subgraph External["🌐 外部服务"]
-        LLM["🤖 LLM API<br/>豆包 Doubao | OpenAI"]
+        LLM["🤖 LLM 模型池<br/>豆包 | DeepSeek | 通义千问<br/>OpenAI | 智谱 | 本地模型"]
         SSH["🖥️ SSH<br/>远程服务器"]
         Alerts["🚨 告警源<br/>Prometheus | Zabbix | 通用Webhook"]
         Notify["📬 通知渠道<br/>Webhook | 邮件 | 企业微信 | 钉钉"]
