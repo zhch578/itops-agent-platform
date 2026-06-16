@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 import clsx from 'clsx';
 import api from '../lib/api';
+import { useToast } from '../contexts/ToastContext';
 
 interface User {
   id: string;
@@ -25,6 +26,7 @@ export default function Users() {
     enabled: true,
   });
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const { data: usersData, isLoading: usersLoading } = useQuery({
     queryKey: ['users'],
@@ -43,6 +45,10 @@ export default function Users() {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowModal(false);
       resetForm();
+      toast.success('用户创建成功');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || err.response?.data?.message || '用户创建失败');
     },
   });
 
@@ -55,6 +61,10 @@ export default function Users() {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowModal(false);
       resetForm();
+      toast.success('用户更新成功');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || err.response?.data?.message || '用户更新失败');
     },
   });
 
@@ -65,6 +75,10 @@ export default function Users() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('用户删除成功');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error || err.response?.data?.message || '用户删除失败');
     },
   });
 
