@@ -44,7 +44,7 @@ router.get('/:id', (req: Request, res: Response) => {
 
 router.post('/', requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const { username, password, email, role = 'viewer' } = req.body;
+    const { username, password, email, role = 'viewer', enabled = true } = req.body;
     
     if (!username || !password) {
       return res.status(400).json({ success: false, error: 'Username and password are required' });
@@ -68,9 +68,9 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     db.prepare(`
-      INSERT INTO users (id, username, password, email, role, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(id, username, hashedPassword, email || null, role, now, now);
+      INSERT INTO users (id, username, password, email, role, enabled, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, username, hashedPassword, email || null, role, enabled ? 1 : 0, now, now);
     
     const reqUser = (req as { user?: { id: string } }).user;
     createAuditLog({
