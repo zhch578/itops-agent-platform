@@ -7,6 +7,7 @@ import { remediationService } from '../services/remediationService';
 import { rootCauseAnalysisService } from '../services/rootCauseAnalysisService';
 import { alertService } from '../services/alertService';
 import { alertAutoAnalyzer } from '../services/alertAutoAnalyzer';
+import { alertWorkflowMappingService } from '../services/alertWorkflowMappingService';
 import { emitToAlerts } from '../websocket/handler';
 import { logger } from '../utils/logger';
 import { requireRole } from '../middleware/auth';
@@ -87,6 +88,22 @@ router.get('/:id', (req: Request, res: Response) => {
   }
 });
 
+router.get('/:id/automation-logs', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const logs = db.prepare(`
+      SELECT * FROM audit_logs
+      WHERE resource_type = 'alert_automation' AND resource_id = ?
+      ORDER BY created_at DESC
+      LIMIT 100
+    `).all(id);
+
+    res.json({ success: true, data: logs });
+  } catch {
+    res.status(500).json({ success: false, error: 'Failed to fetch alert automation logs' });
+  }
+});
+
 router.post('/', async (req: Request, res: Response) => {
     try {
       const { source, severity, title, content, metadata, related_task_id } = req.body;
@@ -158,6 +175,7 @@ router.post('/', async (req: Request, res: Response) => {
         id,
         source: source || 'unknown',
         severity: severity || 'medium',
+        rawSeverity: typeof metadata?.raw_severity === 'string' ? metadata.raw_severity : undefined,
         title,
         content: content || '',
         tags: metadata?.tags ? (Array.isArray(metadata.tags) ? metadata.tags : []): [],
@@ -278,6 +296,7 @@ interface AlertProcessingContext {
   id: string;
   source: string;
   severity: string;
+  rawSeverity?: string;
   title: string;
   content: string;
   tags: string[];
@@ -286,7 +305,7 @@ interface AlertProcessingContext {
 async function runAlertProcessingPipeline(ctx: AlertProcessingContext): Promise<void> {
   const io = getIOInstance();
   try {
-    const { id, source, severity, title, content, tags } = ctx;
+    const { id, source, severity, rawSeverity, title, content, tags } = ctx;
 
     emitToAlerts(io!, 'remediation:started', {
       alertId: id,
@@ -314,7 +333,18 @@ async function runAlertProcessingPipeline(ctx: AlertProcessingContext): Promise<
     alertService.processDatabaseAlert(id);
 
     // 匹配修复策略并执行
-    const alertForMatching = { id, source, severity, title, content, tags };
+    const alertForMatching = { id, source, severity, rawSeverity, title, content, tags };
+    const mappingTask = alertWorkflowMappingService.triggerFirstMatchingWorkflow(alertForMatching);
+    if (mappingTask) {
+      emitToAlerts(io!, 'remediation:result', {
+        alertId: id,
+        policyId: mappingTask.mappingId,
+        policyName: `告警映射: ${mappingTask.workflowName}`,
+        executionId: mappingTask.taskId,
+        status: 'task_created',
+        timestamp: new Date().toISOString()
+      });
+    }
     const policies = await remediationService.matchAlertToPolicies(alertForMatching);
     for (const policy of policies) {
       const result = await remediationService.triggerRemediation(policy, alertForMatching);
@@ -360,24 +390,35 @@ router.post('/:id/process', async (req: Request, res: Response) => {
 
     // 解析 tags
     let tags: string[] = [];
+    let rawSeverity: string | undefined;
     if (alert.metadata) {
       try {
         const meta = typeof alert.metadata === 'string' ? JSON.parse(alert.metadata as string) : alert.metadata;
         tags = Array.isArray(meta.tags) ? meta.tags : [];
+        rawSeverity = typeof meta.raw_severity === 'string'
+          ? meta.raw_severity
+          : typeof meta.zabbix_raw_severity === 'string'
+            ? meta.zabbix_raw_severity
+            : undefined;
       } catch { /* ignore */ }
     }
 
-    const ctx: AlertProcessingContext = { id, source, severity, title, content, tags };
+    const ctx: AlertProcessingContext = { id, source, severity, rawSeverity, title, content, tags };
 
     // 同步匹配：确认有哪些修复策略匹配了
     let matchedPolicies: Array<{ id: string; name: string; execution_mode: string }> = [];
     let executionIds: string[] = [];
+    let mappingTasks: Array<{ taskId: string; mappingId: string; workflowId: string; workflowName: string }> = [];
     let errorMsg: string | null = null;
 
     try {
       // 先跑 alertService 的数据库处理
       alertService.processDatabaseAlert(id);
 
+      const mappingTask = alertWorkflowMappingService.triggerFirstMatchingWorkflow(ctx);
+      if (mappingTask) {
+        mappingTasks = [mappingTask];
+      }
       const policies = await remediationService.matchAlertToPolicies(ctx);
       matchedPolicies = policies.map(p => ({
         id: p.id,
@@ -426,10 +467,11 @@ router.post('/:id/process', async (req: Request, res: Response) => {
       success: true,
       message: errorMsg
         ? `告警处理完成，但部分策略执行出错: ${errorMsg}`
-        : `成功匹配 ${matchedPolicies.length} 条修复策略${executionIds.length ? '，执行已触发' : ''}`,
+        : `告警处理完成：匹配 ${matchedPolicies.length} 条修复策略，触发 ${mappingTasks.length} 个告警映射任务，创建 ${executionIds.length} 条修复执行记录`,
       data: {
         alertId: id,
         matchedPolicies,
+        mappingTasks,
         executionIds,
         error: errorMsg
       }

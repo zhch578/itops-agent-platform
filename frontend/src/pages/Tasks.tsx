@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import { Play, Pause, XCircle, Clock, CheckCircle, XCircle as XIcon, FileText, Activity, List, FileCheck } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -33,6 +34,8 @@ interface Workflow {
 
 export default function Tasks() {
   const { token } = useAuth();
+  const [searchParams] = useSearchParams();
+  const taskIdFromQuery = searchParams.get('taskId');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [executingNodeId, setExecutingNodeId] = useState<string | null>(null);
   const [taskLogs, setTaskLogs] = useState<any[]>([]);
@@ -311,6 +314,15 @@ export default function Tasks() {
     setSelectedTask(parsedTask);
     setTaskLogs(parsedLogs);
   };
+
+  useEffect(() => {
+    if (!taskIdFromQuery || !tasks || selectedTask?.id === taskIdFromQuery) return;
+
+    const task = tasks.find((item) => item.id === taskIdFromQuery);
+    if (task) {
+      handleSelectTask(task);
+    }
+  }, [taskIdFromQuery, selectedTask?.id, tasks]);
 
   const pauseMutation = useMutation({
     mutationFn: async (taskId: string) => {

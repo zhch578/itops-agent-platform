@@ -380,10 +380,13 @@ export default function AlertMappings() {
                   className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 >
                   <option value="">✨ 任意级别</option>
+                  <option value="disaster">💥 Disaster (Zabbix 灾难)</option>
                   <option value="critical">🔴 Critical (严重)</option>
                   <option value="high">🟠 High (高)</option>
                   <option value="medium">🟡 Medium (中)</option>
+                  <option value="warning">🟨 Warning (Zabbix 警告)</option>
                   <option value="low">🔵 Low (低)</option>
+                  <option value="info">ℹ️ Info (信息)</option>
                 </select>
               </div>
 
@@ -441,7 +444,7 @@ export default function AlertMappings() {
                   </div>
                   <div className="text-sm text-blue-800">
                     <p className="font-medium mb-1">配置说明</p>
-                    <p>留空的条件表示匹配任意值，多个条件需要同时满足才会触发工作流。</p>
+                    <p>留空的条件表示匹配任意值。Zabbix 可直接使用 disaster、warning、info 等原始级别，也可使用 critical、medium、low 等归一化级别。</p>
                   </div>
                 </div>
               </div>

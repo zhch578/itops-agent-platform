@@ -20,14 +20,23 @@ interface Alert {
   content: string;
   status: string;
   metadata: Record<string, unknown>;
+  related_task_id?: string | null;
   created_at: string;
 }
 
 interface ProcessResult {
   alertId: string;
   matchedPolicies: Array<{ id: string; name: string; execution_mode: string }>;
+  mappingTasks?: Array<{ taskId: string; mappingId: string; workflowId: string; workflowName: string }>;
   executionIds: string[];
   error: string | null;
+}
+
+interface AutomationLog {
+  id: string;
+  action: string;
+  details: string | null;
+  created_at: string;
 }
 
 export default function Alerts() {
@@ -36,6 +45,7 @@ export default function Alerts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [automationLogAlert, setAutomationLogAlert] = useState<Alert | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttemptRef = useRef(0);
@@ -64,6 +74,15 @@ export default function Alerts() {
       return map;
     },
     refetchInterval: 30000,
+  });
+
+  const { data: automationLogs = [], isLoading: automationLogsLoading } = useQuery({
+    queryKey: ['alert-automation-logs', automationLogAlert?.id],
+    enabled: !!automationLogAlert,
+    queryFn: async () => {
+      const res = await api.get(`/api/alerts/${automationLogAlert!.id}/automation-logs`);
+      return (res.data.data || []) as AutomationLog[];
+    },
   });
 
   const connectWebSocketRef = useRef<ReturnType<typeof connectWebSocketInner> | null>(null);
@@ -217,6 +236,18 @@ export default function Alerts() {
       refetch();
     },
   });
+
+  const hasProcessRecords = (result: ProcessResult) =>
+    result.matchedPolicies.length > 0 || (result.mappingTasks?.length || 0) > 0;
+
+  const formatAutomationLogDetails = (details: string | null) => {
+    if (!details) return '无详情';
+    try {
+      return JSON.stringify(JSON.parse(details), null, 2);
+    } catch {
+      return details;
+    }
+  };
 
   return (
     <div className="h-full overflow-auto p-6">
@@ -402,6 +433,22 @@ export default function Alerts() {
                     修复记录
                   </button>
                   <button
+                    onClick={() => setAutomationLogAlert(alert)}
+                    className="flex items-center gap-1 text-xs text-slate-300 hover:text-white transition-colors px-2 py-1 rounded bg-slate-500/10 hover:bg-slate-500/20"
+                  >
+                    <Clock className="w-3 h-3" />
+                    自动处理记录
+                  </button>
+                  {alert.related_task_id && (
+                    <button
+                      onClick={() => navigate(`/tasks?taskId=${encodeURIComponent(alert.related_task_id!)}`)}
+                      className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors px-2 py-1 rounded bg-cyan-500/5 hover:bg-cyan-500/10"
+                    >
+                      <Terminal className="w-3 h-3" />
+                      工作流任务
+                    </button>
+                  )}
+                  <button
                     onClick={() => navigate(`/inspection-center?alertId=${alert.id}`)}
                     className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 rounded bg-blue-500/5 hover:bg-blue-500/10"
                   >
@@ -436,14 +483,14 @@ export default function Alerts() {
             <div className={`p-4 border-b border-border flex items-center justify-between rounded-t-xl ${
               processResult.error
                 ? 'bg-gradient-to-r from-amber-500/10 to-red-500/10'
-                : processResult.matchedPolicies.length > 0
+                : hasProcessRecords(processResult)
                   ? 'bg-gradient-to-r from-green-500/10 to-blue-500/10'
                   : 'bg-gradient-to-r from-blue-500/10 to-purple-500/10'
             }`}>
               <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                 {processResult.error ? (
                   <AlertCircle2 className="w-5 h-5 text-red-500" />
-                ) : processResult.matchedPolicies.length > 0 ? (
+                ) : hasProcessRecords(processResult) ? (
                   <CheckCircle2 className="w-5 h-5 text-green-500" />
                 ) : (
                   <Play className="w-5 h-5 text-blue-500" />
@@ -463,15 +510,15 @@ export default function Alerts() {
               <div className={`p-3 rounded-lg border ${
                 processResult.error
                   ? 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
-                  : processResult.matchedPolicies.length > 0
+                  : hasProcessRecords(processResult)
                     ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400'
                     : 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400'
               }`}>
                 <p className="text-sm font-medium">
                   {processResult.error
                     ? '⚠️ 执行遇到错误: ' + processResult.error
-                    : processResult.matchedPolicies.length > 0
-                      ? `✅ 成功匹配 ${processResult.matchedPolicies.length} 条修复策略，${processResult.executionIds.length} 个执行已触发`
+                    : hasProcessRecords(processResult)
+                      ? `触发 ${processResult.matchedPolicies.length} 条修复策略，${processResult.mappingTasks?.length || 0} 个告警映射任务，${processResult.executionIds.length} 条修复执行记录已创建`
                       : 'ℹ️ 未匹配到任何修复策略（告警级别/关键词不满足已有策略条件）'}
                 </p>
               </div>
@@ -506,6 +553,23 @@ export default function Alerts() {
               )}
 
               {/* 执行ID */}
+              {!!processResult.mappingTasks?.length && (
+                <div>
+                  <h4 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-1.5">
+                    <Terminal className="w-4 h-4 text-primary" />
+                    告警映射工作流任务
+                  </h4>
+                  <div className="space-y-2">
+                    {processResult.mappingTasks.map((task) => (
+                      <div key={task.taskId} className="p-2.5 bg-background rounded-lg border border-border">
+                        <div className="text-sm text-text-primary">{task.workflowName}</div>
+                        <code className="block text-xs text-text-secondary truncate mt-1">{task.taskId}</code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {processResult.executionIds.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-text-primary mb-2">执行记录 ID</h4>
@@ -540,6 +604,19 @@ export default function Alerts() {
                   查看执行记录
                 </button>
               )}
+              {!!processResult.mappingTasks?.length && (
+                <button
+                  onClick={() => {
+                    setProcessResult(null);
+                    const taskId = processResult.mappingTasks?.[0]?.taskId;
+                    navigate(taskId ? `/tasks?taskId=${encodeURIComponent(taskId)}` : '/tasks');
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  查看工作流任务
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -551,6 +628,50 @@ export default function Alerts() {
           <div className="bg-surface rounded-xl border border-border p-6 shadow-2xl flex items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
             <span className="text-text-primary font-medium">正在处理告警...</span>
+          </div>
+        </div>
+      )}
+
+      {automationLogAlert && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-border max-w-3xl w-full shadow-2xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-border flex items-center justify-between rounded-t-xl">
+              <div>
+                <h3 className="text-lg font-semibold text-text-primary">自动处理记录</h3>
+                <p className="text-sm text-text-secondary mt-1">{sanitizeText(automationLogAlert.title)}</p>
+              </div>
+              <button
+                onClick={() => setAutomationLogAlert(null)}
+                className="p-1.5 rounded-lg hover:bg-background transition-colors"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-auto flex-1">
+              {automationLogsLoading ? (
+                <div className="flex items-center gap-3 text-text-secondary">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>加载处理中...</span>
+                </div>
+              ) : automationLogs.length === 0 ? (
+                <div className="text-sm text-text-secondary">暂无自动处理记录</div>
+              ) : (
+                <div className="space-y-3">
+                  {automationLogs.map((log) => (
+                    <div key={log.id} className="border border-border rounded-lg p-3 bg-background">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="text-sm font-medium text-text-primary">{log.action}</span>
+                        <span className="text-xs text-text-secondary">{new Date(log.created_at).toLocaleString()}</span>
+                      </div>
+                      <pre className="text-xs text-text-secondary whitespace-pre-wrap break-all">
+                        {formatAutomationLogDetails(log.details)}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
