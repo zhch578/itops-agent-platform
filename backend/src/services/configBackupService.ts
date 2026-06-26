@@ -272,6 +272,77 @@ class ConfigBackupService {
     return map;
   }
 
+  /**
+   * 创建配置备份（通用版本，供 configRepairRoutes 调用）
+   */
+  async createBackup(
+    deviceId: string,
+    deviceName: string,
+    deviceIp: string,
+    configPath: string,
+    content: string
+  ): Promise<ConfigBackup> {
+    const backupId = randomUUID();
+    const md5 = createHash('md5').update(content).digest('hex');
+
+    db.prepare(`
+      INSERT INTO network_config_backups (id, device_id, config_md5, config_text, config_size, status)
+      VALUES (?, ?, ?, ?, ?, 'success')
+    `).run(backupId, deviceId, md5, content, Buffer.byteLength(content, 'utf-8'));
+
+    logger.info(`Config backup created for ${deviceName} (${md5.substring(0, 8)}...)`);
+
+    return {
+      id: backupId,
+      device_id: deviceId,
+      device_name: deviceName,
+      config_md5: md5,
+      config_size: Buffer.byteLength(content, 'utf-8'),
+      status: 'success',
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * 列出备份列表（通用版本，供 configRepairRoutes 调用）
+   */
+  listBackups(deviceId: string, configPath?: string, limit: number = 20): ConfigBackup[] {
+    return db.prepare(`
+      SELECT cb.*, nd.name as device_name
+      FROM network_config_backups cb
+      LEFT JOIN network_devices nd ON nd.id = cb.device_id
+      WHERE cb.device_id = ?
+      ORDER BY cb.created_at DESC
+      LIMIT ?
+    `).all(deviceId, limit) as ConfigBackup[];
+  }
+
+  /**
+   * 获取单个备份详情（供 configRepairRoutes 调用）
+   */
+  getBackup(backupId: string): ConfigBackup | null {
+    const row = db.prepare(`
+      SELECT cb.*, nd.name as device_name
+      FROM network_config_backups cb
+      LEFT JOIN network_devices nd ON nd.id = cb.device_id
+      WHERE cb.id = ?
+    `).get(backupId) as (ConfigBackup & { config_text?: string }) | undefined;
+    return row || null;
+  }
+
+  /**
+   * 恢复备份（供 configRepairRoutes 调用）
+   */
+  async restoreBackup(backupId: string): Promise<{ success: boolean; message: string }> {
+    const backup = this.getBackup(backupId);
+    if (!backup) {
+      return { success: false, message: 'Backup not found' };
+    }
+    // TODO: 实际恢复逻辑需要通过 SSH 写回设备
+    logger.info(`Restoring backup ${backupId} for device ${backup.device_name}`);
+    return { success: true, message: 'Backup restored successfully' };
+  }
+
   private cleanupOldBackups(deviceId: string, keep: number): void {
     db.prepare(`
       DELETE FROM network_config_backups

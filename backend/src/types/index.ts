@@ -243,3 +243,38 @@ export interface PolicyStats {
   top_root_causes: Array<{ cause: string; count: number }>;
   daily_stats: Array<{ date: string; triggers: number; success: number; failed: number }>;
 }
+
+// ── 配置模板 ──
+
+export interface ConfigTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  service_name: string;
+  template_content: string;
+  variables: string | null;
+  os_type: string;
+  target_path: string | null;
+  backup_before_apply: number;
+  restart_command: string | null;
+  validation_command: string | null;
+  is_system: number;
+  usage_count: number;
+  success_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConfigTemplateHistory {
+  id: string;
+  template_id: string;
+  server_id: string;
+  applied_by: string | null;
+  variables_snapshot: string | null;
+  status: 'pending' | 'success' | 'failed';
+  backup_path: string | null;
+  result: string | null;
+  error_message: string | null;
+  applied_at: string;
+}
