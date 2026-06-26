@@ -90,7 +90,7 @@ export default function ToolLinksManage() {
       closeModal();
       toast.success('工具链接已更新');
     },
-    onError: (err: any) => {
+    onError: (err: { response?: { data?: { error?: string } } }) => {
       toast.error(err?.response?.data?.error || '更新失败');
     },
   });
@@ -120,7 +120,7 @@ export default function ToolLinksManage() {
       queryClient.invalidateQueries({ queryKey: ['tool-links', 'categories'] });
       toast.success('图标已重置');
     },
-    onError: (err: any) => {
+    onError: (err: { response?: { data?: { error?: string } } }) => {
       toast.error(err?.response?.data?.error || '重置图标失败');
     },
   });

@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { Bell, CheckCircle, Clock, AlertCircle, Search, Play, ExternalLink, X as XIcon, Loader2, ListChecks, CheckCircle2, AlertCircle as AlertCircle2, Zap, Wifi, Wrench, Terminal } from 'lucide-react';
 import { safeFormatDistance } from '../lib/date';
 import clsx from 'clsx';

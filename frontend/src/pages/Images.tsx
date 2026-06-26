@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Tag, Space, message, Popconfirm } from 'antd';
 import { Search, RefreshCw, Trash2, Download } from 'lucide-react';

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Terminal, IDisposable } from 'xterm';
+import type { IDisposable } from 'xterm';
+import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { WebLinksAddon } from 'xterm-addon-web-links';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import 'xterm/css/xterm.css';
 
 interface TerminalProps {

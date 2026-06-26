@@ -3,24 +3,37 @@ import { Table, Button, Modal, Form, Input, Select, Tag, Space, message, Popconf
 import { Plus, Edit, Trash2, Search, RefreshCw, HardDrive } from 'lucide-react';
 import api from '../lib/api';
 
+interface Volume {
+  id: string;
+  name: string;
+  driver: string;
+  mount_point: string;
+  size_gb: number;
+  used_gb: number;
+  status: string;
+  host: string;
+  type: string;
+  tags?: string | string[];
+}
+
 const statusColors: Record<string, string> = {
   available: 'green', 'in-use': 'blue', error: 'red',
 };
 
-const usagePercent = (v: any): number => {
+const usagePercent = (v: Volume): number => {
   if (!v.size_gb || !v.used_gb) return 0;
   return Math.round((v.used_gb / v.size_gb) * 100);
 };
 
 export default function Volumes() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Volume[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<Volume | null>(null);
   const [form] = Form.useForm();
 
   const fetchData = async () => {
@@ -75,7 +88,7 @@ export default function Volumes() {
     { title: '名称', dataIndex: 'name', key: 'name' },
     { title: '驱动', dataIndex: 'driver', key: 'driver', render: (d: string) => <Tag>{d}</Tag> },
     { title: '挂载点', dataIndex: 'mount_point', key: 'mount_point', ellipsis: true },
-    { title: '使用率', key: 'usage', width: 180, render: (_: any, r: any) => (
+    { title: '使用率', key: 'usage', width: 180, render: (_: unknown, r: Volume) => (
       <div className="flex items-center gap-2">
         <Progress percent={usagePercent(r)} size="small" className="flex-1" strokeColor={usagePercent(r) > 80 ? '#ff4d4f' : usagePercent(r) > 60 ? '#faad14' : '#52c41a'} />
         <span className="text-xs text-gray-500">{r.used_gb || 0}/{r.size_gb || 0} GB</span>
@@ -84,7 +97,7 @@ export default function Volumes() {
     { title: '状态', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusColors[s] || 'default'}>{s}</Tag> },
     { title: '主机', dataIndex: 'host', key: 'host' },
     { title: '类型', dataIndex: 'type', key: 'type' },
-    { title: '操作', key: 'action', width: 120, render: (_: any, record: any) => (
+    { title: '操作', key: 'action', width: 120, render: (_: unknown, record: Volume) => (
       <Space>
         <Button type="link" size="small" icon={<Edit size={14} />} onClick={() => openEdit(record)}>编辑</Button>
         <Popconfirm title="确定删除?" onConfirm={() => handleDelete(record.id)}>

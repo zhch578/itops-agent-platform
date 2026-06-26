@@ -3,12 +3,26 @@ import { Table, Button, Modal, Form, Input, Select, Tag, Space, message, Popconf
 import { Plus, Edit, Trash2, Search, RefreshCw, Eye, FileText } from 'lucide-react';
 import api from '../lib/api';
 
+interface ConfigTemplate {
+  id: string;
+  name: string;
+  type: string;
+  target_type: string;
+  version: number;
+  tags?: string | string[];
+  content: string;
+  variables?: string | string[];
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const typeColors: Record<string, string> = {
   generic: 'default', nginx: 'blue', apache: 'cyan', docker: 'teal', kubernetes: 'purple', database: 'orange', monitoring: 'green', system: 'volcano',
 };
 
 export default function ConfigTemplates() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ConfigTemplate[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -18,7 +32,7 @@ export default function ConfigTemplates() {
   const [modalOpen, setModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<ConfigTemplate | null>(null);
   const [form] = Form.useForm();
   const [variables, setVariables] = useState<string[]>([]);
 
@@ -66,7 +80,7 @@ export default function ConfigTemplates() {
     } catch { message.error('预览失败'); }
   };
 
-  const openEdit = (record: any) => {
+  const openEdit = (record: ConfigTemplate) => {
     setEditing(record);
     const vars = typeof record.variables === 'string' ? JSON.parse(record.variables || '[]') : (record.variables || []);
     setVariables(vars);
@@ -88,7 +102,7 @@ export default function ConfigTemplates() {
       return tags.map((tag: string) => <Tag key={tag}>{tag}</Tag>);
     }},
     { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 170 },
-    { title: '操作', key: 'action', width: 200, render: (_: any, record: any) => (
+    { title: '操作', key: 'action', width: 200, render: (_: unknown, record: ConfigTemplate) => (
       <Space>
         <Button type="link" size="small" icon={<Eye size={14} />} onClick={() => handlePreview(record.id)}>预览</Button>
         <Button type="link" size="small" icon={<Edit size={14} />} onClick={() => openEdit(record)}>编辑</Button>

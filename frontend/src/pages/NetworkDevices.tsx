@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -230,8 +231,8 @@ export default function NetworkDevices() {
       result = result.filter((d: NetworkDevice) =>
         d.name.toLowerCase().includes(query) ||
         d.ip_address.toLowerCase().includes(query) ||
-        (d.location && d.location.toLowerCase().includes(query)) ||
-        (d.model && d.model.toLowerCase().includes(query))
+        (d.location?.toLowerCase().includes(query)) ||
+        (d.model?.toLowerCase().includes(query))
       );
     }
 

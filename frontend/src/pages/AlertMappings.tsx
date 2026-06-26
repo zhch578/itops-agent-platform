@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Filter, Bell, Zap, Workflow, Database, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';

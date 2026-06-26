@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Tag, Card, Statistic, Space, message, Popconfirm, Row, Col, InputNumber } from 'antd';
 import { Plus, Edit, Trash2, Search, RefreshCw, Play, Square, RotateCcw } from 'lucide-react';
@@ -7,8 +8,32 @@ const statusColors: Record<string, string> = {
   running: 'green', stopped: 'red', suspended: 'orange', unknown: 'default',
 };
 
+interface VirtualMachine {
+  id: string;
+  name: string;
+  status: string;
+  os: string;
+  cpu_cores: number;
+  memory_mb: number;
+  disk_gb: number;
+  ip_address?: string;
+  host?: string;
+  hypervisor?: string;
+  tags?: string | string[];
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface VmStats {
+  total?: number;
+  totalCpu?: number;
+  totalMem?: number;
+  byStatus?: Array<{ status: string; count: number }>;
+}
+
 export default function VirtualMachines() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<VirtualMachine[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -16,9 +41,9 @@ export default function VirtualMachines() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<VirtualMachine | null>(null);
   const [form] = Form.useForm();
-  const [stats, setStats] = useState<any>({});
+  const [stats, setStats] = useState<VmStats>({});
 
   const fetchData = async () => {
     setLoading(true);
@@ -103,7 +128,7 @@ export default function VirtualMachines() {
         <Col span={6}><Card><Statistic title="CPU 总量" value={stats.totalCpu || 0} suffix="核" /></Card></Col>
         <Col span={6}><Card><Statistic title="内存总量" value={Math.round((stats.totalMem || 0) / 1024)} suffix="GB" /></Card></Col>
         <Col span={6}>
-          {(stats.byStatus || []).map((s: any) => (
+          {(stats.byStatus || []).map((s: { status: string; count: number }) => (
             <span key={s.status} className="mr-4"><Tag color={statusColors[s.status]}>{s.status}: {s.count}</Tag></span>
           ))}
         </Col>

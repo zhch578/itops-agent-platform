@@ -141,7 +141,7 @@ export default function ChatWidget() {
 
     if (!currentConversationId) {
       await createConversationMutation.mutateAsync().then((data) => {
-        if (data && data.success) {
+        if (data?.success) {
           sendMessageMutation.mutate({ conversationId: data.data.id, message });
         }
       });

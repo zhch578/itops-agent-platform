@@ -4,12 +4,24 @@ import { Search, RefreshCw, Play, Square, RotateCcw, Eye } from 'lucide-react';
 import { Input } from 'antd';
 import api from '../lib/api';
 
+interface Container {
+  id: string;
+  name: string;
+  container_id: string;
+  image: string;
+  status: string;
+  host?: string;
+  port_mappings?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const statusColors: Record<string, string> = {
   running: 'green', stopped: 'red', paused: 'orange', exited: 'default',
 };
 
 export default function Containers() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Container[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -17,7 +29,7 @@ export default function Containers() {
   const [search, setSearch] = useState('');
   const [hostFilter, setHostFilter] = useState('');
   const [detailVisible, setDetailVisible] = useState(false);
-  const [detailItem, setDetailItem] = useState<any>(null);
+  const [detailItem, setDetailItem] = useState<Container | null>(null);
   const [hosts, setHosts] = useState<string[]>([]);
 
   const fetchData = async () => {
@@ -31,7 +43,7 @@ export default function Containers() {
   };
 
   const fetchHosts = async () => {
-    try { const res = await api.get('/api/containers/hosts'); setHosts((res.data.data || []).map((h: any) => h.host)); } catch {}
+    try { const res = await api.get('/api/containers/hosts'); setHosts((res.data.data || []).map((h: { host: string }) => h.host)); } catch {}
   };
 
   useEffect(() => { fetchData(); }, [page, pageSize, search, hostFilter]);
@@ -53,7 +65,7 @@ export default function Containers() {
     } catch { message.error('操作失败'); }
   };
 
-  const showDetail = (record: any) => {
+  const showDetail = (record: Container) => {
     setDetailItem(record);
     setDetailVisible(true);
   };
@@ -67,7 +79,7 @@ export default function Containers() {
       const ports = typeof p === 'string' ? JSON.parse(p || '[]') : (p || []);
       return ports.join(', ');
     }, ellipsis: true },
-    { title: '操作', key: 'action', width: 220, render: (_: any, record: any) => (
+    { title: '操作', key: 'action', width: 220, render: (_: unknown, record: Container) => (
       <Space>
         <Button type="link" size="small" icon={<Eye size={14} />} onClick={() => showDetail(record)}>详情</Button>
         <Button type="link" size="small" icon={<Play size={14} />} style={{ color: '#52c41a' }} onClick={() => handleAction(record.id, 'start')}>启动</Button>

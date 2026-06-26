@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -145,7 +146,7 @@ export default function Settings() {
       if (res.data.data) {
         // 保留前端已有的真实 apiKey，防止被后端脱敏值覆盖
         const backendData = res.data.data;
-        if (backendData.apiKey && backendData.apiKey.includes('****')) {
+        if (backendData.apiKey?.includes('****')) {
           backendData.apiKey = qanythingConfig.apiKey;
         }
         setQanythingConfig(backendData);

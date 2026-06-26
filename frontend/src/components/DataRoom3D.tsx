@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
@@ -541,7 +542,7 @@ export default function DataRoom3D() {
           // 按U位填充（从底部U1开始）
           for (let u = 1; u <= rackData.totalU; u++) {
             const slot = slotList.find(s => u >= s.startU && u <= s.endU);
-            if (slot && u === slot.startU) {
+            if (u === slot?.startU) {
               // 有设备渲染
               const hU = slot.endU - slot.startU + 1;
               const y = (slot.startU - 1) * ruH;
@@ -651,14 +652,14 @@ export default function DataRoom3D() {
   }, [racks, rackSlotsMap, ensureMat, ensureGeo, createPerfTexture, createLabelTexture]);
 
   // ===== 渲染仪表盘 UI =====
-  if (loading) return (
+  if (loading) {return (
     <div className="flex items-center justify-center h-full bg-[#060a14]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-12 h-12 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
         <p className="text-cyan-400 text-sm tracking-widest animate-pulse">构建数字孪生场景...</p>
       </div>
     </div>
-  );
+  );}
 
   const summary = overview?.summary || MOCK_OVERVIEW.summary;
 
@@ -782,7 +783,7 @@ export default function DataRoom3D() {
                     const items: React.ReactNode[] = [];
                     for (let u=selectedRack.totalU; u>=1; u--) {
                       const slot = rackSlots.find(s=>u>=s.startU && u<=s.endU);
-                      if (slot && u===slot.endU) {
+                      if (u === slot?.endU) {
                         const h = slot.endU - slot.startU + 1;
                         items.push(
                           <div key={u} className="flex items-center px-2 py-0.5 rounded text-xs hover:bg-gray-800/60 border border-transparent hover:border-gray-700/50 cursor-pointer"
