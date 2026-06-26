@@ -55,6 +55,18 @@ const AiRemediations = lazy(() => import('./pages/AiRemediations'));
 const FrontendTests = lazy(() => import('./pages/FrontendTests'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// ===== 新增页面 =====
+const ConfigTemplates = lazy(() => import('./pages/ConfigTemplates'));
+const Containers = lazy(() => import('./pages/Containers'));
+const DataCenterManage = lazy(() => import('./pages/DataCenterManage'));
+const DataRoom = lazy(() => import('./pages/DataRoom'));
+const Images = lazy(() => import('./pages/Images'));
+const Networks = lazy(() => import('./pages/Networks'));
+const ToolLinks = lazy(() => import('./pages/ToolLinks'));
+const ToolLinksManage = lazy(() => import('./pages/ToolLinksManage'));
+const VirtualMachines = lazy(() => import('./pages/VirtualMachines'));
+const Volumes = lazy(() => import('./pages/Volumes'));
+
 // ==================== 加载占位 ====================
 function PageLoader() {
   return (
@@ -135,6 +147,16 @@ function App() {
                   <Route path="alert-correlation-groups" element={<SuspenseRoute><ProtectedRoute><AlertCorrelationGroupsPage /></ProtectedRoute></SuspenseRoute>} />
                   <Route path="approvals" element={<SuspenseRoute><ProtectedRoute><Approvals /></ProtectedRoute></SuspenseRoute>} />
                   <Route path="ai-remediations" element={<SuspenseRoute><ProtectedRoute><AiRemediations /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="config-templates" element={<SuspenseRoute><ProtectedRoute><ConfigTemplates /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="containers" element={<SuspenseRoute><ProtectedRoute><Containers /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="dc-manage" element={<SuspenseRoute><ProtectedRoute><DataCenterManage /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="data-room" element={<SuspenseRoute><ProtectedRoute><DataRoom /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="images" element={<SuspenseRoute><ProtectedRoute><Images /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="networks" element={<SuspenseRoute><ProtectedRoute><Networks /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="tool-links" element={<SuspenseRoute><ProtectedRoute><ToolLinks /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="tool-links-manage" element={<SuspenseRoute><ProtectedRoute><ToolLinksManage /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="virtual-machines" element={<SuspenseRoute><ProtectedRoute><VirtualMachines /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="volumes" element={<SuspenseRoute><ProtectedRoute><Volumes /></ProtectedRoute></SuspenseRoute>} />
                   </Route>
                   <Route path="*" element={<SuspenseRoute><NotFound /></SuspenseRoute>} />
                 </Routes>
