@@ -215,14 +215,14 @@ export default function RemediationDashboard() {
       },
       rejected: {
         text: '已拒绝',
-        className: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+        className: 'bg-slate-500/10 text-text-secondary border-slate-500/20',
         icon: <XCircle className="w-3.5 h-3.5" />,
       },
     };
 
     const item = config[status] || {
       text: status,
-      className: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+      className: 'bg-slate-500/10 text-text-secondary border-slate-500/20',
       icon: <AlertTriangle className="w-3.5 h-3.5" />,
     };
 
@@ -267,16 +267,16 @@ export default function RemediationDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-1">修复效果仪表盘</h1>
-            <p className="text-slate-400 text-sm">自动修复策略执行效果与统计分析</p>
+            <h1 className="text-2xl font-bold text-text-primary mb-1">修复效果仪表盘</h1>
+            <p className="text-text-secondary text-sm">自动修复策略执行效果与统计分析</p>
           </div>
-          <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-lg p-1">
+          <div className="flex items-center gap-2 bg-surface/50 border border-border rounded-lg p-1">
             <button
               onClick={() => setTrendPeriod('24h')}
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 trendPeriod === '24h'
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               最近24小时
@@ -286,7 +286,7 @@ export default function RemediationDashboard() {
               className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                 trendPeriod === '7d'
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               最近7天
@@ -296,23 +296,23 @@ export default function RemediationDashboard() {
 
         {/* Overall Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:border-blue-500/50 transition-all">
+          <div className="bg-surface/30 border border-border rounded-xl p-5 hover:border-blue-500/50 transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2.5 rounded-lg bg-blue-500/10">
                 <Shield className="w-5 h-5 text-blue-400" />
               </div>
               <TrendingUp className="w-5 h-5 text-green-400" />
             </div>
-            <div className="text-3xl font-bold text-white mb-1">
+            <div className="text-3xl font-bold text-text-primary mb-1">
               {loading ? '...' : remediationStats?.total_policies || 0}
             </div>
-            <div className="text-sm text-slate-400">总策略数</div>
+            <div className="text-sm text-text-secondary">总策略数</div>
             <div className="mt-2 text-xs text-green-400">
               {loading ? '' : `${remediationStats?.enabled_policies || 0} 个已启用`}
             </div>
           </div>
 
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:border-green-500/50 transition-all">
+          <div className="bg-surface/30 border border-border rounded-xl p-5 hover:border-green-500/50 transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2.5 rounded-lg bg-green-500/10">
                 <CheckCircle className="w-5 h-5 text-green-400" />
@@ -321,32 +321,32 @@ export default function RemediationDashboard() {
                 {stats.success_rate}%
               </span>
             </div>
-            <div className="text-3xl font-bold text-white mb-1">
+            <div className="text-3xl font-bold text-text-primary mb-1">
               {loading ? '...' : stats.total}
             </div>
-            <div className="text-sm text-slate-400">今日修复执行</div>
-            <div className="mt-2 text-xs text-slate-500">
+            <div className="text-sm text-text-secondary">今日修复执行</div>
+            <div className="mt-2 text-xs text-text-tertiary">
               成功 {stats.success} · 失败 {stats.failed}
             </div>
           </div>
 
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:border-purple-500/50 transition-all">
+          <div className="bg-surface/30 border border-border rounded-xl p-5 hover:border-purple-500/50 transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2.5 rounded-lg bg-purple-500/10">
                 <Clock className="w-5 h-5 text-purple-400" />
               </div>
               <Zap className="w-4 h-4 text-yellow-400" />
             </div>
-            <div className="text-3xl font-bold text-white mb-1">
+            <div className="text-3xl font-bold text-text-primary mb-1">
               {loading ? '...' : formatDuration(stats.avg_duration_ms)}
             </div>
-            <div className="text-sm text-slate-400">平均执行时间</div>
-            <div className="mt-2 text-xs text-slate-500">
+            <div className="text-sm text-text-secondary">平均执行时间</div>
+            <div className="mt-2 text-xs text-text-tertiary">
               今日已回滚 {stats.rolled_back} 次
             </div>
           </div>
 
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-5 hover:border-orange-500/50 transition-all">
+          <div className="bg-surface/30 border border-border rounded-xl p-5 hover:border-orange-500/50 transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="p-2.5 rounded-lg bg-orange-500/10">
                 <AlertCircle className="w-5 h-5 text-orange-400" />
@@ -357,11 +357,11 @@ export default function RemediationDashboard() {
                 </span>
               ) : null}
             </div>
-            <div className="text-3xl font-bold text-white mb-1">
+            <div className="text-3xl font-bold text-text-primary mb-1">
               {loading ? '...' : remediationStats?.waiting_approval || 0}
             </div>
-            <div className="text-sm text-slate-400">待审批</div>
-            <div className="mt-2 text-xs text-slate-500">
+            <div className="text-sm text-text-secondary">待审批</div>
+            <div className="mt-2 text-xs text-text-tertiary">
               等待人工确认
             </div>
           </div>
@@ -370,13 +370,13 @@ export default function RemediationDashboard() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Execution Trend */}
-          <div className="lg:col-span-2 bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+          <div className="lg:col-span-2 bg-surface/30 border border-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-400" />
                 执行趋势
               </h2>
-              <div className="flex items-center gap-4 text-xs text-slate-400">
+              <div className="flex items-center gap-4 text-xs text-text-secondary">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-400"></span>
                   成功
@@ -427,14 +427,14 @@ export default function RemediationDashboard() {
                           总数: {item.total}
                         </div>
                       </div>
-                      <span className="text-[10px] text-slate-500 mt-2 truncate w-full text-center">
+                      <span className="text-[10px] text-text-tertiary mt-2 truncate w-full text-center">
                         {label}
                       </span>
                     </div>
                   );
                 })
               ) : (
-                <div className="flex-1 flex items-center justify-center text-slate-500">
+                <div className="flex-1 flex items-center justify-center text-text-tertiary">
                   暂无执行数据
                 </div>
               )}
@@ -442,9 +442,9 @@ export default function RemediationDashboard() {
           </div>
 
           {/* Policy Success Rate Ranking */}
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+          <div className="bg-surface/30 border border-border rounded-xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                 <Activity className="w-5 h-5 text-green-400" />
                 策略成功率排行
               </h2>
@@ -454,7 +454,7 @@ export default function RemediationDashboard() {
                 sortedPoliciesBySuccessRate.map((policy, index) => (
                   <div
                     key={policy.id}
-                    className="p-3 rounded-lg bg-slate-900/50 hover:bg-slate-700/30 transition-all"
+                    className="p-3 rounded-lg bg-surface hover:bg-slate-700/30 transition-all"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -463,15 +463,15 @@ export default function RemediationDashboard() {
                             index === 0
                               ? 'bg-yellow-500/20 text-yellow-400'
                               : index === 1
-                              ? 'bg-slate-400/20 text-slate-300'
+                              ? 'bg-slate-400/20 text-text-primary'
                               : index === 2
                               ? 'bg-orange-500/20 text-orange-400'
-                              : 'bg-slate-700/50 text-slate-500'
+                              : 'bg-slate-700/50 text-text-tertiary'
                           }`}
                         >
                           {index + 1}
                         </span>
-                        <span className="text-sm text-white font-medium truncate max-w-[120px]">
+                        <span className="text-sm text-text-primary font-medium truncate max-w-[120px]">
                           {policy.name}
                         </span>
                       </div>
@@ -499,14 +499,14 @@ export default function RemediationDashboard() {
                         style={{ width: `${policy.stats.success_rate}%` }}
                       />
                     </div>
-                    <div className="flex items-center justify-between mt-1.5 text-xs text-slate-500">
+                    <div className="flex items-center justify-between mt-1.5 text-xs text-text-tertiary">
                       <span>触发 {policy.stats.total_triggers} 次</span>
                       <span>平均 {formatDuration(policy.stats.avg_duration_ms)}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-text-tertiary">
                   暂无策略执行数据
                 </div>
               )}
@@ -515,9 +515,9 @@ export default function RemediationDashboard() {
         </div>
 
         {/* Alert Source Stats */}
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+        <div className="bg-surface/30 border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-yellow-400" />
               按告警来源分组统计
             </h2>
@@ -532,22 +532,22 @@ export default function RemediationDashboard() {
                 return (
                   <div
                     key={source.source}
-                    className="p-4 rounded-lg bg-slate-900/50 border border-slate-700/30 hover:border-blue-500/30 transition-all"
+                    className="p-4 rounded-lg bg-surface border border-border/30 hover:border-blue-500/30 transition-all"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-medium text-white text-sm">{source.source}</h3>
-                      <span className="text-xs text-slate-400">
+                      <h3 className="font-medium text-text-primary text-sm">{source.source}</h3>
+                      <span className="text-xs text-text-secondary">
                         解决率 {resolveRate}%
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="text-center p-2 bg-slate-800/50 rounded">
-                        <div className="text-lg font-bold text-white">{source.total_alerts}</div>
-                        <div className="text-[10px] text-slate-500">总告警</div>
+                      <div className="text-center p-2 bg-surface/50 rounded">
+                        <div className="text-lg font-bold text-text-primary">{source.total_alerts}</div>
+                        <div className="text-[10px] text-text-tertiary">总告警</div>
                       </div>
                       <div className="text-center p-2 bg-green-500/5 rounded">
                         <div className="text-lg font-bold text-green-400">{source.resolved_alerts}</div>
-                        <div className="text-[10px] text-slate-500">已解决</div>
+                        <div className="text-[10px] text-text-tertiary">已解决</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
@@ -571,7 +571,7 @@ export default function RemediationDashboard() {
                 );
               })
             ) : (
-              <div className="col-span-3 text-center py-8 text-slate-500">
+              <div className="col-span-3 text-center py-8 text-text-tertiary">
                 暂无告警来源数据
               </div>
             )}
@@ -579,25 +579,25 @@ export default function RemediationDashboard() {
         </div>
 
         {/* Recent Executions */}
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+        <div className="bg-surface/30 border border-border/50 rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
               <ListChecks className="w-5 h-5 text-cyan-400" />
               最近修复执行记录
             </h2>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-text-secondary">
               共 {remediationStats?.recent_executions?.length || 0} 条
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700/50">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">执行ID</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">策略</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">告警</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">状态</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">执行时间</th>
+                <tr className="border-b border-border/50">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">执行ID</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">策略</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">告警</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">状态</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">执行时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -605,34 +605,34 @@ export default function RemediationDashboard() {
                   remediationStats.recent_executions.map((exec) => (
                     <tr
                       key={exec.id}
-                      className="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors"
+                      className="border-b border-border/30 hover:bg-slate-700/20 transition-colors"
                     >
                       <td className="py-3 px-4">
-                        <span className="text-xs text-slate-500 font-mono">
+                        <span className="text-xs text-text-tertiary font-mono">
                           {exec.id.slice(0, 8)}...
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <div className="text-sm text-white font-medium">{exec.policy_name}</div>
-                        <div className="text-xs text-slate-500">{exec.execution_mode}</div>
+                        <div className="text-sm text-text-primary font-medium">{exec.policy_name}</div>
+                        <div className="text-xs text-text-tertiary">{exec.execution_mode}</div>
                       </td>
                       <td className="py-3 px-4">
                         {exec.alert_title ? (
                           <div>
-                            <div className="text-sm text-slate-300 truncate max-w-[200px]">
+                            <div className="text-sm text-text-primary truncate max-w-[200px]">
                               {exec.alert_title}
                             </div>
                             {getSeverityBadge(exec.alert_severity)}
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-500">-</span>
+                          <span className="text-xs text-text-tertiary">-</span>
                         )}
                       </td>
                       <td className="py-3 px-4">
                         {getStatusBadge(exec.status)}
                       </td>
                       <td className="py-3 px-4">
-                        <span className="text-sm text-slate-400">
+                        <span className="text-sm text-text-secondary">
                           {formatDistanceToNow(parseISO(exec.created_at), { addSuffix: true })}
                         </span>
                       </td>
@@ -640,7 +640,7 @@ export default function RemediationDashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-500">
+                    <td colSpan={5} className="py-8 text-center text-text-tertiary">
                       暂无执行记录
                     </td>
                   </tr>

@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
+import { ConfigProvider, theme as antdTheme } from 'antd';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/layout/Layout';
@@ -55,6 +56,26 @@ const AiRemediations = lazy(() => import('./pages/AiRemediations'));
 const FrontendTests = lazy(() => import('./pages/FrontendTests'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// ===== 新增页面 =====
+const ConfigTemplates = lazy(() => import('./pages/ConfigTemplates'));
+const Containers = lazy(() => import('./pages/Containers'));
+const ContainerMonitor = lazy(() => import('./pages/ContainerMonitor'));
+const ContainerLogs = lazy(() => import('./pages/ContainerLogs'));
+const DataCenterManage = lazy(() => import('./pages/DataCenterManage'));
+const DataRoom = lazy(() => import('./pages/DataRoom'));
+const Images = lazy(() => import('./pages/Images'));
+const Networks = lazy(() => import('./pages/Networks'));
+const ToolLinks = lazy(() => import('./pages/ToolLinks'));
+const ToolLinksManage = lazy(() => import('./pages/ToolLinksManage'));
+const VirtualMachines = lazy(() => import('./pages/VirtualMachines'));
+const Volumes = lazy(() => import('./pages/Volumes'));
+const ComposeEditor = lazy(() => import('./pages/ComposeEditor'));
+const SnapshotPolicies = lazy(() => import('./pages/SnapshotPolicies'));
+const ImageRegistry = lazy(() => import('./pages/ImageRegistry'));
+const Kubernetes = lazy(() => import('./pages/Kubernetes'));
+const CostAnalysis = lazy(() => import('./pages/CostAnalysis'));
+const AutoScale = lazy(() => import('./pages/AutoScale'));
+
 // ==================== 加载占位 ====================
 function PageLoader() {
   return (
@@ -71,6 +92,23 @@ function SuspenseRoute({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
+function ThemedConfigProvider({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+  return (
+    <ConfigProvider
+      theme={{
+        algorithm: theme === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#3b82f6',
+          borderRadius: 6,
+        },
+      }}
+    >
+      {children}
+    </ConfigProvider>
+  );
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -84,10 +122,11 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <QueryClientProvider client={queryClient}>
-              <BrowserRouter>
+        <ThemedConfigProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <QueryClientProvider client={queryClient}>
+                <BrowserRouter>
                 <Routes>
                   <Route path="/login" element={<SuspenseRoute><Login /></SuspenseRoute>} />
                   <Route path="/force-password-change" element={<SuspenseRoute><ProtectedRoute><ForcePasswordChange /></ProtectedRoute></SuspenseRoute>} />
@@ -135,6 +174,24 @@ function App() {
                   <Route path="alert-correlation-groups" element={<SuspenseRoute><ProtectedRoute><AlertCorrelationGroupsPage /></ProtectedRoute></SuspenseRoute>} />
                   <Route path="approvals" element={<SuspenseRoute><ProtectedRoute><Approvals /></ProtectedRoute></SuspenseRoute>} />
                   <Route path="ai-remediations" element={<SuspenseRoute><ProtectedRoute><AiRemediations /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="config-templates" element={<SuspenseRoute><ProtectedRoute><ConfigTemplates /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="containers" element={<SuspenseRoute><ProtectedRoute><Containers /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="container-monitor" element={<SuspenseRoute><ProtectedRoute><ContainerMonitor /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="container-logs" element={<SuspenseRoute><ProtectedRoute><ContainerLogs /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="dc-manage" element={<SuspenseRoute><ProtectedRoute><DataCenterManage /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="data-room" element={<SuspenseRoute><ProtectedRoute><DataRoom /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="images" element={<SuspenseRoute><ProtectedRoute><Images /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="networks" element={<SuspenseRoute><ProtectedRoute><Networks /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="tool-links" element={<SuspenseRoute><ProtectedRoute><ToolLinks /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="tool-links-manage" element={<SuspenseRoute><ProtectedRoute><ToolLinksManage /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="virtual-machines" element={<SuspenseRoute><ProtectedRoute><VirtualMachines /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="volumes" element={<SuspenseRoute><ProtectedRoute><Volumes /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="compose" element={<SuspenseRoute><ProtectedRoute><ComposeEditor /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="snapshot-policies" element={<SuspenseRoute><ProtectedRoute><SnapshotPolicies /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="image-registry" element={<SuspenseRoute><ProtectedRoute><ImageRegistry /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="kubernetes" element={<SuspenseRoute><ProtectedRoute><Kubernetes /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="cost-analysis" element={<SuspenseRoute><ProtectedRoute><CostAnalysis /></ProtectedRoute></SuspenseRoute>} />
+                  <Route path="auto-scale" element={<SuspenseRoute><ProtectedRoute><AutoScale /></ProtectedRoute></SuspenseRoute>} />
                   </Route>
                   <Route path="*" element={<SuspenseRoute><NotFound /></SuspenseRoute>} />
                 </Routes>
@@ -142,8 +199,9 @@ function App() {
             </QueryClientProvider>
           </ToastProvider>
         </AuthProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+      </ThemedConfigProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
   );
 }
 

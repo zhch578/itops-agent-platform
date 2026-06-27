@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -96,20 +97,20 @@ const ApprovalNode = ({ data, selected }: { data: any; selected: boolean }) => {
     <div
       className={`
         px-4 py-3 rounded-lg shadow-md border-2 min-w-[200px]
-        ${selected ? 'border-orange-500 bg-orange-500/10 ring-2 ring-orange-500/30' : 'border-orange-400 bg-orange-50'}
+        ${selected ? 'border-orange-500 bg-orange-500/15 ring-2 ring-orange-500/30' : 'border-orange-500/50 bg-orange-500/10'}
         transition-all duration-200
       `}
     >
       <Handle type="target" position={Position.Left} className="w-3 h-3 bg-orange-500" />
       <div className="flex items-center gap-2 mb-2">
-        <Shield className="w-6 h-6 text-orange-600" />
+        <Shield className="w-6 h-6 text-orange-400" />
         <span className="font-semibold text-text-primary text-sm">{data.label || '审批节点'}</span>
       </div>
       {data.description && (
         <div className="text-xs text-text-secondary mb-2 line-clamp-2">{data.description}</div>
       )}
       {data.approvalConfig && (
-        <div className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded border border-orange-200">
+        <div className="text-xs text-orange-300 bg-orange-500/15 px-2 py-1 rounded border border-orange-500/30">
           ⏱️ 超时: {data.approvalConfig.timeout || 3600}秒
         </div>
       )}
@@ -156,6 +157,9 @@ function WorkflowEditorContent() {
       return res.data.data;
     },
     enabled: !!id && id !== 'new',
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Save history for undo/redo
@@ -168,8 +172,10 @@ function WorkflowEditorContent() {
   }, [nodes, edges, history, historyIndex]);
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (workflow) {
+    if (workflow && !initializedRef.current) {
+      initializedRef.current = true;
       setName(workflow.name);
       setDescription(workflow.description);
       setIsTemplate(workflow.is_template === 1);
@@ -608,10 +614,10 @@ function WorkflowEditorContent() {
                   event.dataTransfer.setData('application/reactflow/nodeType', 'approval');
                   event.dataTransfer.effectAllowed = 'move';
                 }}
-                className="p-3 rounded-lg border border-orange-400 bg-orange-50 hover:border-orange-500 hover:bg-orange-100 cursor-move transition-all"
+                className="p-3 rounded-lg border border-orange-500/40 bg-orange-500/10 hover:border-orange-500 hover:bg-orange-500/15 cursor-move transition-all"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Shield className="w-5 h-5 text-orange-600" />
+                  <Shield className="w-5 h-5 text-orange-400" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-text-primary text-sm">审批节点</div>
                     <div className="text-xs text-text-secondary">人工确认</div>

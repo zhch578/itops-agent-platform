@@ -19,7 +19,12 @@ const router = Router();
 router.get('/', (_req: Request, res: Response) => {
   try {
     const tasks = db.prepare(`
-      SELECT st.*, w.name as workflow_name
+      SELECT st.id, st.name, st.description, st.workflow_id,
+             st.schedule, st.schedule as cron_expression,
+             st.enabled, st.last_run, st.last_run as last_run_at,
+             st.next_run, st.next_run as next_run_at,
+             st.last_status, st.context, st.created_at, st.updated_at,
+             w.name as workflow_name
       FROM scheduled_tasks st
       LEFT JOIN workflows w ON st.workflow_id = w.id
       ORDER BY st.created_at DESC
@@ -34,7 +39,12 @@ router.get('/:id', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const task = db.prepare(`
-      SELECT st.*, w.name as workflow_name
+      SELECT st.id, st.name, st.description, st.workflow_id,
+             st.schedule, st.schedule as cron_expression,
+             st.enabled, st.last_run, st.last_run as last_run_at,
+             st.next_run, st.next_run as next_run_at,
+             st.last_status, st.context, st.created_at, st.updated_at,
+             w.name as workflow_name
       FROM scheduled_tasks st
       LEFT JOIN workflows w ON st.workflow_id = w.id
       WHERE st.id = ?
@@ -52,11 +62,13 @@ router.get('/:id', (req: Request, res: Response) => {
 
 router.post('/', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
-    const { name, description, workflow_id, schedule, enabled = 1 } = req.body;
+    const { name, description, workflow_id, schedule, cron_expression, enabled = 1 } = req.body;
     
-    if (!name || !schedule) {
+    if (!name || (!schedule && !cron_expression)) {
       return res.status(400).json({ success: false, error: 'Name and cron expression are required' });
     }
+    
+    const taskSchedule = schedule || cron_expression;
     
     if (workflow_id) {
       const workflow = db.prepare('SELECT id FROM workflows WHERE id = ?').get(workflow_id);
@@ -71,7 +83,7 @@ router.post('/', requireRole('admin', 'operator'), (req: Request, res: Response)
     db.prepare(`
       INSERT INTO scheduled_tasks (id, name, description, workflow_id, schedule, enabled, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, name, description || null, workflow_id || null, schedule, enabled ? 1 : 0, now, now);
+    `).run(id, name, description || null, workflow_id || null, taskSchedule, enabled ? 1 : 0, now, now);
     
     // 如果启用，则立即调度任务
     if (enabled) {
@@ -80,7 +92,7 @@ router.post('/', requireRole('admin', 'operator'), (req: Request, res: Response)
         name,
         description,
         workflow_id,
-        schedule,
+        schedule: taskSchedule,
         enabled: 1
       });
     }
@@ -102,7 +114,7 @@ router.post('/', requireRole('admin', 'operator'), (req: Request, res: Response)
 router.put('/:id', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, workflow_id, schedule, enabled } = req.body;
+    const { name, description, workflow_id, schedule, cron_expression, enabled } = req.body;
     
     const task = db.prepare('SELECT * FROM scheduled_tasks WHERE id = ?').get(id);
     if (!task) {
@@ -131,9 +143,9 @@ router.put('/:id', requireRole('admin', 'operator'), (req: Request, res: Respons
       updates.push('workflow_id = ?');
       params.push(workflow_id);
     }
-    if (schedule) {
+    if (schedule || cron_expression) {
       updates.push('schedule = ?');
-      params.push(schedule);
+      params.push(schedule || cron_expression);
     }
     if (enabled !== undefined) {
       updates.push('enabled = ?');

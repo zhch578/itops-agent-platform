@@ -102,51 +102,51 @@ export default function AIInsights() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-auto p-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">AI 洞察</h2>
-          <p className="text-slate-400 text-sm">基于 AI 分析的系统运维洞察和统计</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-1">AI 洞察</h2>
+          <p className="text-text-secondary text-sm">基于 AI 分析的系统运维洞察和统计</p>
         </div>
 
         {isLoading ? (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
+          <div className="text-center py-12 text-text-secondary">加载中...</div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
               {statsCards.map((card, index) => (
-                <div key={index} className={`bg-gradient-to-br ${card.color} border border-slate-700/50 rounded-xl p-4`}>
+                <div key={index} className={`bg-gradient-to-br ${card.color} border border-border rounded-xl p-4`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-slate-400">{card.icon}</span>
-                    <span className="text-xs text-slate-500">{card.trend}</span>
+                    <span className="text-text-secondary">{card.icon}</span>
+                    <span className="text-xs text-text-tertiary">{card.trend}</span>
                   </div>
-                  <div className="text-2xl font-bold text-white mb-1">{card.value}</div>
-                  <div className="text-sm text-slate-400">{card.title}</div>
+                  <div className="text-2xl font-bold text-text-primary mb-1">{card.value}</div>
+                  <div className="text-sm text-text-secondary">{card.title}</div>
                 </div>
               ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="bg-surface/30 border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-blue-400" />
                   告警严重程度分布
                 </h3>
                 <div className="space-y-3">
                   {severityDistribution.map((item, index) => (
                     <div key={index} className="flex items-center gap-3">
-                      <span className="text-sm text-slate-400 w-12">{item.level}</span>
-                      <div className="flex-1 bg-slate-700/30 rounded-full h-6 overflow-hidden">
+                      <span className="text-sm text-text-secondary w-12">{item.level}</span>
+                      <div className="flex-1 bg-border/30 rounded-full h-6 overflow-hidden">
                         <div
                           className={`${item.color} h-full rounded-full transition-all duration-500`}
                           style={{ width: `${(item.count / maxCount) * 100}%` }}
                         />
                       </div>
-                      <span className="text-sm text-white w-8 text-right">{item.count}</span>
+                      <span className="text-sm text-text-primary w-8 text-right">{item.count}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="bg-surface/30 border border-border rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-cyan-400" />
                   知识库分类分布
                 </h3>
@@ -154,42 +154,42 @@ export default function AIInsights() {
                   <div className="space-y-3">
                     {topCategories.map(([cat, count], index) => (
                       <div key={index} className="flex items-center gap-3">
-                        <span className="text-sm text-slate-400 w-20 truncate">{cat}</span>
-                        <div className="flex-1 bg-slate-700/30 rounded-full h-6 overflow-hidden">
+                        <span className="text-sm text-text-secondary w-20 truncate">{cat}</span>
+                        <div className="flex-1 bg-border/30 rounded-full h-6 overflow-hidden">
                           <div
                             className="bg-cyan-500 h-full rounded-full transition-all duration-500"
                             style={{ width: `${(count / maxCategoryCount) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm text-white w-8 text-right">{count}</span>
+                        <span className="text-sm text-text-primary w-8 text-right">{count}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-slate-500">暂无数据</div>
+                  <div className="text-center py-8 text-text-tertiary">暂无数据</div>
                 )}
               </div>
             </div>
 
-            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-700/50">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+            <div className="bg-surface/30 border border-border rounded-xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-border/50">
+                <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-400" />
                   最近洞察
                 </h3>
               </div>
               {completedRCAs.length > 0 ? (
-                <div className="divide-y divide-slate-700/30">
+                <div className="divide-y divide-border/30">
                   {completedRCAs.slice(0, 10).map((rca: any) => (
-                    <div key={rca.id} className="px-6 py-4 hover:bg-slate-700/20 transition-colors">
+                    <div key={rca.id} className="px-6 py-4 hover:bg-border/20 transition-colors">
                       <div className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm text-white font-medium truncate">{rca.title}</div>
+                          <div className="text-sm text-text-primary font-medium truncate">{rca.title}</div>
                           {rca.root_cause && (
-                            <div className="text-xs text-slate-400 mt-1 line-clamp-2">{rca.root_cause}</div>
+                            <div className="text-xs text-text-secondary mt-1 line-clamp-2">{rca.root_cause}</div>
                           )}
-                          <div className="text-xs text-slate-500 mt-2">
+                          <div className="text-xs text-text-tertiary mt-2">
                             {new Date(rca.created_at).toLocaleString('zh-CN', {
                               month: '2-digit',
                               day: '2-digit',
@@ -203,7 +203,7 @@ export default function AIInsights() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-slate-500">暂无洞察数据</div>
+                <div className="text-center py-12 text-text-tertiary">暂无洞察数据</div>
               )}
             </div>
           </>

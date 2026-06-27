@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { X, CheckCircle2, AlertCircle, Loader2, Key, Lock, User, Radio, Shield } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -162,7 +163,7 @@ export default function AddDeviceModal({ device, onClose, onSuccess }: AddDevice
     
     if (useCredential && formData.ssh_key_id) {
       const selectedCred = credentials.find((c: Credential) => c.id === formData.ssh_key_id);
-      if (selectedCred && selectedCred.auth_type === 'password') {
+      if (selectedCred?.auth_type === 'password') {
         testUsername = selectedCred.username || '';
         toast.info('使用凭证测试连接需要保存后执行');
         return;

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Bot, GitBranch, Play, Bell, TrendingUp, TrendingDown, Minus, Clock, Server, BookOpen, Zap, Activity, Shield } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import { safeFormatDistance } from '../lib/date';
 
@@ -49,36 +50,33 @@ interface Knowledge {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const quickActions = [
     {
-      name: '系统巡检',
-      description: '快速检查服务器状态',
+      id: 'systemInspection',
       icon: Activity,
       color: 'text-blue-600',
       bg: 'bg-blue-600/10',
       action: () => navigate('/workflows'),
     },
     {
-      name: '执行脚本',
-      description: '运行常用运维脚本',
+      id: 'executeScript',
       icon: Zap,
       color: 'text-purple-600',
       bg: 'bg-purple-600/10',
       action: () => navigate('/scripts'),
     },
     {
-      name: '安全检查',
-      description: '执行安全合规检查',
+      id: 'securityCheck',
       icon: Shield,
       color: 'text-green-600',
       bg: 'bg-green-600/10',
       action: () => navigate('/workflows'),
     },
     {
-      name: '查看告警',
-      description: '查看最新系统告警',
+      id: 'viewAlerts',
       icon: Bell,
       color: 'text-red-600',
       bg: 'bg-red-600/10',
@@ -144,42 +142,42 @@ export default function Dashboard() {
 
   const stats = [
     {
-      name: '服务器',
+      id: 'servers',
       value: servers?.length || 0,
       icon: Server,
       color: 'text-purple-500',
       bg: 'bg-purple-500/10',
     },
     {
-      name: 'Agent总数',
+      id: 'agents',
       value: agents?.length || 0,
       icon: Bot,
       color: 'text-blue-500',
       bg: 'bg-blue-500/10',
     },
     {
-      name: '工作流模板',
+      id: 'workflowTemplates',
       value: workflows?.filter((w) => w.is_template === 1).length || 0,
       icon: GitBranch,
       color: 'text-green-500',
       bg: 'bg-green-500/10',
     },
     {
-      name: '运行中任务',
+      id: 'runningTasks',
       value: tasks?.filter((t) => t.status === 'running').length || 0,
       icon: Play,
       color: 'text-yellow-500',
       bg: 'bg-yellow-500/10',
     },
     {
-      name: '活跃告警',
+      id: 'activeAlerts',
       value: alerts?.filter((a) => a.status === 'new').length || 0,
       icon: Bell,
       color: 'text-red-500',
       bg: 'bg-red-500/10',
     },
     {
-      name: '知识库',
+      id: 'knowledge',
       value: knowledge?.length || 0,
       icon: BookOpen,
       color: 'text-cyan-500',
@@ -192,8 +190,8 @@ export default function Dashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary mb-2">仪表盘</h1>
-            <p className="text-text-secondary">IT运维多Agent自动化平台概览</p>
+            <h1 className="text-2xl font-bold text-text-primary mb-2">{t('dashboard.title')}</h1>
+            <p className="text-text-secondary">{t('dashboard.subtitle')}</p>
           </div>
           <a
             href="https://www.zjzwfw.cloud/"
@@ -201,7 +199,7 @@ export default function Dashboard() {
             rel="noopener noreferrer"
             className="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors font-medium text-sm"
           >
-            访问官网
+            {t('dashboard.visitWebsite')}
           </a>
         </div>
 
@@ -219,211 +217,54 @@ export default function Dashboard() {
             ))}
           </div>
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stats.map((stat) => (
-            <div
-              key={stat.name}
-              className="bg-surface rounded-xl p-6 border border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg ${stat.bg}`}>
-                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
-                {(() => {
-                  const TrendIcon = stat.value > 5 ? TrendingUp : stat.value === 0 ? TrendingDown : Minus;
-                  const trendColor = stat.value > 5 ? 'text-status-success' : stat.value === 0 ? 'text-status-failed' : 'text-text-secondary';
-                  return <TrendIcon className={`w-5 h-5 ${trendColor}`} />;
-                })()}
-              </div>
-              <h3 className="text-3xl font-bold text-text-primary mb-1">
-                {stat.value}
-              </h3>
-              <p className="text-sm text-text-secondary">{stat.name}</p>
-            </div>
-          ))}
-        </div>
-        )}
-
-        <div className="bg-surface rounded-xl p-6 border border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-              <Zap className="w-5 h-5 text-primary" />
-              一键执行
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => (
-              <button
-                key={action.name}
-                onClick={action.action}
-                className="p-4 rounded-xl bg-background hover:bg-background/80 border border-border hover:border-primary/50 transition-all text-left group"
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+          {/* 左侧：6个统计卡片 */}
+          <div className="lg:col-span-4 grid grid-cols-3 gap-3">
+            {stats.map((stat) => (
+              <div
+                key={stat.id}
+                className="bg-surface rounded-lg px-3 py-3 border border-border hover:border-primary/50 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => {
+                  if (stat.id === 'servers') navigate('/servers');
+                  else if (stat.id === 'agents') navigate('/agents');
+                  else if (stat.id === 'workflowTemplates') navigate('/workflows');
+                  else if (stat.id === 'runningTasks') navigate('/tasks');
+                  else if (stat.id === 'activeAlerts') navigate('/alerts');
+                  else if (stat.id === 'knowledge') navigate('/knowledge');
+                }}
               >
-                <div className={`w-12 h-12 rounded-lg ${action.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                  <action.icon className={`w-6 h-6 ${action.color}`} />
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className={`p-1.5 rounded-md ${stat.bg}`}>
+                    <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+                  </div>
+                  <span className="text-[11px] text-text-tertiary">{t(`dashboard.${stat.id}`)}</span>
                 </div>
-                <h3 className="font-semibold text-text-primary mb-1">{action.name}</h3>
-                <p className="text-sm text-text-secondary">{action.description}</p>
-              </button>
+                <p className="text-xl font-bold text-text-primary">{stat.value}</p>
+              </div>
             ))}
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-surface rounded-xl p-6 border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                <Server className="w-5 h-5 text-purple-500" />
-                服务器
+          {/* 右侧：最新告警 */}
+          <div className="lg:col-span-3 bg-surface rounded-xl p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                <Bell className="w-4 h-4 text-red-500" />
+                {t('dashboard.latestAlerts')}
               </h2>
-              <Link to="/servers" className="text-sm text-primary hover:underline">
-                查看全部
+              <Link to="/alerts" className="text-xs text-primary hover:underline">
+                {t('dashboard.viewAll')} →
               </Link>
             </div>
-            <div className="space-y-3">
-              {(Array.isArray(servers) ? servers : []).slice(0, 5).map((server) => (
-                <div
-                  key={server.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-background hover:bg-background/80 transition-all"
-                >
-                  <div className={`p-2 rounded-lg ${server.enabled ? 'bg-purple-500/10' : 'bg-status-failed/10'}`}>
-                    <Server className={`w-5 h-5 ${server.enabled ? 'text-purple-500' : 'text-text-secondary'}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-text-primary">{server.name}</h3>
-                    <p className="text-sm text-text-secondary">{server.hostname}</p>
-                  </div>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      server.enabled
-                        ? 'bg-status-success/10 text-status-success'
-                        : 'bg-status-failed/10 text-status-failed'
-                    }`}
-                  >
-                    {server.enabled ? '启用' : '禁用'}
-                  </span>
-                </div>
-              ))}
-              {!servers || servers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="p-4 rounded-xl bg-surface border border-border mb-3">
-                    <Server className="w-8 h-8 text-text-secondary opacity-50" />
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">暂无服务器</p>
-                  <p className="text-xs text-text-tertiary mb-3">添加服务器以开始管理</p>
-                  <button
-                    onClick={() => navigate('/servers')}
-                    className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs hover:bg-primary/20 transition-colors"
-                  >
-                    前往服务器管理
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-          
-          <div className="bg-surface rounded-xl p-6 border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                <Bot className="w-5 h-5 text-primary" />
-                在线Agent
-              </h2>
-              <Link to="/agents" className="text-sm text-primary hover:underline">
-                查看全部
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {agents?.slice(0, 5).map((agent) => (
-                <div
-                  key={agent.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-background hover:bg-background/80 transition-all"
-                >
-                  <span className="text-2xl">{agent.avatar}</span>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-text-primary">{agent.name}</h3>
-                    <p className="text-sm text-text-secondary">{agent.role}</p>
-                  </div>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      agent.enabled
-                        ? 'bg-status-success/10 text-status-success'
-                        : 'bg-status-failed/10 text-status-failed'
-                    }`}
-                  >
-                    {agent.enabled ? '在线' : '离线'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-surface rounded-xl p-6 border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-cyan-500" />
-                知识库
-              </h2>
-              <Link to="/knowledge" className="text-sm text-primary hover:underline">
-                查看全部
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {knowledge?.slice(0, 5).map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-background/80 transition-all"
-                >
-                  <div className="p-2 rounded-lg bg-cyan-500/10">
-                    <BookOpen className="w-4 h-4 text-cyan-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-text-primary truncate">{item.title}</h3>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs text-text-secondary">{item.category}</span>
-                      <span className="text-xs text-status-success">
-                        {item.usage_count || 0} 次使用
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {!knowledge || knowledge.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="p-4 rounded-xl bg-surface border border-border mb-3">
-                    <BookOpen className="w-8 h-8 text-text-secondary opacity-50" />
-                  </div>
-                  <p className="text-sm text-text-secondary mb-2">暂无知识条目</p>
-                  <p className="text-xs text-text-tertiary mb-3">添加运维知识以便快速查阅</p>
-                  <button
-                    onClick={() => navigate('/knowledge')}
-                    className="px-3 py-1.5 bg-cyan-500/10 text-cyan-500 rounded-lg text-xs hover:bg-cyan-500/20 transition-colors"
-                  >
-                    前往知识库
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-          
-          <div className="bg-surface rounded-xl p-6 border border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                <Bell className="w-5 h-5 text-red-500" />
-                最新告警
-              </h2>
-              <Link to="/alerts" className="text-sm text-primary hover:underline">
-                查看全部
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {alerts?.slice(0, 5).map((alert) => (
+            <div className="space-y-2">
+              {alerts?.slice(0, 6).map((alert) => (
                 <div
                   key={alert.id}
-                  className="p-3 rounded-lg bg-background hover:bg-background/80 transition-all"
+                  className="p-2.5 rounded-lg bg-background hover:bg-background/80 transition-all"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-medium text-text-primary text-sm">{alert.title}</h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-medium text-text-primary text-xs leading-tight truncate">{alert.title}</h3>
                     <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex-shrink-0 ${
                         alert.severity === 'critical'
                           ? 'bg-status-failed/10 text-status-failed'
                           : alert.severity === 'high'
@@ -434,41 +275,172 @@ export default function Dashboard() {
                       {alert.severity}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-text-secondary">
+                  <div className="flex items-center gap-1.5 text-[10px] text-text-secondary mt-1">
                     <Clock className="w-3 h-3" />
                     {safeFormatDistance(alert.created_at)}
                   </div>
                 </div>
               ))}
+              {!alerts || alerts.length === 0 ? (
+                <div className="text-center py-6 text-text-secondary text-xs">{t('dashboard.noAlerts')}</div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        )}
+
+        <div className="bg-surface rounded-xl p-5 border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-text-primary flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              {t('dashboard.quickActions')}
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {quickActions.map((action) => (
+              <button
+                key={action.id}
+                onClick={action.action}
+                className="p-3 rounded-xl bg-background hover:bg-background/80 border border-border hover:border-primary/50 transition-all text-left group"
+              >
+                <div className={`w-10 h-10 rounded-lg ${action.bg} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
+                  <action.icon className={`w-5 h-5 ${action.color}`} />
+                </div>
+                <h3 className="font-semibold text-text-primary text-sm mb-0.5">{t(`dashboard.${action.id}`)}</h3>
+                <p className="text-xs text-text-secondary">{t(`dashboard.${action.id}Desc`)}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="bg-surface rounded-xl p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                <Server className="w-4 h-4 text-purple-500" />
+                {t('dashboard.servers')}
+              </h2>
+              <Link to="/servers" className="text-xs text-primary hover:underline">{t('dashboard.viewAll')}</Link>
+            </div>
+            <div className="space-y-2">
+              {(Array.isArray(servers) ? servers : []).slice(0, 5).map((server) => (
+                <div
+                  key={server.id}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-background hover:bg-background/80 transition-all"
+                >
+                  <div className={`p-1.5 rounded-md ${server.enabled ? 'bg-purple-500/10' : 'bg-status-failed/10'}`}>
+                    <Server className={`w-4 h-4 ${server.enabled ? 'text-purple-500' : 'text-text-secondary'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-text-primary text-xs truncate">{server.name}</h3>
+                    <p className="text-[10px] text-text-secondary truncate">{server.hostname}</p>
+                  </div>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      server.enabled
+                        ? 'bg-status-success/10 text-status-success'
+                        : 'bg-status-failed/10 text-status-failed'
+                    }`}
+                  >
+                    {server.enabled ? t('dashboard.enabled') : t('dashboard.disabled')}
+                  </span>
+                </div>
+              ))}
+              {!servers || servers.length === 0 ? (
+                <div className="text-center py-6 text-text-secondary text-xs">{t('dashboard.noServers')}</div>
+              ) : null}
+            </div>
+          </div>
+          
+          <div className="bg-surface rounded-xl p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                <Bot className="w-4 h-4 text-primary" />
+                {t('dashboard.onlineAgents')}
+              </h2>
+              <Link to="/agents" className="text-xs text-primary hover:underline">{t('dashboard.viewAll')}</Link>
+            </div>
+            <div className="space-y-2">
+              {agents?.slice(0, 5).map((agent) => (
+                <div
+                  key={agent.id}
+                  className="flex items-center gap-2 p-2 rounded-lg bg-background hover:bg-background/80 transition-all"
+                >
+                  <span className="text-lg">{agent.avatar}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-text-primary text-xs">{agent.name}</h3>
+                    <p className="text-[10px] text-text-secondary">{agent.role}</p>
+                  </div>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                      agent.enabled
+                        ? 'bg-status-success/10 text-status-success'
+                        : 'bg-status-failed/10 text-status-failed'
+                    }`}
+                  >
+                    {agent.enabled ? t('dashboard.online') : t('dashboard.offline')}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="bg-surface rounded-xl p-6 border border-border lg:col-span-3">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-                <Play className="w-5 h-5 text-green-500" />
-                最近任务
+          <div className="bg-surface rounded-xl p-4 border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-cyan-500" />
+                {t('dashboard.knowledge')}
               </h2>
-              <Link to="/tasks" className="text-sm text-primary hover:underline">
-                查看全部
-              </Link>
+              <Link to="/knowledge" className="text-xs text-primary hover:underline">{t('dashboard.viewAll')}</Link>
+            </div>
+            <div className="space-y-2">
+              {knowledge?.slice(0, 5).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start gap-2 p-2 rounded-lg bg-background hover:bg-background/80 transition-all"
+                >
+                  <div className="p-1.5 rounded-md bg-cyan-500/10">
+                    <BookOpen className="w-3.5 h-3.5 text-cyan-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-text-primary text-xs truncate">{item.title}</h3>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-[10px] text-text-secondary">{item.category}</span>
+                      <span className="text-[10px] text-status-success">{item.usage_count || 0}{t('dashboard.timesUsed')}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!knowledge || knowledge.length === 0 ? (
+                <div className="text-center py-6 text-text-secondary text-xs">{t('dashboard.noKnowledge')}</div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="bg-surface rounded-xl p-4 border border-border lg:col-span-3">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                <Play className="w-4 h-4 text-green-500" />
+                {t('dashboard.recentTasks')}
+              </h2>
+              <Link to="/tasks" className="text-xs text-primary hover:underline">{t('dashboard.viewAll')}</Link>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-sm text-text-secondary border-b border-border">
-                    <th className="pb-3 font-medium">任务名称</th>
-                    <th className="pb-3 font-medium">状态</th>
-                    <th className="pb-3 font-medium">执行时间</th>
+                  <tr className="text-left text-xs text-text-secondary border-b border-border">
+                    <th className="pb-2 font-medium">{t('dashboard.taskName')}</th>
+                    <th className="pb-2 font-medium">{t('dashboard.status')}</th>
+                    <th className="pb-2 font-medium">{t('dashboard.executionTime')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tasks?.map((task) => (
                     <tr key={task.id} className="border-b border-border/50 hover:bg-background/50">
-                      <td className="py-3 text-text-primary">{task.name}</td>
-                      <td className="py-3">
+                      <td className="py-2 text-text-primary text-xs">{task.name}</td>
+                      <td className="py-2">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                             task.status === 'completed'
                               ? 'bg-status-success/10 text-status-success'
                               : task.status === 'running'
@@ -481,7 +453,7 @@ export default function Dashboard() {
                           {task.status}
                         </span>
                       </td>
-                      <td className="py-3 text-sm text-text-secondary">
+                      <td className="py-2 text-xs text-text-secondary">
                         {safeFormatDistance(task.created_at)}
                       </td>
                     </tr>

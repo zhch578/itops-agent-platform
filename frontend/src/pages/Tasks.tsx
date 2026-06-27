@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { io, Socket } from 'socket.io-client';
+import { useSearchParams } from 'react-router-dom';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { Play, Pause, XCircle, Clock, CheckCircle, XCircle as XIcon, FileText, Activity, List, FileCheck } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import clsx from 'clsx';
@@ -33,6 +36,8 @@ interface Workflow {
 
 export default function Tasks() {
   const { token } = useAuth();
+  const [searchParams] = useSearchParams();
+  const taskIdFromQuery = searchParams.get('taskId');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [executingNodeId, setExecutingNodeId] = useState<string | null>(null);
   const [taskLogs, setTaskLogs] = useState<any[]>([]);
@@ -311,6 +316,15 @@ export default function Tasks() {
     setSelectedTask(parsedTask);
     setTaskLogs(parsedLogs);
   };
+
+  useEffect(() => {
+    if (!taskIdFromQuery || !tasks || selectedTask?.id === taskIdFromQuery) return;
+
+    const task = tasks.find((item) => item.id === taskIdFromQuery);
+    if (task) {
+      handleSelectTask(task);
+    }
+  }, [taskIdFromQuery, selectedTask?.id, tasks]);
 
   const pauseMutation = useMutation({
     mutationFn: async (taskId: string) => {
@@ -688,7 +702,7 @@ export default function Tasks() {
                                       </div>
                                     </div>
                                   )}
-                                  {result.metadata && result.metadata.executionTime && (
+                                  {result.metadata?.executionTime && (
                                     <div className="mt-3 pt-3 border-t border-border">
                                       <p className="text-xs text-text-secondary">
                                         执行时间: {new Date(result.metadata.executionTime).toLocaleString()}

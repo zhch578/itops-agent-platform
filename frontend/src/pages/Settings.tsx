@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, Database, Shield, Loader2, CheckCircle2, AlertCircle, Sun, Moon, Lock, BookOpen, Upload, FileText, Globe, Wifi, Brain, Eye, EyeOff } from 'lucide-react';
+import { Bell, Database, Shield, Loader2, CheckCircle2, AlertCircle, Sun, Moon, Lock, BookOpen, Upload, FileText, Globe, Wifi, Brain, Eye, EyeOff, Languages } from 'lucide-react';
 import clsx from 'clsx';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { validatePassword, getPasswordStrength } from '../utils/passwordValidator';
@@ -17,6 +19,7 @@ interface Backup {
 }
 
 export default function Settings() {
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('models');
   const queryClient = useQueryClient();
@@ -145,7 +148,7 @@ export default function Settings() {
       if (res.data.data) {
         // 保留前端已有的真实 apiKey，防止被后端脱敏值覆盖
         const backendData = res.data.data;
-        if (backendData.apiKey && backendData.apiKey.includes('****')) {
+        if (backendData.apiKey?.includes('****')) {
           backendData.apiKey = qanythingConfig.apiKey;
         }
         setQanythingConfig(backendData);
@@ -497,19 +500,19 @@ export default function Settings() {
   });
 
   const tabs = [
-    { id: 'models', name: 'AI模型管理', icon: Brain },
-    { id: 'qanything', name: '知识库', icon: BookOpen },
-    { id: 'notifications', name: '通知设置', icon: Bell },
-    { id: 'database', name: '数据库', icon: Database },
-    { id: 'security', name: '安全设置', icon: Shield },
+    { id: 'models', name: t('settings.models'), icon: Brain },
+    { id: 'qanything', name: t('dashboard.knowledge'), icon: BookOpen },
+    { id: 'notifications', name: t('settings.monitoring'), icon: Bell },
+    { id: 'database', name: t('settings.backup'), icon: Database },
+    { id: 'security', name: t('settings.security'), icon: Shield },
   ];
 
   return (
     <div className="h-full overflow-auto p-6">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary mb-2">设置</h1>
-          <p className="text-text-secondary">配置系统参数和API密钥</p>
+          <h1 className="text-2xl font-bold text-text-primary mb-2">{t('settings.title')}</h1>
+          <p className="text-text-secondary">{t('settings.languageDesc')}</p>
         </div>
 
         <div className="bg-surface rounded-xl border border-border overflow-hidden">
@@ -1528,9 +1531,26 @@ export default function Settings() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-background rounded-lg">
                       <div>
-                        <h4 className="font-medium text-text-primary">主题设置</h4>
+                        <h4 className="font-medium text-text-primary">{t('settings.language')}</h4>
                         <p className="text-sm text-text-secondary">
-                          选择深色或浅色主题
+                          {t('settings.languageDesc')}
+                        </p>
+                      </div>
+                      <select
+                        value={i18n.language}
+                        onChange={(e) => i18n.changeLanguage(e.target.value)}
+                        className="px-4 py-2 bg-surface border border-border rounded-lg text-text-primary focus:outline-none focus:border-primary text-sm"
+                      >
+                        <option value="zh-CN">中文</option>
+                        <option value="en">English</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-background rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-text-primary">{t('settings.theme')}</h4>
+                        <p className="text-sm text-text-secondary">
+                          {t('settings.themeDesc')}
                         </p>
                       </div>
                       <button

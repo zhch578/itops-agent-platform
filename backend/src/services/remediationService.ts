@@ -241,8 +241,8 @@ class RemediationService {
 
   private severityMatches(policySeverity: string | null, alertSeverity: string | undefined): boolean {
     if (!policySeverity) return true;
-    const pr = this.severityRank.get(policySeverity) ?? 0;
-    const ar = this.severityRank.get(alertSeverity ?? '') ?? 0;
+    const pr = this.severityRank.get(policySeverity.toLowerCase()) ?? 0;
+    const ar = this.severityRank.get((alertSeverity ?? '').toLowerCase()) ?? 0;
     // 策略要求 severity >= X，告警的 severity 也要 >= X
     // 例: policy=warning(2) 匹配 alert=high(3) 或 warning(2) 或 medium(2)
     //     policy=high(3) 只匹配 alert=critical(4)/high(3)
@@ -251,19 +251,26 @@ class RemediationService {
   }
 
   async matchAlertToPolicies(alert: { id: string; source: string; severity?: string; title?: string; content?: string; tags?: string[] }): Promise<RemediationPolicy[]> {
+    const normalizedAlert = {
+      ...alert,
+      source: (alert.source || 'unknown').toLowerCase(),
+      severity: alert.severity?.toLowerCase(),
+      tags: (alert.tags || []).map(tag => tag.toLowerCase())
+    };
+
     // 1. 先精确匹配 source（zabbix/prometheus/...）
-    const specificPolicies = this._matchBySource(alert);
+    const specificPolicies = this._matchBySource(normalizedAlert);
     if (specificPolicies.length > 0) return specificPolicies;
 
     // 2. 没有匹配 → 降级到 source=null 的通用策略
-    const fallbackPolicies = this._matchBySource({ ...alert, source: '__any__' });
+    const fallbackPolicies = this._matchBySource({ ...normalizedAlert, source: '__any__' });
     return fallbackPolicies;
   }
 
   private _matchBySource(alert: { id: string; source: string; severity?: string; title?: string; content?: string; tags?: string[] }): RemediationPolicy[] {
     const policies = db.prepare(`
       SELECT * FROM remediation_policies
-      WHERE enabled = 1 AND (alert_source = ? OR alert_source = '*')
+      WHERE enabled = 1 AND (LOWER(alert_source) = ? OR alert_source = '*')
       ORDER BY
         CASE
           WHEN alert_source = ? THEN 0 ELSE 1
@@ -281,9 +288,10 @@ class RemediationService {
 
     return policies.filter(policy => {
       // 通配符匹配：策略的 alert_source 为 '*' 时匹配任意告警 source
-      if (!policy.alert_source || policy.alert_source === '*') {
+      const policySource = policy.alert_source?.toLowerCase();
+      if (!policySource || policySource === '*') {
         // 通配符，不按 source 过滤
-      } else if (policy.alert_source !== alert.source) {
+      } else if (policySource !== alert.source) {
         return false;
       }
 
@@ -293,6 +301,9 @@ class RemediationService {
       }
 
       // 关键词匹配
+      let keywordMatched = !policy.alert_keywords;
+      let tagMatched = !policy.alert_tags;
+
       if (policy.alert_keywords) {
         try {
           const keywords = JSON.parse(policy.alert_keywords) as string[];
@@ -301,9 +312,7 @@ class RemediationService {
             return true;
           }
           const alertText = `${alert.title || ''} ${alert.content || ''}`.toLowerCase();
-          if (!keywords.some(kw => alertText.includes(kw.toLowerCase()))) {
-            return false;
-          }
+          keywordMatched = keywords.some(kw => alertText.includes(kw.toLowerCase()));
         } catch {
           logger.warn(`Invalid alert_keywords JSON in policy ${policy.id}`);
           return false;
@@ -318,16 +327,14 @@ class RemediationService {
             return true;
           }
           const alertTags = alert.tags || [];
-          if (!tags.some(t => alertTags.includes(t))) {
-            return false;
-          }
+          tagMatched = tags.some(t => alertTags.includes(t.toLowerCase()));
         } catch {
           logger.warn(`Invalid alert_tags JSON in policy ${policy.id}`);
           return false;
         }
       }
 
-      return true;
+      return keywordMatched || tagMatched;
     });
   }
 

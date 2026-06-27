@@ -7,7 +7,11 @@ import path from 'path';
 import fs from 'fs';
 
 const router = Router();
-const upload = multer({ dest: '/tmp/itops-uploads/' });
+const uploadDir = path.resolve(process.env.UPLOAD_DIR || './data/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+const upload = multer({ dest: uploadDir });
 
 router.get('/status', requireRole('admin'), (req: Request, res: Response) => {
   try {

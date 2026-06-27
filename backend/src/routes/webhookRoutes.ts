@@ -19,6 +19,7 @@ import {
 } from '../services/alertSourceAdapters';
 import { alertDeviceResolver } from '../services/alertDeviceResolver';
 import { alertAutoAnalyzer } from '../services/alertAutoAnalyzer';
+import { alertWorkflowMappingService } from '../services/alertWorkflowMappingService';
 import { emitToAlerts } from '../websocket/handler';
 import { validateBody } from '../middleware/validation';
 import { z } from 'zod';
@@ -119,66 +120,6 @@ function verifyWebhookSignature(req: Request, source: string): boolean {
   );
 }
 
-function findAndTriggerWorkflow(alertId: string, source: string, severity: string, title: string): string | null {
-  try {
-    const mappings = db.prepare(`
-      SELECT * FROM alert_workflow_mappings
-      WHERE enabled = 1
-      AND (alert_source = ? OR alert_source IS NULL)
-      AND (alert_severity = ? OR alert_severity IS NULL)
-    `).all(source, severity);
-
-    const matchingMappings = (mappings as Array<{ alert_title_pattern?: string; workflow_id: string }>).filter(mapping => {
-      if (!mapping.alert_title_pattern) return true;
-      try {
-        return title.includes(mapping.alert_title_pattern);
-      } catch {
-        return false;
-      }
-    });
-
-    if (matchingMappings.length > 0) {
-      const mapping = matchingMappings[0];
-      const taskId = randomUUID();
-      const now = new Date().toISOString();
-
-      db.prepare(`
-        INSERT INTO tasks (id, workflow_id, name, status, created_at, initial_input, related_alert_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        taskId,
-        mapping.workflow_id,
-        `自动处理告警: ${title.substring(0, 50)}`,
-        'pending',
-        now,
-        JSON.stringify({ alertId, source, severity, title }),
-        alertId
-      );
-
-      db.prepare('UPDATE alerts SET related_task_id = ? WHERE id = ?').run(taskId, alertId);
-
-      createAuditLog({
-        action: 'auto_trigger_workflow',
-        resource_type: 'task',
-        resource_id: taskId,
-        details: { alertId, workflowId: mapping.workflow_id },
-      });
-
-      const io = getIOInstance();
-      if (io) {
-        io.emit('task:created', { id: taskId, name: `自动处理告警: ${title}`, workflowId: mapping.workflow_id });
-      }
-
-      return taskId;
-    }
-
-    return null;
-  } catch (error) {
-    logger.error('Error triggering workflow:', error);
-    return null;
-  }
-}
-
 function processNormalizedAlert(
   alert: NormalizedAlert,
   sourceLabel: string
@@ -247,6 +188,7 @@ function processNormalizedAlert(
         id,
         source: alert.source,
         severity,
+        rawSeverity: alert.raw_severity,
         title,
         content: alert.content,
         tags: [] as string[],
@@ -284,6 +226,17 @@ function processNormalizedAlert(
       }
 
       // ── 修复策略执行 ──
+      const mappingTask = alertWorkflowMappingService.triggerFirstMatchingWorkflow(alertForMatching);
+      if (mappingTask && io) {
+        emitToAlerts(io, 'remediation:result', {
+          alertId: id,
+          policyId: mappingTask.mappingId,
+          policyName: `告警映射: ${mappingTask.workflowName}`,
+          executionId: mappingTask.taskId,
+          status: 'task_created',
+          timestamp: new Date().toISOString()
+        });
+      }
       const matchedPolicies = await remediationService.matchAlertToPolicies(alertForMatching);
       for (const policy of matchedPolicies) {
         logger.info(`🔧 [Webhook] 匹配到修复策略: ${policy.name}, 自动触发...`);
@@ -337,7 +290,7 @@ function processNormalizedAlert(
     action: 'alert_received',
     resource_type: 'alert',
     resource_id: id,
-    details: { source: alert.source, severity, title, executionIds },
+    details: { source: alert.source, severity, rawSeverity: alert.raw_severity, title, executionIds },
   });
 
   if (io) {
@@ -535,6 +488,16 @@ router.post('/tencent', (req: Request, res: Response) => {
 router.post('/auto', (req: Request, res: Response) => {
   const startTime = Date.now();
   try {
+    if (!verifyWebhookSignature(req, 'auto')) {
+      createAuditLog({
+        action: 'webhook_signature_failed',
+        resource_type: 'webhook',
+        details: { source: 'auto', ip: req.ip },
+      });
+      logWebhookInvocation('auto', 'error', 0, 0, 'Invalid signature', req, Date.now() - startTime);
+      return res.status(401).json({ success: false, error: 'Invalid webhook signature' });
+    }
+
     const detectedType = detectSourceType(req.body);
     logger.info(`Auto-detected alert source: ${detectedType}`);
 

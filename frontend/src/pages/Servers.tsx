@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -2403,7 +2404,7 @@ ${serverInfo.disk_gb ? `磁盘大小：${serverInfo.disk_gb}GB` : ''}
         )}
         {isDeleteConfirmOpen && pendingDeleteServer && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]" onClick={() => { setIsDeleteConfirmOpen(false); setPendingDeleteServer(null); }}>
-            <div className="bg-gradient-to-br from-slate-800/70 to-slate-900/70 backdrop-blur-xl rounded-xl p-6 w-full max-w-md mx-4 border border-red-500/20" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gradient-to-br from-surface/70 to-background/70 backdrop-blur-xl rounded-xl p-6 w-full max-w-md mx-4 border border-red-500/20" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
                 删除服务器

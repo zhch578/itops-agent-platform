@@ -75,11 +75,34 @@ import { setServerInstances } from './services/restartService';
 import { checkDbskiterAvailability } from './services/dbskiterService';
 import { timeoutApproval } from './services/workflowExecutor';
 import { queueService } from './services/queueService';
+import { alertAutoResponseService } from './services/alertAutoResponse/alertAutoResponseService';
+import { dockerService } from './services/dockerService';
+import { configTemplateService } from './services/configTemplateService';
 import importExportRouter from './routes/importExportRoutes';
 import alertAutoRouter from './routes/alertAutoRoutes';
 import linkageRouter from './routes/linkageRoutes';
 import networkDiscoveryRouter from './routes/networkDiscoveryRoutes';
 import alertCorrelationRouter from './routes/alertCorrelationRoutes';
+import alertAutoResponseRoutes from './routes/alertAutoResponseRoutes';
+import configRepairRoutes from './routes/configRepairRoutes';
+import configTemplateRoutes from './routes/configTemplateRoutes';
+import containerRoutes from './routes/containerRoutes';
+import monitorRoutes from './routes/monitorRoutes';
+import multiHostRoutes from './routes/multiHostRoutes';
+import dcInfrastructureRoutes from './routes/dcInfrastructureRoutes';
+import dockerRoutes from './routes/dockerRoutes';
+import imageRoutes from './routes/imageRoutes';
+import toolLinkRoutes from './routes/toolLinkRoutes';
+import virtualMachineRoutes from './routes/virtualMachineRoutes';
+import vmManagementRoutes from './routes/vmManagementRoutes';
+import volumeRoutes from './routes/volumeRoutes';
+import composeRoutes from './routes/composeRoutes';
+import snapshotPolicyRoutes from './routes/snapshotPolicyRoutes';
+import registryRoutes from './routes/registryRoutes';
+import kubernetesRoutes from './routes/kubernetesRoutes';
+import autoScaleRoutes from './routes/autoScaleRoutes';
+import costAnalysisRoutes from './routes/costAnalysisRoutes';
+import vmMigrationRoutes from './routes/vmMigrationRoutes';
 
 const app = express();
 const httpServer = createServer(app);
@@ -153,6 +176,17 @@ async function initializeApp() {
   
   // Initialize alert correlation service
   alertCorrelationService.start();
+  
+  // Initialize alert auto-response service (adaptive alert handling)
+  alertAutoResponseService.start();
+  
+  // Initialize Docker service connection
+  dockerService.init().catch((err: Error) => {
+    logger.warn('Docker service initialization failed (non-fatal)', err);
+  });
+  
+  // Initialize config template service
+  configTemplateService.init();
   
   initTokenBlacklist();
   startCircuitBreakerCleanup();
@@ -269,6 +303,27 @@ app.use('/api', rateLimiter, alertAutoRouter);
 app.use('/api', rateLimiter, linkageRouter);
 app.use('/api', rateLimiter, networkDiscoveryRouter);
 app.use('/api', rateLimiter, alertCorrelationRouter);
+app.use('/api/alert-auto-response', rateLimiter, alertAutoResponseRoutes);
+app.use('/api/config-repair', rateLimiter, configRepairRoutes);
+app.use('/api/config-templates', rateLimiter, configTemplateRoutes);
+app.use('/api/containers', rateLimiter, containerRoutes);
+app.use('/api/docker-monitor', rateLimiter, monitorRoutes);
+app.use('/api/docker-endpoints', rateLimiter, multiHostRoutes);
+app.use('/api/dc', rateLimiter, dcInfrastructureRoutes);
+app.use('/api/dc-infrastructure', rateLimiter, dcInfrastructureRoutes);
+app.use('/api/docker', rateLimiter, dockerRoutes);
+app.use('/api/images', rateLimiter, imageRoutes);
+app.use('/api/tool-links', rateLimiter, toolLinkRoutes);
+app.use('/api/virtual-machines', rateLimiter, virtualMachineRoutes);
+app.use('/api/vm-management', rateLimiter, vmManagementRoutes);
+app.use('/api/volumes', rateLimiter, volumeRoutes);
+app.use('/api/compose', rateLimiter, composeRoutes);
+app.use('/api/snapshot-policies', rateLimiter, snapshotPolicyRoutes);
+app.use('/api/registries', rateLimiter, registryRoutes);
+app.use('/api/kubernetes', rateLimiter, kubernetesRoutes);
+app.use('/api/auto-scale', rateLimiter, autoScaleRoutes);
+app.use('/api/cost-analysis', rateLimiter, costAnalysisRoutes);
+app.use('/api/vm-migrations', rateLimiter, vmMigrationRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

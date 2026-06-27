@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 type ThemeType = 'dark' | 'light';
 
@@ -19,9 +20,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     if (theme === 'light') {
       root.setAttribute('data-theme', 'light');
+      root.classList.remove('dark');
       document.body.style.background = '#f8fafc';
     } else {
       root.removeAttribute('data-theme');
+      root.classList.add('dark');
       document.body.style.background = 'linear-gradient(135deg, #0f172a 0%, #020617 100%)';
     }
     localStorage.setItem('theme', theme);

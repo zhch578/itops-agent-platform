@@ -326,7 +326,7 @@ export default function SSHKeys() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold text-white/95">{key.name}</h3>
+                        <h3 className="truncate text-sm font-semibold text-text-primary/95">{key.name}</h3>
                         <span className={clsx('inline-flex shrink-0 items-center px-1.5 py-0.5 text-[10px] font-semibold rounded',
                           getKeyTypeColor(key.key_type, key.auth_type)
                         )}>

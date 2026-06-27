@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { ArrowLeft, MonitorPlay, PowerOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { clsx } from 'clsx';
@@ -123,8 +124,8 @@ export default function RemoteDesktop() {
           <div class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-300">
             <div class="text-center">
               <p class="mb-2 text-lg">VNC 连接已建立</p>
-              <p class="text-sm text-gray-500 mb-4">服务器: ${config.hostname}:${config.vnc_port}</p>
-              <p class="text-xs text-gray-600">完整 noVNC 集成需要安装 @novnc/novnc 包</p>
+              <p class="text-sm text-text-tertiary mb-4">服务器: ${config.hostname}:${config.vnc_port}</p>
+              <p class="text-xs text-text-tertiary">完整 noVNC 集成需要安装 @novnc/novnc 包</p>
             </div>
           </div>
         `;

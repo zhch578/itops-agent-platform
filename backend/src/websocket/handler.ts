@@ -5,6 +5,8 @@ import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 import db from '../models/database';
 import { terminalService } from '../services/terminalService';
+import { containerMonitorService } from '../services/containerMonitorService';
+import { containerLogService } from '../services/containerLogService';
 import type { User } from '../types';
 
 interface SocketWithUser extends Socket {
@@ -48,6 +50,9 @@ function authenticateSocket(socket: Socket, next: (err?: Error) => void) {
 }
 
 export function setupWebSocket(io: SocketIOServer) {
+  containerMonitorService.setIO(io);
+  containerLogService.setIO(io);
+
   io.use(authenticateSocket);
 
   io.on('connection', (socket: Socket) => {
@@ -76,6 +81,40 @@ export function setupWebSocket(io: SocketIOServer) {
     socket.on('alert:subscribe', () => {
       socket.join('alerts');
       logger.info(`🔔 Client ${socket.id} subscribed to alerts`);
+    });
+
+    // 容器监控订阅
+    socket.on('container:subscribe', (data: { containerId: string }) => {
+      socket.join(`container:${data.containerId}`);
+      containerMonitorService.startMonitoring(data.containerId);
+      logger.info(`📊 Client ${socket.id} subscribed to container ${data.containerId}`);
+    });
+
+    // 容器监控取消订阅
+    socket.on('container:unsubscribe', (data: { containerId: string }) => {
+      socket.leave(`container:${data.containerId}`);
+      logger.info(`📊 Client ${socket.id} unsubscribed from container ${data.containerId}`);
+    });
+
+    // 容器日志订阅
+    socket.on('container:log:subscribe', (data: { containerId: string; tail?: number; timestamps?: boolean }, callback: (result: { roomId: string }) => void) => {
+      const roomId = `log:${socket.id}:${data.containerId}:${Date.now()}`;
+      socket.join(roomId);
+      containerLogService.startLogStream(roomId, data.containerId, {
+        tail: data.tail,
+        timestamps: data.timestamps,
+      }).catch((err: Error) => {
+        logger.error(`Failed to start log stream for ${data.containerId}:`, err.message);
+      });
+      callback({ roomId });
+      logger.info(`📜 Client ${socket.id} subscribed to logs of container ${data.containerId} (room: ${roomId})`);
+    });
+
+    // 容器日志取消订阅
+    socket.on('container:log:unsubscribe', (data: { roomId: string }) => {
+      socket.leave(data.roomId);
+      containerLogService.stopLogStream(data.roomId);
+      logger.info(`📜 Client ${socket.id} unsubscribed from log room ${data.roomId}`);
     });
 
     socket.on('terminal:open', async (data: { serverId: string; cols: number; rows: number }, callback: (result: { sessionId?: string; error?: string }) => void) => {

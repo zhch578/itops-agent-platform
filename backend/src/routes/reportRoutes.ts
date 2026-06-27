@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import db from '../models/database';
 import { reportService } from '../services/reportService';
+import { requireRole } from '../middleware/auth';
 
 const router = Router();
 
@@ -42,7 +43,7 @@ router.post('/templates', (req: Request, res: Response) => {
   }
 });
 
-router.put('/templates/:id', (req: Request, res: Response) => {
+router.put('/templates/:id', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
     const { name, description, content, variables } = req.body;
     const template = reportService.updateTemplate(req.params.id, {
@@ -60,7 +61,7 @@ router.put('/templates/:id', (req: Request, res: Response) => {
   }
 });
 
-router.delete('/templates/:id', (req: Request, res: Response) => {
+router.delete('/templates/:id', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
     const deleted = reportService.deleteTemplate(req.params.id);
     if (!deleted) {
@@ -175,7 +176,7 @@ router.get('/:id', (req: Request, res: Response) => {
   }
 });
 
-router.post('/generate', (req: Request, res: Response) => {
+router.post('/generate', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
     const { templateId, variables, format } = req.body;
     const report = reportService.generateReport(templateId, variables, format);
@@ -214,7 +215,7 @@ router.post('/scheduled', (req: Request, res: Response) => {
   }
 });
 
-router.put('/scheduled/:id', (req: Request, res: Response) => {
+router.put('/scheduled/:id', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
     const { name, template_id, cron_expression, enabled, recipients, format } = req.body;
     const report = reportService.updateScheduledReport(req.params.id, {
@@ -234,7 +235,7 @@ router.put('/scheduled/:id', (req: Request, res: Response) => {
   }
 });
 
-router.delete('/scheduled/:id', (req: Request, res: Response) => {
+router.delete('/scheduled/:id', requireRole('admin', 'operator'), (req: Request, res: Response) => {
   try {
     const deleted = reportService.deleteScheduledReport(req.params.id);
     if (!deleted) {

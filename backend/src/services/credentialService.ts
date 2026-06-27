@@ -221,6 +221,31 @@ export class CredentialService {
   }
 
   /**
+   * 加密凭证（供 vmManagement 等模块调用）
+   * 返回加密后的密文和 IV（组合格式）
+   */
+  encryptCredential(plaintext: string): { encrypted: string; iv: string } {
+    if (!this.initialized) this.init();
+    const combined = this.encrypt(plaintext);
+    // 格式: iv:authTag:ciphertext，提取 iv 和完整密文
+    const parts = combined.split(':');
+    return {
+      encrypted: combined,
+      iv: parts[0] || '',
+    };
+  }
+
+  /**
+   * 解密凭证（供 vmManagement 等模块调用）
+   * @param encrypted 加密后的完整密文（iv:authTag:ciphertext 格式）
+   * @param iv 未使用，保留参数兼容性
+   */
+  decryptCredential(encrypted: string, iv?: string): string {
+    if (!this.initialized) this.init();
+    return this.decrypt(encrypted);
+  }
+
+  /**
    * List all configured providers with masked values
    */
   listProviders(): Array<{ provider: string; configured: boolean; masked?: string; createdAt: string }> {

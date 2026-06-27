@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -226,7 +227,7 @@ export default function DbConnections() {
     mysql: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     postgresql: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     oracle: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    sqlite: 'bg-slate-500/20 text-slate-400 border-slate-500/30'
+    sqlite: 'bg-slate-500/20 text-text-secondary border-slate-500/30'
   };
 
   return (
@@ -235,11 +236,11 @@ export default function DbConnections() {
         {/* 头部 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-3">
               <Database className="w-7 h-7 text-blue-400" />
               数据库管理
             </h1>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-sm text-text-secondary mt-1">
               管理数据库连接配置，供数据库运维 Agent 调用 dbskiter 使用
             </p>
           </div>
@@ -260,13 +261,13 @@ export default function DbConnections() {
             { label: '已禁用', value: connections?.filter(c => !c.enabled).length || 0, icon: X, color: 'red' },
             { label: 'MySQL', value: connections?.filter(c => c.db_type === 'mysql').length || 0, icon: Server, color: 'amber' }
           ].map((stat, i) => (
-            <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4">
+            <div key={i} className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4">
               <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center', `bg-${stat.color}-500/20 text-${stat.color}-400`)}>
                 <stat.icon className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-xs text-slate-400">{stat.label}</div>
+                <div className="text-2xl font-bold text-text-primary">{stat.value}</div>
+                <div className="text-xs text-text-secondary">{stat.label}</div>
               </div>
             </div>
           ))}
@@ -274,13 +275,13 @@ export default function DbConnections() {
 
         {/* 搜索 */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
           <input
             type="text"
             placeholder="搜索名称、主机、数据库类型..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
         </div>
 
@@ -290,7 +291,7 @@ export default function DbConnections() {
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
+          <div className="text-center py-16 text-text-secondary">
             <Database className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p>暂无数据库连接</p>
             <p className="text-sm mt-1">点击上方"添加连接"按钮创建</p>
@@ -301,8 +302,8 @@ export default function DbConnections() {
               <div
                 key={conn.id}
                 className={clsx(
-                  'bg-slate-800/50 border rounded-xl p-5 transition-all hover:bg-slate-800/80 hover:scale-[1.01]',
-                  conn.enabled ? 'border-slate-700/50' : 'border-red-500/20 opacity-60'
+                  'bg-surface border rounded-xl p-5 transition-all hover:bg-slate-800/80 hover:scale-[1.01]',
+                  conn.enabled ? 'border-border' : 'border-red-500/20 opacity-60'
                 )}
               >
                 <div className="flex items-start justify-between">
@@ -312,12 +313,12 @@ export default function DbConnections() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-white">{conn.name}</h3>
+                        <h3 className="font-semibold text-text-primary">{conn.name}</h3>
                         {!conn.enabled && (
                           <span className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 rounded-full border border-red-500/20">已禁用</span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-text-secondary mt-0.5">
                         {conn.db_type}://{conn.host}:{conn.port}/{conn.database}
                       </p>
                     </div>
@@ -341,10 +342,10 @@ export default function DbConnections() {
                 </div>
 
                 {conn.description && (
-                  <p className="text-sm text-slate-400 mt-3 line-clamp-1">{conn.description}</p>
+                  <p className="text-sm text-text-secondary mt-3 line-clamp-1">{conn.description}</p>
                 )}
 
-                <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
+                <div className="flex items-center gap-4 mt-3 text-xs text-text-tertiary">
                   <span className="flex items-center gap-1">
                     <Server className="w-3 h-3" />
                     {conn.host}:{conn.port}
@@ -367,14 +368,14 @@ export default function DbConnections() {
       {/* 创建/编辑模态框 */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl w-full max-w-lg border border-slate-700/50 shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-700/30 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-xl font-bold text-white">
+          <div className="bg-surface backdrop-blur-xl rounded-2xl w-full max-w-lg border border-border shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-border/30 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-xl font-bold text-text-primary">
                 {editingConn ? '编辑数据库连接' : '添加数据库连接'}
               </h2>
               <button
                 onClick={() => { setIsModalOpen(false); setEditingConn(null); resetForm(); }}
-                className="p-2 hover:bg-slate-700/50 rounded-xl text-slate-400 hover:text-white transition-all"
+                className="p-2 hover:bg-slate-700/50 rounded-xl text-text-secondary hover:text-text-primary transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -382,23 +383,23 @@ export default function DbConnections() {
 
             <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">连接名称 *</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">连接名称 *</label>
                 <input
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="例如：生产环境MySQL"
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">数据库类型 *</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">数据库类型 *</label>
                   <select
                     value={formData.db_type}
                     onChange={(e) => setFormData({ ...formData, db_type: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   >
                     <option value="mysql">MySQL</option>
                     <option value="postgresql">PostgreSQL</option>
@@ -407,53 +408,53 @@ export default function DbConnections() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">端口 *</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">端口 *</label>
                   <input
                     type="number"
                     required
                     value={formData.port}
                     onChange={(e) => setFormData({ ...formData, port: Number(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">主机地址 *</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">主机地址 *</label>
                   <input
                     required
                     value={formData.host}
                     onChange={(e) => setFormData({ ...formData, host: e.target.value })}
                     placeholder="127.0.0.1"
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">数据库名 *</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">数据库名 *</label>
                   <input
                     required
                     value={formData.database}
                     onChange={(e) => setFormData({ ...formData, database: e.target.value })}
                     placeholder="数据库名称"
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">用户名 *</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">用户名 *</label>
                   <input
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="root"
-                    className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     {editingConn ? '密码（留空不修改）' : '密码 *'}
                   </label>
                   <div className="relative">
@@ -463,12 +464,12 @@ export default function DbConnections() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder={editingConn ? '••••••' : '请输入密码'}
-                      className="w-full px-4 py-2.5 pr-10 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      className="w-full px-4 py-2.5 pr-10 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-all"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary transition-all"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -477,23 +478,23 @@ export default function DbConnections() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">描述</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">描述</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="可选，填写连接用途说明"
                   rows={2}
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
+                  className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">标签（逗号分隔）</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">标签（逗号分隔）</label>
                 <input
                   value={formData.tags}
                   onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                   placeholder="prod, mysql, business"
-                  className="w-full px-4 py-2.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full px-4 py-2.5 bg-surface border border-border rounded-xl text-text-primary focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
@@ -505,15 +506,15 @@ export default function DbConnections() {
                   onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
                   className="w-4 h-4 rounded border-slate-600 text-blue-500 focus:ring-blue-500/50"
                 />
-                <label htmlFor="enabled" className="text-sm text-slate-300">启用连接</label>
+                <label htmlFor="enabled" className="text-sm text-text-primary">启用连接</label>
               </div>
             </form>
 
-            <div className="p-6 border-t border-slate-700/30 flex gap-3 flex-shrink-0">
+            <div className="p-6 border-t border-border/30 flex gap-3 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => { setIsModalOpen(false); setEditingConn(null); resetForm(); }}
-                className="flex-1 px-4 py-2.5 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700/70 transition-all font-medium border border-slate-600/30"
+                className="flex-1 px-4 py-2.5 bg-slate-700/50 text-text-primary rounded-xl hover:bg-slate-700/70 transition-all font-medium border border-slate-600/30"
               >
                 取消
               </button>
@@ -551,20 +552,20 @@ export default function DbConnections() {
       {/* 删除确认 */}
       {showDeleteConfirm && pendingDelete && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800/95 backdrop-blur-xl rounded-2xl w-full max-w-md border border-red-500/20 shadow-2xl p-6">
+          <div className="bg-surface backdrop-blur-xl rounded-2xl w-full max-w-md border border-red-500/20 shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
-              <h3 className="text-lg font-bold text-white">确认删除</h3>
+              <h3 className="text-lg font-bold text-text-primary">确认删除</h3>
             </div>
-            <p className="text-slate-300 mb-6">
-              确定要删除数据库连接 <span className="font-semibold text-white">"{pendingDelete.name}"</span> 吗？此操作不可撤销。
+            <p className="text-text-primary mb-6">
+              确定要删除数据库连接 <span className="font-semibold text-text-primary">"{pendingDelete.name}"</span> 吗？此操作不可撤销。
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowDeleteConfirm(false); setPendingDelete(null); }}
-                className="flex-1 px-4 py-2.5 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700/70 transition-all font-medium"
+                className="flex-1 px-4 py-2.5 bg-slate-700/50 text-text-primary rounded-xl hover:bg-slate-700/70 transition-all font-medium"
               >
                 取消
               </button>

@@ -15,6 +15,9 @@ import { initializeAlertMappings } from './presets/initAlertMappings';
 import { initializePresetScheduledTasks } from './presets/initScheduledTasks';
 import { initRemediationPolicies } from './presets/initRemediationPolicies';
 import { linkRemediationWorkflows } from './presets/linkRemediationWorkflows';
+import { initConfigTemplates } from './presets/initConfigTemplates';
+import { initializeEnhancedWorkflows } from './presets/initEnhancedWorkflows';
+import { initializeVMManagementTables } from './presets/initVMManagement';
 import type { Server as SocketIOServer } from 'socket.io';
 
 let ioInstance: SocketIOServer | null = null;
@@ -475,6 +478,18 @@ function initializeDefaultData(): void {
   }
   // 关联策略 → 工作流（智能匹配，创建额外高级策略）
   linkRemediationWorkflows();
+
+  // 预设配置模板
+  const configTemplateCount = db.prepare('SELECT COUNT(*) as count FROM config_templates').get() as { count: number };
+  if (configTemplateCount.count === 0) {
+    initConfigTemplates();
+  }
+
+  // 增强工作流
+  initializeEnhancedWorkflows();
+
+  // 虚拟机管理预设
+  initializeVMManagementTables();
 }
 
 /**

@@ -1,9 +1,11 @@
 import { logger } from '../utils/logger';
+import { normalizeSeverityLabel } from '../utils/alertSeverity';
 
 export interface NormalizedAlert {
   external_id?: string;
   source: string;
   severity: string;
+  raw_severity?: string;
   title: string;
   content: string;
   metadata: Record<string, unknown>;
@@ -18,31 +20,6 @@ export interface NormalizedAlert {
 export interface AlertAdapterResult {
   alerts: NormalizedAlert[];
   errors: string[];
-}
-
-function normalizeSeverity(level: string | number): string {
-  if (typeof level === 'number') {
-    if (level >= 5) return 'critical';
-    if (level >= 4) return 'high';
-    if (level >= 3) return 'medium';
-    if (level >= 2) return 'low';
-    return 'info';
-  }
-  const map: Record<string, string> = {
-    critical: 'critical',
-    critical_severity: 'critical',
-    disaster: 'critical',
-    high: 'high',
-    error: 'high',
-    warning: 'medium',
-    warn: 'medium',
-    average: 'medium',
-    information: 'low',
-    info: 'low',
-    low: 'low',
-    not_classified: 'info',
-  };
-  return map[level.toLowerCase()] || 'medium';
 }
 
 export function adaptPrometheus(payload: unknown): AlertAdapterResult {
@@ -67,7 +44,8 @@ export function adaptPrometheus(payload: unknown): AlertAdapterResult {
       alerts.push({
         external_id: `${labels.alertname || 'unknown'}-${labels.instance || ''}-${status}`,
         source: 'prometheus',
-        severity: normalizeSeverity(labels.severity || 'medium'),
+        severity: normalizeSeverityLabel(labels.severity || 'medium'),
+        raw_severity: labels.severity || 'medium',
         title: annotations.summary || labels.alertname || 'Prometheus Alert',
         content: annotations.description || annotations.message || JSON.stringify(alert),
         metadata: {
@@ -121,7 +99,7 @@ export function adaptZabbix(payload: unknown): AlertAdapterResult {
     const host = (hostObj?.NAME as string) || (body.host as string) || ((eventObj?.host as Record<string, unknown>)?.name as string) || 'Unknown';
     const hostIp = (hostObj?.IP as string) || (body.host_ip as string) || '';
     const rawSeverity = (triggerObj?.SEVERITY as string) || (triggerObj?.PRIORITY as string | number) || (body.severity as string | number) || ((eventObj?.severity as string));
-    const severity = normalizeSeverity(rawSeverity);
+    const severity = normalizeSeverityLabel(rawSeverity);
     const eventId = (body.EVENT as Record<string, unknown>)?.ID || (eventObj?.id as string) || (body.eventid as string);
     const triggerId = (triggerObj?.ID as string) || (body.triggerid as string);
     const item = (itemObj?.NAME as string) || (body.item as string) || '';
@@ -145,9 +123,11 @@ export function adaptZabbix(payload: unknown): AlertAdapterResult {
       external_id: eventId ? `zabbix-${eventId}` : undefined,
       source: 'zabbix',
       severity,
+      raw_severity: rawSeverity == null ? undefined : String(rawSeverity),
       title: `[${severity.toUpperCase()}] ${trigger}`,
       content,
       metadata: {
+        raw_severity: rawSeverity == null ? null : String(rawSeverity),
         zabbix_host: host,
         zabbix_host_ip: hostIp,
         zabbix_trigger_id: triggerId,
@@ -194,7 +174,8 @@ export function adaptGrafana(payload: unknown): AlertAdapterResult {
       alerts.push({
         external_id: alert.ruleUID ? `grafana-${alert.ruleUID}` : undefined,
         source: 'grafana',
-        severity: normalizeSeverity(rawSeverity),
+        severity: normalizeSeverityLabel(rawSeverity),
+        raw_severity: rawSeverity == null ? undefined : String(rawSeverity),
         title,
         content,
         metadata: {
@@ -256,7 +237,8 @@ export function adaptAliyun(payload: unknown): AlertAdapterResult {
     alerts.push({
       external_id: body.alertId || body.ruleId ? `aliyun-${body.alertId || body.ruleId}` : undefined,
       source: 'aliyun',
-      severity: normalizeSeverity(level),
+      severity: normalizeSeverityLabel(level),
+      raw_severity: level == null ? undefined : String(level),
       title: `[${product}] ${name}`,
       content: contentParts,
       metadata: {
@@ -311,7 +293,8 @@ export function adaptTencentCloud(payload: unknown): AlertAdapterResult {
     alerts.push({
       external_id: policyId ? `tencent-${policyId}` : undefined,
       source: 'tencent',
-      severity: normalizeSeverity(level),
+      severity: normalizeSeverityLabel(level),
+      raw_severity: level == null ? undefined : String(level),
       title: `[${alarmType}] ${alarmName}`,
       content: contentParts,
       metadata: {

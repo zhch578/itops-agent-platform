@@ -4,6 +4,12 @@ import { randomUUID } from 'crypto';
 
 const router = Router();
 
+function normalizeNullableCondition(value: unknown): string | null {
+  if (typeof value !== 'string') return value == null ? null : String(value);
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 router.get('/', (_req: Request, res: Response) => {
   try {
     const mappings = db.prepare(`
@@ -56,7 +62,14 @@ router.post('/', (req: Request, res: Response) => {
     db.prepare(`
       INSERT INTO alert_workflow_mappings (id, alert_source, alert_severity, alert_title_pattern, workflow_id, enabled)
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run(id, alert_source || null, alert_severity || null, alert_title_pattern || null, workflow_id, enabled ? 1 : 0);
+    `).run(
+      id,
+      normalizeNullableCondition(alert_source),
+      normalizeNullableCondition(alert_severity),
+      normalizeNullableCondition(alert_title_pattern),
+      workflow_id,
+      enabled ? 1 : 0
+    );
     
     res.status(201).json({ success: true, data: { id, alert_source, alert_severity, alert_title_pattern, workflow_id, enabled } });
   } catch {
@@ -86,15 +99,15 @@ router.put('/:id', (req: Request, res: Response) => {
     
     if (alert_source !== undefined) {
       updates.push('alert_source = ?');
-      params.push(alert_source);
+      params.push(normalizeNullableCondition(alert_source));
     }
     if (alert_severity !== undefined) {
       updates.push('alert_severity = ?');
-      params.push(alert_severity);
+      params.push(normalizeNullableCondition(alert_severity));
     }
     if (alert_title_pattern !== undefined) {
       updates.push('alert_title_pattern = ?');
-      params.push(alert_title_pattern);
+      params.push(normalizeNullableCondition(alert_title_pattern));
     }
     if (workflow_id) {
       updates.push('workflow_id = ?');

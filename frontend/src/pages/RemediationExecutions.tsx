@@ -99,10 +99,10 @@ export default function RemediationExecutions() {
       'rolled_back': <RefreshCw className="w-4 h-4 text-yellow-500" />,
       'waiting_approval': <Clock className="w-4 h-4 text-blue-500" />,
       'running': <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />,
-      'skipped': <AlertTriangle className="w-4 h-4 text-gray-500" />,
+      'skipped': <AlertTriangle className="w-4 h-4 text-text-tertiary" />,
       'rejected': <XCircle className="w-4 h-4 text-orange-500" />
     };
-    return iconMap[status] || <Clock className="w-4 h-4 text-slate-500" />;
+    return iconMap[status] || <Clock className="w-4 h-4 text-text-tertiary" />;
   };
 
   const getStatusText = (status: string) => {
@@ -132,7 +132,7 @@ export default function RemediationExecutions() {
       'skipped': 'bg-gray-500/10 text-gray-400 border-gray-500/20',
       'rejected': 'bg-orange-500/10 text-orange-400 border-orange-500/20'
     };
-    return map[status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    return map[status] || 'bg-slate-500/10 text-text-secondary border-slate-500/20';
   };
 
   const formatTime = (timeStr: string) => {
@@ -157,17 +157,17 @@ export default function RemediationExecutions() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-auto p-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">修复执行记录</h2>
-          <p className="text-slate-400 text-sm">查看所有自动修复策略的执行历史和结果</p>
+          <h2 className="text-2xl font-bold text-text-primary mb-1">修复执行记录</h2>
+          <p className="text-text-secondary text-sm">查看所有自动修复策略的执行历史和结果</p>
         </div>
 
         <div className="flex items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
+            <Filter className="w-4 h-4 text-text-secondary" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              className="px-3 py-2 bg-surface border border-border rounded-lg text-text-primary focus:outline-none focus:border-blue-500"
             >
               <option value="all">全部状态</option>
               <option value="success">成功</option>
@@ -181,34 +181,34 @@ export default function RemediationExecutions() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
+          <div className="text-center py-12 text-text-secondary">加载中...</div>
         ) : !data?.executions?.length ? (
           <div className="text-center py-12">
-            <Clock className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">暂无执行记录</p>
+            <Clock className="w-16 h-16 text-text-tertiary mx-auto mb-4" />
+            <p className="text-text-secondary">暂无执行记录</p>
           </div>
         ) : (
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
+          <div className="bg-surface/30 border border-border rounded-xl overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-700/50">
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">时间</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">策略</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">状态</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">耗时</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">验证</th>
-                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-400">操作</th>
+                <tr className="border-b border-border/50">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">时间</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">策略</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">状态</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">耗时</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">验证</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-text-secondary">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {data.executions.map((execution: any) => (
-                  <tr key={execution.id} className="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
+                  <tr key={execution.id} className="border-b border-border/30 hover:bg-slate-700/20 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="text-sm text-white">{formatTime(execution.created_at)}</div>
+                      <div className="text-sm text-text-primary">{formatTime(execution.created_at)}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="text-sm text-slate-300">策略 ID: {execution.policy_id?.slice(0, 8)}...</div>
-                      <div className="text-xs text-slate-500">告警 ID: {execution.alert_id?.slice(0, 8)}...</div>
+                      <div className="text-sm text-text-primary">策略 ID: {execution.policy_id?.slice(0, 8)}...</div>
+                      <div className="text-xs text-text-tertiary">告警 ID: {execution.alert_id?.slice(0, 8)}...</div>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
@@ -218,22 +218,22 @@ export default function RemediationExecutions() {
                         </span>
                       </div>
                       {execution.status_reason && (
-                        <div className="text-xs text-slate-500 mt-1">{execution.status_reason}</div>
+                        <div className="text-xs text-text-tertiary mt-1">{execution.status_reason}</div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-300">
+                    <td className="py-3 px-4 text-sm text-text-primary">
                       {formatDuration(execution.execution_duration_ms)}
                     </td>
                     <td className="py-3 px-4">
                       {execution.verification_status ? (
                         <div className="flex items-center gap-2">
                           {getStatusIcon(execution.verification_status)}
-                          <span className="text-xs text-slate-300">
+                          <span className="text-xs text-text-primary">
                             {getStatusText(execution.verification_status)}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-500">未验证</span>
+                        <span className="text-xs text-text-tertiary">未验证</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -257,14 +257,14 @@ export default function RemediationExecutions() {
                         {(execution.status === 'failed' || execution.status === 'rejected') && (
                           <button
                             onClick={() => retryMutation.mutate(execution.id)}
-                            className="p-1.5 text-slate-400 hover:text-blue-400 transition-colors"
+                            className="p-1.5 text-text-secondary hover:text-blue-400 transition-colors"
                             title="重试"
                           >
                             <RefreshCw className="w-4 h-4" />
                           </button>
                         )}
                         <button
-                          className="p-1.5 text-slate-400 hover:text-white transition-colors"
+                          className="p-1.5 text-text-secondary hover:text-text-primary transition-colors"
                           title="查看详情"
                           onClick={() => handleViewDetail(execution.id)}
                         >
@@ -281,19 +281,19 @@ export default function RemediationExecutions() {
 
         {data && data.total > limit && (
           <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-slate-400">共 {data.total} 条记录</div>
+            <div className="text-sm text-text-secondary">共 {data.total} 条记录</div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700/50 transition-colors"
+                className="px-3 py-1.5 bg-surface border border-border rounded-lg text-text-primary disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700/50 transition-colors"
               >
                 上一页
               </button>
-              <span className="text-slate-400 text-sm">{page}</span>
+              <span className="text-text-secondary text-sm">{page}</span>
               <button
                 onClick={() => setPage(p => p + 1)}
-                className="px-3 py-1.5 bg-slate-800/50 border border-slate-700 rounded-lg text-white hover:bg-slate-700/50 transition-colors"
+                className="px-3 py-1.5 bg-surface border border-border rounded-lg text-text-primary hover:bg-slate-700/50 transition-colors"
               >
                 下一页
               </button>
@@ -308,14 +308,14 @@ export default function RemediationExecutions() {
           onClick={handleCloseModal}
         >
           <div
-            className="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col"
+            className="bg-surface border border-border rounded-xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50">
-              <h3 className="text-lg font-semibold text-white">执行详情</h3>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+              <h3 className="text-lg font-semibold text-text-primary">执行详情</h3>
               <button
                 onClick={handleCloseModal}
-                className="p-1.5 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50"
+                className="p-1.5 text-text-secondary hover:text-text-primary transition-colors rounded-lg hover:bg-slate-700/50"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -323,17 +323,17 @@ export default function RemediationExecutions() {
 
             <div className="flex-1 overflow-auto p-6 space-y-6">
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   基本信息
                 </h4>
-                <div className="grid grid-cols-2 gap-4 bg-slate-900/50 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-4 bg-surface rounded-lg p-4">
                   <div>
-                    <div className="text-xs text-slate-500 mb-1">策略名称</div>
-                    <div className="text-sm text-white">{executionDetail.policy_name || executionDetail.policy_id?.slice(0, 8) || '-'}</div>
+                    <div className="text-xs text-text-tertiary mb-1">策略名称</div>
+                    <div className="text-sm text-text-primary">{executionDetail.policy_name || executionDetail.policy_id?.slice(0, 8) || '-'}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500 mb-1">执行状态</div>
+                    <div className="text-xs text-text-tertiary mb-1">执行状态</div>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(executionDetail.status)}
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(executionDetail.status)}`}>
@@ -342,17 +342,17 @@ export default function RemediationExecutions() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500 mb-1">执行时间</div>
-                    <div className="text-sm text-white">{formatTime(executionDetail.created_at)}</div>
+                    <div className="text-xs text-text-tertiary mb-1">执行时间</div>
+                    <div className="text-sm text-text-primary">{formatTime(executionDetail.created_at)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500 mb-1">耗时</div>
-                    <div className="text-sm text-white">{formatDuration(executionDetail.execution_duration_ms)}</div>
+                    <div className="text-xs text-text-tertiary mb-1">耗时</div>
+                    <div className="text-sm text-text-primary">{formatDuration(executionDetail.execution_duration_ms)}</div>
                   </div>
                   {executionDetail.status_reason && (
                     <div className="col-span-2">
-                      <div className="text-xs text-slate-500 mb-1">状态原因</div>
-                      <div className="text-sm text-slate-300">{executionDetail.status_reason}</div>
+                      <div className="text-xs text-text-tertiary mb-1">状态原因</div>
+                      <div className="text-sm text-text-primary">{executionDetail.status_reason}</div>
                     </div>
                   )}
                 </div>
@@ -360,12 +360,12 @@ export default function RemediationExecutions() {
 
               {executionDetail.execution_result && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                     <CheckSquare className="w-4 h-4" />
                     执行结果
                   </h4>
-                  <div className="bg-slate-900/50 rounded-lg p-4">
-                    <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-48 overflow-y-auto">
+                  <div className="bg-surface rounded-lg p-4">
+                    <pre className="text-xs text-text-primary font-mono whitespace-pre-wrap overflow-x-auto max-h-48 overflow-y-auto">
                       {typeof executionDetail.execution_result === 'string' 
                         ? executionDetail.execution_result 
                         : JSON.stringify(executionDetail.execution_result, null, 2)}
@@ -376,24 +376,24 @@ export default function RemediationExecutions() {
 
               {executionDetail.verification_status && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                     <CheckSquare className="w-4 h-4" />
                     验证结果
                   </h4>
-                  <div className="bg-slate-900/50 rounded-lg p-4">
+                  <div className="bg-surface rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-3">
                       {getStatusIcon(executionDetail.verification_status)}
-                      <span className="text-sm text-white">
+                      <span className="text-sm text-text-primary">
                         验证 {getStatusText(executionDetail.verification_status)}
                       </span>
                     </div>
                     {executionDetail.verification_completed_at && (
-                      <div className="text-xs text-slate-500 mb-2">
+                      <div className="text-xs text-text-tertiary mb-2">
                         验证完成时间: {formatTime(executionDetail.verification_completed_at)}
                       </div>
                     )}
                     {executionDetail.verification_result && (
-                      <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-32 overflow-y-auto bg-slate-800/50 rounded p-3">
+                      <pre className="text-xs text-text-primary font-mono whitespace-pre-wrap overflow-x-auto max-h-32 overflow-y-auto bg-surface/50 rounded p-3">
                         {typeof executionDetail.verification_result === 'string'
                           ? executionDetail.verification_result
                           : JSON.stringify(executionDetail.verification_result, null, 2)}
@@ -405,7 +405,7 @@ export default function RemediationExecutions() {
 
               {executionDetail.rollback_triggered === 1 && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                     <ArrowLeftRight className="w-4 h-4" />
                     回滚信息
                   </h4>
@@ -415,12 +415,12 @@ export default function RemediationExecutions() {
                       <span className="text-sm text-yellow-300">已触发回滚</span>
                     </div>
                     {executionDetail.rollback_completed_at && (
-                      <div className="text-xs text-slate-400 mb-2">
+                      <div className="text-xs text-text-secondary mb-2">
                         回滚完成时间: {formatTime(executionDetail.rollback_completed_at)}
                       </div>
                     )}
                     {executionDetail.rollback_result && (
-                      <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-32 overflow-y-auto bg-slate-800/50 rounded p-3">
+                      <pre className="text-xs text-text-primary font-mono whitespace-pre-wrap overflow-x-auto max-h-32 overflow-y-auto bg-surface/50 rounded p-3">
                         {typeof executionDetail.rollback_result === 'string'
                           ? executionDetail.rollback_result
                           : JSON.stringify(executionDetail.rollback_result, null, 2)}
@@ -432,27 +432,27 @@ export default function RemediationExecutions() {
 
               {executionDetail.approval_comment && (
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     审批信息
                   </h4>
-                  <div className="bg-slate-900/50 rounded-lg p-4">
+                  <div className="bg-surface rounded-lg p-4">
                     {executionDetail.approved_at && (
-                      <div className="text-xs text-slate-500 mb-2">
+                      <div className="text-xs text-text-tertiary mb-2">
                         审批时间: {formatTime(executionDetail.approved_at)}
                       </div>
                     )}
-                    <div className="text-sm text-slate-300">{executionDetail.approval_comment}</div>
+                    <div className="text-sm text-text-primary">{executionDetail.approval_comment}</div>
                   </div>
                 </div>
               )}
 
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                <h4 className="text-sm font-medium text-text-primary flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   完整日志
                 </h4>
-                <div className="bg-slate-900/50 rounded-lg divide-y divide-slate-700/30">
+                <div className="bg-surface rounded-lg divide-y divide-slate-700/30">
                   {[
                     { key: 'execution', label: '执行日志', content: executionDetail.execution_result },
                     { key: 'verification', label: '验证日志', content: executionDetail.verification_result },
@@ -462,7 +462,7 @@ export default function RemediationExecutions() {
                     <div key={item.key} className="py-2">
                       <button
                         onClick={() => toggleLog(item.key)}
-                        className="flex items-center justify-between w-full px-4 text-sm text-slate-300 hover:text-white transition-colors"
+                        className="flex items-center justify-between w-full px-4 text-sm text-text-primary hover:text-text-primary transition-colors"
                       >
                         <span className="flex items-center gap-2">
                           {expandedLogs[item.key] ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -471,7 +471,7 @@ export default function RemediationExecutions() {
                       </button>
                       {expandedLogs[item.key] && (
                         <div className="px-4 py-2">
-                          <pre className="text-xs text-slate-400 font-mono whitespace-pre-wrap overflow-x-auto max-h-48 overflow-y-auto bg-slate-800/30 rounded p-3">
+                          <pre className="text-xs text-text-secondary font-mono whitespace-pre-wrap overflow-x-auto max-h-48 overflow-y-auto bg-surface/30 rounded p-3">
                             {typeof item.content === 'string' ? item.content : JSON.stringify(item.content, null, 2)}
                           </pre>
                         </div>
@@ -482,10 +482,10 @@ export default function RemediationExecutions() {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-700/50 flex justify-end">
+            <div className="px-6 py-4 border-t border-border/50 flex justify-end">
               <button
                 onClick={handleCloseModal}
-                className="px-4 py-2 bg-slate-700/50 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors text-sm"
+                className="px-4 py-2 bg-slate-700/50 text-text-primary rounded-lg hover:bg-slate-700 transition-colors text-sm"
               >
                 关闭
               </button>
