@@ -49,8 +49,10 @@
 
 🌐 项目官网：<https://www.zjzwfw.cloud/ITOpsAgentinfo>
 
-📦 镜像仓库：[GitHub](https://github.com/qinshihu/itops-agent-platform)  |  [Gitee](https://gitee.com/IT_Oline/itops-agent-platform)  |  [GitCode](https://gitcode.com/gcw_IM7aAihp/itops-agent-platform)
+📦 代码仓库：[GitHub](https://github.com/qinshihu/itops-agent-platform)  |  [Gitee](https://gitee.com/IT_Oline/itops-agent-platform)  |  [GitCode](https://gitcode.com/gcw_IM7aAihp/itops-agent-platform)
+
 ---------------------------------------------------------------
+
 
 ## 🎯 谁在用 / 谁适合用？
 
