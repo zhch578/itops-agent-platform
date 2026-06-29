@@ -295,7 +295,7 @@ router.get('/stats/summary', (_req: Request, res: Response) => {
 interface AlertProcessingContext {
   id: string;
   source: string;
-  severity: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
   rawSeverity?: string;
   title: string;
   content: string;
@@ -363,7 +363,7 @@ router.post('/:id/process', async (req: Request, res: Response) => {
     }
 
     const source = (alert.source as string) || 'unknown';
-    const severity = (alert.severity as string) || 'medium';
+    const severity = ((alert.severity as string) || 'medium') as AlertProcessingContext['severity'];
     const title = alert.title as string;
     const content = (alert.content as string) || '';
 

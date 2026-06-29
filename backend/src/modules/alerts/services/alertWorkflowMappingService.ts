@@ -24,7 +24,7 @@ class AlertWorkflowMappingService {
   /** 根据告警匹配第一个符合条件的工作流并触发执行 */
   triggerFirstMatchingWorkflow(alert: AlertContext): MappingResult | null {
     try {
-      logger.info('[AlertWorkflowMapping] 尝试匹配告警: alertId=', alert.id, 'source=', alert.source, 'severity=', alert.severity);
+      logger.info(`[AlertWorkflowMapping] 尝试匹配告警: alertId=${alert.id}, source=${alert.source}, severity=${alert.severity}`);
 
       // 查询所有启用的映射，按规则优先级排序（source精确匹配 > severity匹配 > title_pattern匹配）
       const mappings = db.prepare(`
@@ -38,7 +38,7 @@ class AlertWorkflowMappingService {
       // 遍历所有映射规则，找到第一个匹配的
       for (const mapping of mappings) {
         if (this.matches(alert, mapping)) {
-          logger.info('[AlertWorkflowMapping] 找到匹配的映射: mappingId=', mapping.id, 'workflowId=', mapping.workflow_id);
+          logger.info(`[AlertWorkflowMapping] 找到匹配的映射: mappingId=${mapping.id}, workflowId=${mapping.workflow_id}`);
           // 触发工作流
           const taskId = this.executeMappedWorkflow(alert, mapping);
           return {
@@ -126,7 +126,7 @@ class AlertWorkflowMappingService {
       nodes: JSON.parse(workflow.nodes || '[]'),
       edges: JSON.parse(workflow.edges || '[]'),
       agent_configs: JSON.parse(workflow.agent_configs || '{}'),
-      is_template: workflow.is_template === 1,
+      is_template: workflow.is_template ? 1 : 0,
       created_at: workflow.created_at,
       updated_at: workflow.updated_at
     };

@@ -54,7 +54,7 @@ export const httpMethods = {
         method: 'GET',
         headers: params.headers || {}
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: true,
@@ -82,7 +82,7 @@ export const httpMethods = {
         },
         body: JSON.stringify(params.data)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: true,

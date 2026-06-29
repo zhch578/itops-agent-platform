@@ -60,10 +60,7 @@ export interface NodeResult {
   status: 'success' | 'failed' | 'pending';
   output?: string;
   error?: string;
-  metadata?: {
-    thinkingProcess?: string;
-    executionTime?: number;
-  };
+  metadata?: Record<string, unknown>;
 }
 
 export interface TaskLogEntry {

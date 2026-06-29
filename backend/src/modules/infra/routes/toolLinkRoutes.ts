@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import db from '../../../models/database';
 import { randomUUID } from 'crypto';
@@ -113,7 +113,7 @@ router.delete('/:id', requireRole('admin'), validateParams(z.object({ id: z.stri
 });
 
 // Icon Upload
-router.post('/:id/icon', requireRole('admin'), validateParams(z.object({ id: z.string().uuid() })), (req: Request, res: Response, next: Function) => {
+router.post('/:id/icon', requireRole('admin'), validateParams(z.object({ id: z.string().uuid() })), (req: Request, res: Response, next: NextFunction) => {
   const u = getUpload();
   u.single('icon')(req, res, next);
 }, (req: Request, res: Response) => {

@@ -160,7 +160,7 @@ function processNormalizedAlert(
   }
 
   const id = randomUUID();
-  const severity = alert.severity;
+  const severity = alert.severity as 'critical' | 'high' | 'medium' | 'low' | 'info';
   const title = alert.title;
   const content = alert.content;
 
@@ -181,6 +181,7 @@ function processNormalizedAlert(
   //  统一修复流水线: 修复策略匹配 + 设备关联 + RCA + WebSocket
   // ============================================================
   const executionIds: string[] = [];
+  const matchedPolicies: string[] = [];
   setImmediate(async () => {
     try {
       if (io) {
@@ -190,7 +191,7 @@ function processNormalizedAlert(
       }
 
       // ── RCA ──
-      if (severity === 'critical' || severity === 'high' || severity === 'disaster') {
+      if (severity === 'critical' || severity === 'high') {
         alertService.processDatabaseAlert(id);
       }
 

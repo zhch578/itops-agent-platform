@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { backupService } from '../services/backupService';
 import { logger } from '../../../utils/logger';
@@ -141,7 +141,7 @@ router.get('/download/:id', requireRole('admin'), (req: Request, res: Response) 
   }
 });
 
-router.post('/upload', requireRole('admin'), (req: Request, res: Response, next: Function) => {
+router.post('/upload', requireRole('admin'), (req: Request, res: Response, next: NextFunction) => {
   const u = getUpload();
   u.single('backup')(req, res, next);
 }, async (req: Request, res: Response) => {

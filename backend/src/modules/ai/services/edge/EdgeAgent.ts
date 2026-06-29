@@ -5,6 +5,7 @@ import type {
   EdgeAgentConfig,
   HostInfo,
   HostLoad,
+  HostMetricPoint,
   ProcessListResponse,
   CollectorOutput,
   HeartbeatRequest,
@@ -294,10 +295,10 @@ export class EdgeAgent extends EventEmitter {
       return;
     }
 
-    try {
-      const samples = [...this.metricsBuffer];
-      this.metricsBuffer = [];
+    const samples = [...this.metricsBuffer];
+    this.metricsBuffer = [];
 
+    try {
       logger.debug(`[EdgeAgent] Simulated pushing ${samples.length} metrics samples`);
       // 实际场景下应该发送到服务端
     } catch (error) {
@@ -310,7 +311,7 @@ export class EdgeAgent extends EventEmitter {
   /**
    * 推送主机指标（模拟）
    */
-  private async pushHostMetric(point: HostLoad): Promise<void> {
+  private async pushHostMetric(point: HostMetricPoint): Promise<void> {
     try {
       logger.debug(`[EdgeAgent] Simulated pushing host metric: CPU ${point.cpuUsage}%, Memory ${point.memoryUsage}%`);
       // 实际场景下应该发送到服务端

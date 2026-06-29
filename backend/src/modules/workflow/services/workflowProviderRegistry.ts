@@ -64,9 +64,9 @@ export const workflowProviderRegistry = new WorkflowProviderRegistry();
           if (notificationService) {
             // 如果有通知服务，调用真实通知
             const result = await notificationService.send({
-              type: config.channel,
-              message: config.message,
-              targets: config.targets
+              type: config.channel || 'general',
+              title: '工作流通知',
+              content: config.message
             });
             return result;
           }

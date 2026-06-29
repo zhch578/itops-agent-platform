@@ -9,7 +9,7 @@ import db from '../../../models/database';
 import { logger } from '../../../utils/logger';
 import { notificationService } from '../../infra/services/notificationService';
 import { createAuditLog } from '../../infra/services/auditService';
-import { sshService } from '../../servers/services/sshService';
+import { executeCommand } from '../../servers/services/sshService';
 import { knowledgeEngine } from '../../../core/KnowledgeEngine';
 import type { NodeResult, ExecutionContext } from '../../../types';
 import type {
@@ -101,9 +101,9 @@ export async function executeVerificationNode(
 
 function buildGateStages(config: VerificationNodeConfig): GateStage[] {
   if (!config.gates || config.gates.length === 0) return [...DEFAULT_GATES];
-  return config.gates.map(stage => {
-    const base = DEFAULT_GATES.find(g => g.stage === stage) || { stage, required: true, maxRetries: 0, retryIntervalSec: 0, timeoutSec: 30 };
-    const overrides = config.stageOverrides?.[stage] || {};
+  return config.gates.map((stage: string) => {
+    const base = DEFAULT_GATES.find((g: GateStage) => g.stage === stage) || { stage: stage as VerificationStage, required: true, maxRetries: 0, retryIntervalSec: 0, timeoutSec: 30 };
+    const overrides = config.stageOverrides?.[stage as VerificationStage] || {};
     return { ...base, ...overrides };
   });
 }
@@ -142,14 +142,14 @@ async function runGateCheck(stage: VerificationStage, serverId?: string): Promis
 async function checkServiceHealth(server: Record<string, unknown>): Promise<{ passed: boolean; detail: string }> {
   try {
     // 检查系统关键服务：sshd, cron, rsyslog/systemd-journald
-    const result = await sshService.executeCommand(
+    const result = await executeCommand(
       server.id as string,
       'systemctl is-active sshd 2>/dev/null; systemctl is-active cron 2>/dev/null || systemctl is-active crond 2>/dev/null; echo "---UP---"',
-      15000
+      { timeout: 15000 }
     );
-    const output = result.stdout || result.output || '';
+    const output = result.stdout || '';
     const failedServices = output.split('\n')
-      .filter(line => line && line !== '---UP---' && line.trim() !== 'active' && line.trim() !== 'inactive')
+      .filter((line: string) => line && line !== '---UP---' && line.trim() !== 'active' && line.trim() !== 'inactive')
       .filter(Boolean);
 
     if (failedServices.length === 0) {
@@ -163,12 +163,12 @@ async function checkServiceHealth(server: Record<string, unknown>): Promise<{ pa
 
 async function checkMetricRecovery(server: Record<string, unknown>): Promise<{ passed: boolean; detail: string }> {
   try {
-    const result = await sshService.executeCommand(
+    const result = await executeCommand(
       server.id as string,
       'echo "LOAD:$(cat /proc/loadavg | awk \'{print $1}\')" && echo "MEM:$(free -m | awk \'/^Mem:/{printf "%.0f", $3/$2*100}\')" && echo "DISK:$(df -h / | awk \'NR==2{print $5}\' | tr -d \'%\')"',
-      10000
+      { timeout: 10000 }
     );
-    const output = result.stdout || result.output || '';
+    const output = result.stdout || '';
 
     const loadMatch = output.match(/LOAD:([\d.]+)/);
     const memMatch = output.match(/MEM:(\d+)/);
@@ -195,12 +195,12 @@ async function checkMetricRecovery(server: Record<string, unknown>): Promise<{ p
 async function checkBaselineComparison(server: Record<string, unknown>): Promise<{ passed: boolean; detail: string }> {
   try {
     // 简单基线对比：获取当前负载和最近一次记录的负载
-    const result = await sshService.executeCommand(
+    const result = await executeCommand(
       server.id as string,
       'cat /proc/loadavg 2>/dev/null',
-      5000
+      { timeout: 5000 }
     );
-    const output = (result.stdout || result.output || '').trim();
+    const output = (result.stdout || '').trim();
     const currentLoad = output ? parseFloat(output.split(/\s+/)[0]) : 0;
 
     // 从数据库获取上次基线
@@ -223,12 +223,12 @@ async function checkBaselineComparison(server: Record<string, unknown>): Promise
 async function checkImpactAssessment(server: Record<string, unknown>): Promise<{ passed: boolean; detail: string }> {
   try {
     // 检查关键进程和端口是否正常
-    const result = await sshService.executeCommand(
+    const result = await executeCommand(
       server.id as string,
       'ps aux --no-headers | wc -l && echo "---" && ss -tlnp 2>/dev/null | wc -l',
-      10000
+      { timeout: 10000 }
     );
-    const output = result.stdout || result.output || '';
+    const output = result.stdout || '';
     const parts = output.split('---');
 
     const processCount = parseInt(parts[0]?.trim() || '0');
@@ -284,7 +284,7 @@ export function executeRiskAssessNode(
 
   // 从上下文或变量中提取修复计划信息
   const planOutput = config.planSourceNodeId
-    ? previousResults.find(r => r.includes('修复') || r.includes('命令')) || previousResults[previousResults.length - 1] || ''
+    ? previousResults.find((r: string) => r.includes('修复') || r.includes('命令')) || previousResults[previousResults.length - 1] || ''
     : previousResults.join('\n').substring(0, 2000);
 
   // 分析命令风险因子
@@ -307,10 +307,10 @@ export function executeRiskAssessNode(
   };
 
   let operationalRiskScore = Object.values(factors)
-    .filter(f => f.triggered)
-    .reduce((sum, f) => sum + f.weight, 0);
+    .filter((f: { triggered: boolean; weight: number }) => f.triggered)
+    .reduce((sum: number, f: { triggered: boolean; weight: number }) => sum + f.weight, 0);
 
-  const highRiskCount = Object.values(factors).filter(f => f.triggered && f.weight >= 0.25).length;
+  const highRiskCount = Object.values(factors).filter((f: { triggered: boolean; weight: number }) => f.triggered && f.weight >= 0.25).length;
   if (highRiskCount >= 2) operationalRiskScore = Math.min(1.0, operationalRiskScore + 0.2);
 
   // 时间紧迫度评估
@@ -452,10 +452,10 @@ function evaluateRule(rule: DecisionRule, riskScore: number, riskLevel: string):
 
     // 复合条件：A && B 或 A || B
     if (condition.includes('&&')) {
-      return condition.split('&&').every(part => evaluateRule({ ...rule, condition: part.trim() }, riskScore, riskLevel));
+      return condition.split('&&').every((part: string) => evaluateRule({ ...rule, condition: part.trim() }, riskScore, riskLevel));
     }
     if (condition.includes('||')) {
-      return condition.split('||').some(part => evaluateRule({ ...rule, condition: part.trim() }, riskScore, riskLevel));
+      return condition.split('||').some((part: string) => evaluateRule({ ...rule, condition: part.trim() }, riskScore, riskLevel));
     }
 
     return false;
@@ -517,8 +517,8 @@ export async function executeRollbackNode(
 
   for (const cmd of rollbackCommands) {
     try {
-      const result = await sshService.executeCommand(serverId, cmd, cmdTimeout);
-      const output = result.stdout || result.output || result.stderr || '';
+      const result = await executeCommand(serverId, cmd, { timeout: cmdTimeout });
+      const output = result.stdout || result.stderr || '';
       results.push({ command: cmd, success: true, output: output.substring(0, 500) });
     } catch (err: any) {
       results.push({ command: cmd, success: false, output: err.message || String(err) });
@@ -526,16 +526,16 @@ export async function executeRollbackNode(
     }
   }
 
-  const allSuccess = results.every(r => r.success);
+  const allSuccess = results.every((r: { command: string; success: boolean; output: string }) => r.success);
   const output = `## 🔄 回滚执行结果\n\n` +
-    results.map(r => `- ${r.success ? '✅' : '❌'} \`${r.command.substring(0, 80)}\`\n  ${r.output.substring(0, 200)}`).join('\n');
+    results.map((r: { command: string; success: boolean; output: string }) => `- ${r.success ? '✅' : '❌'} \`${r.command.substring(0, 80)}\`\n  ${r.output.substring(0, 200)}`).join('\n');
 
   // 审计
   createAuditLog({
     action: 'rollback_executed',
     resource_type: 'rollback',
     resource_id: serverId,
-    details: { commands: rollbackCommands, results: results.map(r => ({ success: r.success })) },
+    details: { commands: rollbackCommands, results: results.map((r: { command: string; success: boolean; output: string }) => ({ success: r.success })) },
   });
 
   return {
@@ -559,7 +559,7 @@ function extractRollbackCommands(
       // 尝试从输出中提取 ```bash ... ``` 代码块
       const match = nodeResult.output.match(/```(?:bash|sh|shell)?\s*\n([\s\S]*?)```/);
       if (match) {
-        return match[1].split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+        return match[1].split('\n').filter((l: string) => l.trim() && !l.trim().startsWith('#'));
       }
     }
   }
@@ -572,7 +572,7 @@ function extractRollbackCommands(
     if (result.output?.includes('回滚') || result.output?.includes('rollback')) {
       const match = result.output.match(/```(?:bash|sh|shell)?\s*\n([\s\S]*?)```/);
       if (match) {
-        return match[1].split('\n').filter(l => l.trim() && !l.trim().startsWith('#'));
+        return match[1].split('\n').filter((l: string) => l.trim() && !l.trim().startsWith('#'));
       }
     }
   }

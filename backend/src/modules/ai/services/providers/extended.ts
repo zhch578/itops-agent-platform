@@ -76,7 +76,7 @@ export const prometheusMethods = {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.status === 'success',
@@ -100,7 +100,7 @@ export const prometheusMethods = {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.status === 'success',
@@ -120,7 +120,7 @@ export const prometheusMethods = {
   async alerts(params: any): Promise<ProviderResult> {
     try {
       const response = await fetch(`${params.url}/api/v1/alerts`);
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.status === 'success',
@@ -217,7 +217,7 @@ export const elasticsearchMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: true,
@@ -245,7 +245,7 @@ export const elasticsearchMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params.document)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: true,
@@ -272,7 +272,7 @@ export const elasticsearchMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : undefined
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: true,
@@ -374,7 +374,7 @@ export const dingtalkMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.errcode === 0,
@@ -407,7 +407,7 @@ export const dingtalkMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.errcode === 0,
@@ -441,7 +441,7 @@ export const dingtalkMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.errcode === 0,
@@ -529,7 +529,7 @@ export const wecomMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.errcode === 0,
@@ -558,7 +558,7 @@ export const wecomMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.errcode === 0,
@@ -587,7 +587,7 @@ export const wecomMethods = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      const data = await response.json();
+      const data: any = await response.json();
 
       return {
         success: data.errcode === 0,

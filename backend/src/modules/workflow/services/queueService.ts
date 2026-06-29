@@ -227,7 +227,7 @@ class QueueService {
    */
   async enableRedisBackend(redisUrl: string): Promise<void> {
     try {
-      const { BullQueueAdapter } = await import('./queueBullAdapter.ts');
+      const { BullQueueAdapter } = await import('./queueBullAdapter');
       const bullAdapter = new BullQueueAdapter(redisUrl);
       // 测试连接
       await bullAdapter.health();

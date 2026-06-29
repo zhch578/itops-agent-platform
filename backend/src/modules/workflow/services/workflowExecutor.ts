@@ -264,7 +264,7 @@ async function executeFromIndex(
         nodeResults[nodeId] = result;
         io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
         io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: result.status, output: result.output });
-        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+        addTaskLog(taskId, { type: 'output', content: result.output ?? '', nodeId });
 
         if (result.status === 'failed' && !node.data.allowFailure) {
           throw new Error(`验证失败: ${result.error || '未知错误'}`);
@@ -295,7 +295,7 @@ async function executeFromIndex(
 
         io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
         io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'success', output: result.output });
-        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+        addTaskLog(taskId, { type: 'output', content: result.output ?? '', nodeId });
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         nodeResults[nodeId] = { status: 'failed', error: errorMessage };
@@ -410,10 +410,11 @@ async function executeFromIndex(
 
         io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
         io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'success', output: result.output });
-        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+        addTaskLog(taskId, { type: 'output', content: result.output ?? '', nodeId });
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         nodeResults[nodeId] = { status: 'failed', error: errorMessage };
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'failed', error: errorMessage });
         addTaskLog(taskId, { type: 'error', content: errorMessage, nodeId });
         // 知识节点失败不阻塞流程
       }
@@ -434,7 +435,7 @@ async function executeFromIndex(
 
         io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
         io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: result.status, output: result.output });
-        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+        addTaskLog(taskId, { type: 'output', content: result.output ?? '', nodeId });
 
         if (result.status === 'failed' && !node.data.allowFailure) {
           throw new Error(`回滚失败: ${result.error || '未知错误'}`);

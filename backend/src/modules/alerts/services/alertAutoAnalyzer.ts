@@ -720,7 +720,7 @@ ${rawOutput.substring(0, 8000)}
           logger.info(`🔧 [AI Remediation] AI 建议了 ${remediationCommands.length} 条修复命令，创建修复工作流`);
 
           // 动态导入避免循环依赖
-          const { aiRemediationService } = await import('../../ai/services/remediation/aiRemediationService.ts');
+          const { aiRemediationService } = await import('../../ai/services/remediation/aiRemediationService');
 
           const remediation = await aiRemediationService.createAndExecute({
             alertId,

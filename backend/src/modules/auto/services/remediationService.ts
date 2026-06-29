@@ -3,7 +3,7 @@ import db from '../../../models/database';
 import { executeWorkflow } from '../../workflow/services/workflowExecutor';
 import { notificationService } from '../../infra/services/notificationService';
 import { logger } from '../../../utils/logger';
-import type { RemediationPolicy, RemediationExecution, WorkflowNode, WorkflowEdge, WorkflowParsed } from '../../../types';
+import type { RemediationPolicy, RemediationExecution, WorkflowNode, WorkflowEdge, WorkflowParsed, PolicyStats } from '../../../types';
 import { policyEngineMixin } from './remediation/policyEngine';
 import { executionTrackerMixin } from './remediation/executionTracker';
 import { remediationActionsMixin } from './remediation/remediationActions';
@@ -22,6 +22,19 @@ class RemediationService {
     this.initialized = true;
     logger.info('Auto-remediation engine initialized');
   }
+
+  // ---- Methods provided by mixins (Object.assign in constructor) ----
+  declare matchAlertToPolicies: (alert: { id: string; source: string; severity?: string; title?: string; content?: string; tags?: string[] }) => Promise<RemediationPolicy[]>;
+  declare listExecutions: (filters: { policy_id?: string; alert_id?: string; status?: string; page?: number; limit?: number }) => { executions: RemediationExecution[]; total: number };
+  declare getExecution: (id: string) => RemediationExecution;
+  declare getPolicyStats: (policyId: string, days: number) => Promise<PolicyStats>;
+  declare listAudits: (filters: { status?: string; risk_level?: string; page?: number; limit?: number }) => { audits: Array<Record<string, unknown>>; total: number };
+  declare createAudit: (input: { rca_id: string; policy_id?: string; server_id: string; risk_level: string; recommendations?: string }) => Record<string, unknown>;
+  declare approveAudit: (id: string, userId: string, action?: string, comment?: string) => Record<string, unknown>;
+  declare executeAudit: (id: string) => Promise<Record<string, unknown>>;
+  declare verifyAudit: (id: string) => Promise<Record<string, unknown>>;
+  declare getAudit: (id: string) => Record<string, unknown>;
+  declare rollbackAudit: (id: string) => Promise<Record<string, unknown>>;
 
   createPolicy(policy: Omit<RemediationPolicy, 'id' | 'created_at' | 'updated_at'>): RemediationPolicy {
     const id = uuidv4();

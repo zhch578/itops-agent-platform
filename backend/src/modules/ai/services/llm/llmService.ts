@@ -797,6 +797,62 @@ export async function callLocalAIAPI(
 }
 
 /**
+ * 根据 AI 模型池中的模型配置调用 LLM API
+ * 动态构建 LLMProviderConfig，支持任意 provider_type
+ */
+async function callModelWithConfig(
+  model: AIModel,
+  systemPrompt: string,
+  userInput: string,
+  agentName: string,
+  temperature: number,
+  agentId: string,
+  signal?: AbortSignal
+): Promise<string> {
+  // 根据 provider_type 构建对应的 LLMProviderConfig
+  const providerNameMap: Record<string, string> = {
+    volcengine: 'Doubao',
+    openai: 'OpenAI',
+    aliyun: 'Aliyun',
+    deepseek: 'DeepSeek',
+    zhipu: 'Zhipu',
+    local: 'LocalAI',
+  };
+
+  const defaultApiBaseMap: Record<string, string> = {
+    volcengine: 'https://ark.cn-beijing.volces.com/api/v3',
+    openai: 'https://api.openai.com/v1',
+    aliyun: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    deepseek: 'https://api.deepseek.com/v1',
+    zhipu: 'https://open.bigmodel.cn/api/paas/v4',
+    local: 'http://host.docker.internal:11434/v1',
+  };
+
+  const providerName = providerNameMap[model.provider_type] || model.provider_type;
+  const defaultApiBase = defaultApiBaseMap[model.provider_type] || '';
+
+  const config: LLMProviderConfig = {
+    providerName,
+    apiKeySetting: `${providerName.toUpperCase()}_API_KEY`,
+    apiKeyEnv: `${providerName.toUpperCase()}_API_KEY`,
+    apiBaseSetting: `${providerName.toUpperCase()}_API_BASE`,
+    apiBaseEnv: `${providerName.toUpperCase()}_API_BASE`,
+    defaultApiBase: model.api_base || defaultApiBase,
+    modelSetting: `${providerName.toUpperCase()}_MODEL`,
+    modelEnv: `${providerName.toUpperCase()}_MODEL`,
+    defaultModel: model.model_id,
+    placeholderKey: model.provider_type === 'local' ? '' : `your-${model.provider_type}-api-key-here`,
+  };
+
+  // 临时覆盖：如果 AIModel 中配置了 api_base，使用它
+  if (model.api_base) {
+    logger.info(`🔧 [${agentName}] Using custom api_base from model config: ${model.api_base}`);
+  }
+
+  return callLLMAPI(config, systemPrompt, userInput, agentName, temperature, agentId, signal);
+}
+
+/**
  * 通用的 LLM 完成生成函数
  * @param prompt 用户提示词
  * @param systemPrompt 系统提示词（可选）

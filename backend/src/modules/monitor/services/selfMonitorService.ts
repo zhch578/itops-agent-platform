@@ -515,8 +515,8 @@ export class SelfMonitorService {
    */
   private async checkServices(): Promise<MonitorCheck> {
     try {
-      const { backupService } = await import('../../infra/services/backupService.ts');
-      const { schedulerService } = await import('../../workflow/services/schedulerService.ts');
+      const { backupService } = await import('../../infra/services/backupService');
+      const { schedulerService } = await import('../../workflow/services/schedulerService');
 
       const services: Array<{ name: string; ok: boolean; status: string; message?: string }> = [];
 

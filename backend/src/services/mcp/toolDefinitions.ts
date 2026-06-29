@@ -842,7 +842,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, riskLevel: RiskLevel.MEDIUM, requiresApproval: true },
     handler: async (args, _ctx) => {
       try {
-        const result = await executeCommand(args.serverId, args.command);
+        const result = await executeCommand(args.serverId as string, args.command as string);
         return textResult(
           `执行结果 (${result.success ? '✅ 成功' : '❌ 失败'})\n输出:\n${result.stdout}${result.stderr ? `\n错误:\n${result.stderr}` : ''}\n用时: ${result.duration}ms`
         );
@@ -867,7 +867,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     handler: async (args, _ctx) => {
       try {
         const command = `tail -n ${args.lines || 100} ${args.filePath}`;
-        const result = await executeCommand(args.serverId, command);
+        const result = await executeCommand(args.serverId as string, command);
         return textResult(`文件: ${args.filePath}\n${result.stdout}${result.stderr ? `\n错误: ${result.stderr}` : ''}`);
       } catch (err) {
         return textResult(`查看文件失败: ${(err as Error).message}`, true);
@@ -888,7 +888,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     handler: async (args, _ctx) => {
       try {
         const commands = ['uptime', 'free -h', 'df -h', 'iostat -x 1 1', 'vmstat 1 1'].join(' && echo -e "\\n---\\n" && ');
-        const result = await executeCommand(args.serverId, commands);
+        const result = await executeCommand(args.serverId as string, commands);
         return textResult(result.stdout);
       } catch (err) {
         return textResult(`获取负载信息失败: ${(err as Error).message}`, true);
@@ -912,10 +912,10 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
       try {
         const sortFlag = args.sortBy === 'mem' ? '-%mem' : '-%cpu';
         const command = `ps aux --sort=${sortFlag} | head -${args.limit || 20}`;
-        const result = await executeCommand(args.serverId, command);
+        const result = await executeCommand(args.serverId as string, command);
         return textResult(result.stdout);
-      } catch (err) {
-        return textResult(`获取进程列表失败: ${(err as Error).message}`, true);
+      } catch (error: any) {
+        return textResult(`获取进程列表失败: ${(error as Error).message}`, true);
       }
     },
     enabled: true,
@@ -933,7 +933,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     handler: async (args, _ctx) => {
       try {
         const commands = ['ip addr show', 'ss -tuln', 'ip route show', 'ping -c 4 8.8.8.8'].join(' && echo -e "\\n---\\n" && ');
-        const result = await executeCommand(args.serverId, commands);
+        const result = await executeCommand(args.serverId as string, commands);
         return textResult(result.stdout);
       } catch (err) {
         return textResult(`网络检查失败: ${(err as Error).message}`, true);
@@ -957,7 +957,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     handler: async (args, _ctx) => {
       try {
         const command = `find ${args.directory || '/'} -type f -size +${args.minSizeMB || 100}M -exec ls -lh {} \\; 2>/dev/null | head -${args.limit || 10}`;
-        const result = await executeCommand(args.serverId, command);
+        const result = await executeCommand(args.serverId as string, command);
         return textResult(`查找目录: ${args.directory || '/'}\n最小文件大小: ${args.minSizeMB || 100} MB\n${result.stdout}`);
       } catch (err) {
         return textResult(`查找大文件失败: ${(err as Error).message}`, true);
@@ -985,7 +985,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
         if (args.unit) command += ` -u ${args.unit}`;
         if (args.level) command += ` -p ${args.level}`;
         command += ` --since '${args.since || '1 hour ago'}' -n ${args.lines || 100}`;
-        const result = await executeCommand(args.serverId, command);
+        const result = await executeCommand(args.serverId as string, command);
         return textResult(`系统日志 (${args.unit || '所有单元'}, ${args.since || '1 hour ago'}):\n${result.stdout}`);
       } catch (err) {
         return textResult(`查询日志失败: ${(err as Error).message}`, true);
@@ -1015,7 +1015,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
         } else {
           command += ' --failed --type=service';
         }
-        const result = await executeCommand(args.serverId, command);
+        const result = await executeCommand(args.serverId as string, command);
         return textResult(`服务状态:\n${result.stdout}`);
       } catch (err) {
         return textResult(`服务检查失败: ${(err as Error).message}`, true);
@@ -1084,7 +1084,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     annotations: READONLY,
     handler: async (args, _ctx) => {
       try {
-        const logs = await dockerService.getContainerLogs(args.containerId, args.tail || 100);
+        const logs = await dockerService.getContainerLogs(args.containerId as string, Number(args.tail) || 100);
         return textResult(`容器 ${args.containerId} 日志 (最近 ${args.tail || 100} 行):\n${logs}`);
       } catch (err) {
         return textResult(`获取容器日志失败: ${(err as Error).message}`, true);
@@ -1104,7 +1104,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     annotations: READONLY,
     handler: async (args, _ctx) => {
       try {
-        const stats = await dockerService.getContainerStats(args.containerId);
+        const stats = await dockerService.getContainerStats(args.containerId as string);
         return jsonResult(stats, `容器 ${args.containerId} 资源统计`);
       } catch (err) {
         return textResult(`获取容器统计失败: ${(err as Error).message}`, true);
@@ -1124,7 +1124,7 @@ export const PLATFORM_TOOLS: RegisteredTool[] = [
     annotations: READONLY,
     handler: async (args, _ctx) => {
       try {
-        const info = await dockerService.getContainer(args.containerId);
+        const info = await dockerService.getContainer(args.containerId as string);
         return jsonResult(info, `容器 ${args.containerId} 详细信息`);
       } catch (err) {
         return textResult(`获取容器详情失败: ${(err as Error).message}`, true);

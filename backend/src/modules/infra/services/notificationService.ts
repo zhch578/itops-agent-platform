@@ -170,7 +170,7 @@ class NotificationService {
     }
   }
 
-  private async send(notification: { type: string; title: string; content: string }) {
+  public async send(notification: { type: string; title: string; content: string }) {
     this.loadConfig(); // 重新加载最新配置
 
     const promises: Promise<void>[] = [];

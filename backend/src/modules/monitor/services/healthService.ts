@@ -312,7 +312,7 @@ export class HealthService {
     const services: SystemHealth['services'] = [];
     
     try {
-      const { backupService } = await import('../../infra/services/backupService.ts');
+      const { backupService } = await import('../../infra/services/backupService');
       const backupStatus = backupService.getStatus();
       services.push({
         name: 'backup',
@@ -328,7 +328,7 @@ export class HealthService {
     }
 
     try {
-      const { schedulerService } = await import('../../workflow/services/schedulerService.ts');
+      const { schedulerService } = await import('../../workflow/services/schedulerService');
       services.push({
         name: 'scheduler',
         status: schedulerService ? 'healthy' : 'degraded',
@@ -344,7 +344,7 @@ export class HealthService {
 
     // 自监控服务检查
     try {
-      const { selfMonitorService } = await import('./selfMonitorService.ts');
+      const { selfMonitorService } = await import('./selfMonitorService');
       const monitorReport = selfMonitorService.getLastReport();
       if (monitorReport) {
         services.push({
@@ -370,7 +370,7 @@ export class HealthService {
 
     // 队列服务检查
     try {
-      const { queueService } = await import('../../workflow/services/queueService.ts');
+      const { queueService } = await import('../../workflow/services/queueService');
       const queueStats = await queueService.stats();
       services.push({
         name: 'queue',
