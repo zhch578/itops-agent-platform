@@ -9,7 +9,7 @@ import { initializeDatabase, setIOInstance, db } from './models/database';
 import { setupWebSocket } from './shared/websocket/handler';
 import { registerAllModules } from './modules/_registry';
 import { container } from './core/serviceContainer';
-import { registerAllServices } from './core/serviceRegistry';
+import { registerAllServices } from './serviceRegistry';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { authenticateToken, requirePasswordChange } from './middleware/auth';
 import { traceMiddleware } from './middleware/trace';

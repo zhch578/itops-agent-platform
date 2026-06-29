@@ -1,43 +1,46 @@
 /**
- * 服务注册中心
+ * 服务注册中心（组装层 / Composition Root）
  * 
- * 将所有服务的初始化逻辑从 app.ts 迁移到此文件
- * 使用 ServiceContainer 统一管理生命周期
+ * 位于 src/ 根级别，不在 core/ 中
+ * 原因：它负责组装所有模块，按照架构约束规则，
+ * 组装层可以依赖所有模块，而 core/ 不能依赖 modules/
+ * 
+ * 参照 ongrid 的 cmd/ 层（assembly layer）模式
  */
 
-import { container } from '../core/serviceContainer';
-import { db } from '../models/database';
-import { logger } from '../utils/logger';
+import { container } from './core/serviceContainer';
+import { db } from './models/database';
+import { logger } from './utils/logger';
 
 // 服务导入
-import { initAlertService } from '../modules/alerts/services/alertService';
-import { reportService } from '../modules/infra/services/reportService';
-import { copilotService } from '../modules/ai/services/agents/copilotService';
-import { rootCauseAnalysisService } from '../modules/ai/services/rca/rootCauseAnalysisService';
-import { schedulerService } from '../modules/workflow/services/schedulerService';
-import { notificationService } from '../modules/infra/services/notificationService';
-import { remediationService } from '../modules/auto/services/remediationService';
-import { backupService } from '../modules/infra/services/backupService';
-import { credentialService } from '../modules/auth/services/credentialService';
-import { queueService } from '../modules/workflow/services/queueService';
-import { selfMonitorService } from '../modules/monitor/services/selfMonitorService';
-import { snmpPollingService } from '../modules/network/services/snmpPollingService';
-import { alertAutoAnalyzer } from '../modules/alerts/services/alertAutoAnalyzer';
-import { alertCorrelationService } from '../modules/alerts/services/alertCorrelationService';
-import { alertAutoResponseService } from '../modules/alerts/services/alertAutoResponse/alertAutoResponseService';
-import { dockerService } from '../modules/containers/services/dockerService';
-import { configTemplateService } from '../modules/infra/services/configTemplateService';
-import { composeService } from '../modules/infra/services/composeService';
-import { registryService } from '../modules/containers/services/registryService';
-import { kubernetesService } from '../modules/kubernetes/services/kubernetesService';
-import { autoScaleService } from '../modules/auto/services/autoScaleService';
-import { vmMigrationService } from '../modules/containers/services/vmMigrationService';
-import { vmSnapshotSchedulerService } from '../modules/containers/services/vmSnapshotSchedulerService';
-import { multiHostDockerService } from '../modules/containers/services/multiHostDockerService';
-import { initTokenBlacklist } from '../modules/auth/services/tokenBlacklist';
-import { startCircuitBreakerCleanup } from '../modules/ai/services/llm/llmService';
-import { startDCStatusPush, stopDCStatusPush } from '../modules/dc/services/dcStatusService';
-import { initializeProviders } from '../modules/ai/services/providers';
+import { initAlertService } from './modules/alerts/services/alertService';
+import { reportService } from './modules/infra/services/reportService';
+import { copilotService } from './modules/ai/services/agents/copilotService';
+import { rootCauseAnalysisService } from './modules/ai/services/rca/rootCauseAnalysisService';
+import { schedulerService } from './modules/workflow/services/schedulerService';
+import { notificationService } from './modules/infra/services/notificationService';
+import { remediationService } from './modules/auto/services/remediationService';
+import { backupService } from './modules/infra/services/backupService';
+import { credentialService } from './modules/auth/services/credentialService';
+import { queueService } from './modules/workflow/services/queueService';
+import { selfMonitorService } from './modules/monitor/services/selfMonitorService';
+import { snmpPollingService } from './modules/network/services/snmpPollingService';
+import { alertAutoAnalyzer } from './modules/alerts/services/alertAutoAnalyzer';
+import { alertCorrelationService } from './modules/alerts/services/alertCorrelationService';
+import { alertAutoResponseService } from './modules/alerts/services/alertAutoResponse/alertAutoResponseService';
+import { dockerService } from './modules/containers/services/dockerService';
+import { configTemplateService } from './modules/infra/services/configTemplateService';
+import { composeService } from './modules/infra/services/composeService';
+import { registryService } from './modules/containers/services/registryService';
+import { kubernetesService } from './modules/kubernetes/services/kubernetesService';
+import { autoScaleService } from './modules/auto/services/autoScaleService';
+import { vmMigrationService } from './modules/containers/services/vmMigrationService';
+import { vmSnapshotSchedulerService } from './modules/containers/services/vmSnapshotSchedulerService';
+import { multiHostDockerService } from './modules/containers/services/multiHostDockerService';
+import { initTokenBlacklist } from './modules/auth/services/tokenBlacklist';
+import { startCircuitBreakerCleanup } from './modules/ai/services/llm/llmService';
+import { startDCStatusPush, stopDCStatusPush } from './modules/dc/services/dcStatusService';
+import { initializeProviders } from './modules/ai/services/providers';
 
 /**
  * 注册所有服务到容器
