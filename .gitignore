@@ -73,3 +73,6 @@ eslint.txt
 
 # 机房大屏（独立项目，不纳入主仓库）
 jifangdaping/
+
+# 开发辅助脚本（不纳入仓库）
+scripts/
