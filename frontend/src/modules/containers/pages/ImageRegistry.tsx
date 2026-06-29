@@ -145,7 +145,7 @@ export default function ImageRegistry() {
                       <div className="flex flex-col gap-1.5 mt-1">
                         <div className="flex items-center gap-2">
                           <Tag color={typeInfo.color}>{typeInfo.label}</Tag>
-                          <Tag color={reg.status === 'connected' ? 'green' : 'default'}>{reg.status || 'unknown'}</Tag>
+                          <Tag color={reg.status === 'active' ? 'green' : 'default'}>{reg.status || 'unknown'}</Tag>
                         </div>
                         {reg.url && (
                           <Typography.Text type="secondary" ellipsis className="text-xs">

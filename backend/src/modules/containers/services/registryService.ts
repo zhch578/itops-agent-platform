@@ -151,7 +151,7 @@ class RegistryService {
     if (config.type !== undefined) { updates.push('type = ?'); params.push(config.type); }
     if (config.url !== undefined) { updates.push('url = ?'); params.push(config.url); }
     if (config.username !== undefined) { updates.push('username = ?'); params.push(config.username); }
-    if (config.password !== undefined) { updates.push('password = ?'); params.push(config.password); }
+    if (config.password !== undefined) { updates.push('encrypted_password = ?'); params.push(config.password); }
     
     if (updates.length > 0) {
       updates.push("updated_at = datetime('now','localtime')");

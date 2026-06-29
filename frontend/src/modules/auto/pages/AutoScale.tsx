@@ -39,7 +39,7 @@ interface ScaleSummary {
   activeRules: number;
   todayScaleUp: number;
   todayScaleDown: number;
-  managedInstances: number;
+  totalManagedInstances: number;
 }
 
 // ==================== 主组件 ====================
@@ -62,7 +62,7 @@ export default function AutoScale() {
 
   // 统计
   const [summary, setSummary] = useState<ScaleSummary>({
-    activeRules: 0, todayScaleUp: 0, todayScaleDown: 0, managedInstances: 0,
+    activeRules: 0, todayScaleUp: 0, todayScaleDown: 0, totalManagedInstances: 0,
   });
 
   // ==================== 数据获取 ====================
@@ -93,7 +93,7 @@ export default function AutoScale() {
   const fetchSummary = useCallback(async () => {
     try {
       const res = await api.get('/api/auto-scale/summary');
-      setSummary(res.data.data || { activeRules: 0, todayScaleUp: 0, todayScaleDown: 0, managedInstances: 0 });
+      setSummary(res.data.data || { activeRules: 0, todayScaleUp: 0, todayScaleDown: 0, totalManagedInstances: 0 });
     } catch { /* ignore */ }
   }, []);
 
@@ -268,7 +268,7 @@ export default function AutoScale() {
           <Card className="bg-slate-800/50 border-slate-700">
             <Statistic
               title={<span className="text-slate-400 text-xs">管理实例总数</span>}
-              value={summary.managedInstances}
+              value={summary.totalManagedInstances}
               prefix={<Server size={16} className="text-blue-400 inline-block mr-1" />}
               valueStyle={{ color: '#60a5fa', fontSize: 24, fontWeight: 700 }}
             />

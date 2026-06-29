@@ -1,19 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Tag, Space, message, Form, Input, InputNumber, Switch, Popconfirm, Tooltip, Select } from 'antd';
+import { Table, Button, Modal, Tag, Space, message, Form, Input, InputNumber, Switch, Popconfirm, Tooltip } from 'antd';
 import { Plus, Edit, Trash2, Search, RefreshCw, HelpCircle } from 'lucide-react';
 import api from '../../../lib/api';
 
 interface SnapshotPolicy {
   id: string;
   name: string;
-  platform_id?: string;
-  vm_id?: string;
-  cron_expr?: string;
-  retain_count?: number;
-  include_memory?: boolean | number;
+  platformId?: string;
+  vmId?: string;
+  cronExpression?: string;
+  retention?: number;
+  snapshotMemory?: boolean | number;
   enabled?: boolean | number;
-  last_run_at?: string;
+  lastRunAt?: string;
 }
 
 const cronExamples = [
@@ -70,7 +70,7 @@ export default function SnapshotPolicies() {
     setEditing(record);
     form.setFieldsValue({
       ...record,
-      include_memory: !!record.include_memory,
+      snapshotMemory: !!record.snapshotMemory,
       enabled: !!record.enabled,
     });
     setModalOpen(true);
@@ -78,13 +78,13 @@ export default function SnapshotPolicies() {
 
   const columns = [
     { title: '名称', dataIndex: 'name', key: 'name' },
-    { title: '平台ID', dataIndex: 'platform_id', key: 'platform_id' },
-    { title: 'VM ID', dataIndex: 'vm_id', key: 'vm_id' },
-    { title: 'Cron表达式', dataIndex: 'cron_expr', key: 'cron_expr', ellipsis: true },
-    { title: '保留数', dataIndex: 'retain_count', key: 'retain_count' },
-    { title: '内存快照', dataIndex: 'include_memory', key: 'include_memory', render: (v: any) => v ? <Tag color="blue">是</Tag> : <Tag>否</Tag> },
+    { title: '平台ID', dataIndex: 'platformId', key: 'platformId' },
+    { title: 'VM ID', dataIndex: 'vmId', key: 'vmId' },
+    { title: 'Cron表达式', dataIndex: 'cronExpression', key: 'cronExpression', ellipsis: true },
+    { title: '保留数', dataIndex: 'retention', key: 'retention' },
+    { title: '内存快照', dataIndex: 'snapshotMemory', key: 'snapshotMemory', render: (v: any) => v ? <Tag color="blue">是</Tag> : <Tag>否</Tag> },
     { title: '状态', dataIndex: 'enabled', key: 'enabled', render: (v: any) => v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
-    { title: '上次执行', dataIndex: 'last_run_at', key: 'last_run_at' },
+    { title: '上次执行', dataIndex: 'lastRunAt', key: 'lastRunAt' },
     { title: '操作', key: 'action', width: 160, render: (_: any, record: SnapshotPolicy) => (
       <Space>
         <Button type="link" size="small" icon={<Edit size={14} />} onClick={() => openEdit(record)}>编辑</Button>
@@ -119,11 +119,11 @@ export default function SnapshotPolicies() {
       />
 
       <Modal title={editing ? '编辑策略' : '新建策略'} open={modalOpen} onOk={handleSave} onCancel={() => { setModalOpen(false); setEditing(null); }} width={560}>
-        <Form form={form} layout="vertical" initialValues={{ retain_count: 7, include_memory: false, enabled: true }}>
+        <Form form={form} layout="vertical" initialValues={{ retention: 7, snapshotMemory: false, enabled: true }}>
           <Form.Item name="name" label="名称" rules={[{ required: true }]}><Input /></Form.Item>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="platform_id" label="平台ID"><Input /></Form.Item>
-            <Form.Item name="vm_id" label="VM ID"><Input /></Form.Item>
+            <Form.Item name="platformId" label="平台ID"><Input /></Form.Item>
+            <Form.Item name="vmId" label="VM ID"><Input /></Form.Item>
           </div>
           <Form.Item
             label={
@@ -134,15 +134,15 @@ export default function SnapshotPolicies() {
                 </Tooltip>
               </span>
             }
-            name="cron_expr"
+            name="cronExpression"
           >
             <Input placeholder="0 2 * * *" />
           </Form.Item>
-          <Form.Item name="retain_count" label="保留最近 N 个">
+          <Form.Item name="retention" label="保留最近 N 个">
             <InputNumber min={1} max={30} className="w-full" />
           </Form.Item>
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item name="include_memory" label="包含内存快照" valuePropName="checked">
+            <Form.Item name="snapshotMemory" label="包含内存快照" valuePropName="checked">
               <Switch />
             </Form.Item>
             <Form.Item name="enabled" label="启用" valuePropName="checked">
