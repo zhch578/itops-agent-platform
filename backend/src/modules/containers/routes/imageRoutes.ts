@@ -64,6 +64,18 @@ router.post('/pull', requireRole('admin', 'operator'), async (req: Request, res:
   }
 });
 
+// POST /sync — 同步镜像数据
+router.post('/sync', requireRole('admin', 'operator'), async (req: Request, res: Response) => {
+  if (!checkDockerAvailable(res)) return;
+
+  try {
+    const allImages = await dockerService.listImages();
+    res.json({ success: true, message: '镜像数据同步完成', data: allImages });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // POST /prune — 批量清理未使用镜像
 router.post('/prune', requireRole('admin', 'operator'), async (_req: Request, res: Response) => {
   if (!checkDockerAvailable(res)) return;

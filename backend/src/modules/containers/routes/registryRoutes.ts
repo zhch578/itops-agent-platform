@@ -38,6 +38,17 @@ router.post('/', requireRole('admin'), async (req: Request, res: Response) => {
   }
 });
 
+// PUT /:id — 更新仓库
+router.put('/:id', requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { name, type, url, username, password } = req.body;
+    const updated = await registryService.updateRegistry(req.params.id, { name, type, url, username, password });
+    res.json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // DELETE /:id — 删除仓库
 router.delete('/:id', requireRole('admin'), async (req: Request, res: Response) => {
   try {

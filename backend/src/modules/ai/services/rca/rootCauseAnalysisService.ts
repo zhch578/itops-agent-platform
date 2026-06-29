@@ -8,6 +8,7 @@ import { topologyService } from '../../../network/services/topologyService';
 import { changeService } from '../../../infra/services/changeService';
 import EnhancedRAGService from '../remediation/enhancedRAGService';
 import { RCA_PROMPT } from '../../prompts/rcaPrompt';
+import { aiRemediationService } from '../remediation/aiRemediationService';
 
 const ragService = new EnhancedRAGService();
 
@@ -79,12 +80,12 @@ class RootCauseAnalysisService {
             description = COALESCE(?, description),
             status = COALESCE(?, status),
             root_cause = COALESCE(?, root_cause),
-          symptoms = COALESCE(?, symptoms),
-          timeline = COALESCE(?, timeline),
-          evidence = COALESCE(?, evidence),
-          recommendations = COALESCE(?, recommendations),
-          updated_at = datetime('now','localtime'),
-          completed_at = CASE WHEN ? = 'completed' THEN datetime('now','localtime') ELSE completed_at END
+            symptoms = COALESCE(?, symptoms),
+            timeline = COALESCE(?, timeline),
+            evidence = COALESCE(?, evidence),
+            recommendations = COALESCE(?, recommendations),
+            updated_at = datetime('now','localtime'),
+            completed_at = CASE WHEN ? = 'completed' THEN datetime('now','localtime') ELSE completed_at END
         WHERE id = ?
       `);
 
@@ -362,6 +363,138 @@ ${alertInfo}
     }
   }
 
+  /** 根据告警查找关联设备（优先 network_devices，再查 servers） */
+  private findDeviceByAlert(alertId: string): {
+    id: string;
+    name: string;
+    ip_address: string;
+    device_type: 'server' | 'network_device';
+  } | null {
+    try {
+      // 1. 查 alert_device_associations
+      const assoc = db.prepare(`
+        SELECT ad.device_type, ad.device_id
+        FROM alert_device_associations ad
+        WHERE ad.alert_id = ?
+      `).get(alertId) as { device_type: 'server' | 'network_device'; device_id: string } | undefined;
+
+      if (assoc) {
+        if (assoc.device_type === 'network_device') {
+          const nd = db.prepare(`
+            SELECT id, name, ip_address
+            FROM network_devices WHERE id = ?
+          `).get(assoc.device_id) as any;
+          if (nd) {
+            return {
+              id: nd.id,
+              name: nd.name,
+              ip_address: nd.ip_address,
+              device_type: 'network_device',
+            };
+          }
+        } else {
+          // server
+          const sv = db.prepare('SELECT id, name, hostname, ip_address FROM servers WHERE id = ?').get(assoc.device_id) as any;
+          if (sv) {
+            return {
+              id: sv.id,
+              name: sv.name,
+              ip_address: sv.hostname || sv.ip_address,
+              device_type: 'server',
+            };
+          }
+        }
+      }
+
+      // 2. 回退：直接从 alert 的 metadata/host 字段提取 IP 匹配
+      const alert = db.prepare('SELECT title, content, metadata FROM alerts WHERE id = ?').get(alertId) as any;
+      if (!alert) return null;
+
+      const metadata = typeof alert.metadata === 'string' 
+        ? JSON.parse(alert.metadata || '{}') 
+        : alert.metadata || {};
+      const possibleIps: string[] = [];
+
+      // 从 metadata.host / annotations / labels 中找 IP
+      if (metadata.host) possibleIps.push(metadata.host);
+      if (metadata.labels?.instance) possibleIps.push(metadata.labels.instance);
+      if (metadata.annotations?.instance) possibleIps.push(metadata.annotations.instance);
+
+      // 从标题和内容中正则匹配 IP
+      const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/g;
+      const titleIps = alert.title.match(ipRegex) || [];
+      const contentIps = alert.content?.match(ipRegex) || [];
+      possibleIps.push(...titleIps, ...contentIps);
+
+      for (const ip of [...new Set(possibleIps)]) {
+        // 查 network_devices
+        const nd = db.prepare(
+          'SELECT id, name, ip_address FROM network_devices WHERE ip_address = ?'
+        ).get(ip) as any;
+        if (nd) {
+          return {
+            id: nd.id,
+            name: nd.name,
+            ip_address: nd.ip_address,
+            device_type: 'network_device',
+          };
+        }
+        // 查 servers（匹配 hostname、ip_address、private_ip 三个字段）
+        const sv = db.prepare(
+          'SELECT id, name, hostname, ip_address, private_ip FROM servers WHERE hostname = ? OR ip_address = ? OR private_ip = ?'
+        ).get(ip, ip, ip) as any;
+        if (sv) {
+          return {
+            id: sv.id,
+            name: sv.name,
+            ip_address: sv.hostname || sv.ip_address || sv.private_ip,
+            device_type: 'server',
+          };
+        }
+      }
+    } catch {
+      // 查找设备失败，忽略
+    }
+
+    return null;
+  }
+
+  /** 从 recommendations 中提取具体的修复命令 */
+  private extractCommandsFromRecommendations(recommendations: string[]): string[] {
+    const commands: string[] = [];
+    const commandPatterns = [
+      /^(?:systemctl|service|docker|docker-compose|kubectl|mkdir|rm|mv|cp|chmod|chown|touch|echo|cat|grep|sed|awk|tail|head|kill|pkill|sysctl|ulimit|date|uptime|free|df|netstat|ss|top|ps|ls|cd)\s+.+$/,
+      /`([^`]+)`/,
+      /```(?:bash|sh|shell)?\s*([\s\S]*?)\s*```/,
+    ];
+
+    for (const rec of recommendations) {
+      // 尝试匹配完整命令行
+      const match1 = rec.match(commandPatterns[0]);
+      if (match1) {
+        commands.push(match1[0].trim());
+        continue;
+      }
+      // 尝试匹配反引号中的命令
+      const match2 = rec.match(commandPatterns[1]);
+      if (match2) {
+        commands.push(match2[1].trim());
+        continue;
+      }
+      // 尝试匹配代码块
+      const match3 = rec.match(commandPatterns[2]);
+      if (match3) {
+        // 分割多行命令
+        const lines = match3[1].split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0 && !l.startsWith('#'));
+        commands.push(...lines);
+        continue;
+      }
+    }
+
+    // 去重
+    return [...new Set(commands)];
+  }
+
   async autoAnalyze(alertId: string): Promise<RootCauseAnalysis | undefined> {
     try {
       logger.info(`🔍 [RCA] 开始自动根因分析: alertId=${alertId}`);
@@ -401,9 +534,39 @@ ${alertInfo}
       });
 
       logger.info(`✅ [RCA] 自动根因分析完成: rcaId=${rca.id}`);
+
+      // [断裂点1修复] 桥接到aiRemediationService
+      try {
+        // 查找关联设备
+        const device = this.findDeviceByAlert(alertId);
+        if (device && analysisResult.recommendations && analysisResult.recommendations.length > 0) {
+          // 从 recommendations 中提取具体的修复命令
+          const commands = this.extractCommandsFromRecommendations(analysisResult.recommendations);
+          if (commands.length > 0) {
+            // 调用 aiRemediationService
+            logger.info(`🔧 [RCA → AI Remediation] 触发自动修复: alertId=${alertId}, commands=${commands}`);
+            await aiRemediationService.createAndExecute({
+              alertId: alertId,
+              alertTitle: alert.title,
+              alertContent: alert.content,
+              alertSeverity: alert.severity,
+              deviceId: device.id,
+              deviceName: device.name,
+              deviceIp: device.ip_address,
+              deviceType: device.device_type,
+              diagnosis: analysisResult.root_cause || 'AI诊断完成',
+              remediationCommands: commands,
+              riskLevel: alert.severity === 'critical' || alert.severity === 'high' ? 'high' : 'medium'
+            });
+          }
+        }
+      } catch (remediationError) {
+        logger.warn(`⚠️ [RCA] 触发AI修复失败: ${remediationError instanceof Error ? remediationError.message : String(remediationError)}`);
+      }
+
       return this.get(rca.id);
     } catch (error) {
-      logger.error(`❌ [RCA] 自动根因分析失败: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      logger.error(`❌ [RCA] 自动根因分析失败: ${error instanceof Error ? error.message : 'Unknown'}`);
       throw error;
     }
   }

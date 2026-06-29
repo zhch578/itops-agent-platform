@@ -487,7 +487,7 @@ export default function useDataCenter() {
     if (!selectedSlot) return;
     try {
       const values = await moveForm.validateFields();
-      await api.post(`/api/dc/slots/${selectedSlot.id}/move`, values);
+      await api.put(`/api/dc/slots/${selectedSlot.id}`, values);
       message.success('设备移位成功');
       setMoveModalOpen(false);
       moveForm.resetFields();

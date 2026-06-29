@@ -4,15 +4,13 @@ import { randomUUID, createHash } from 'crypto';
 import db, { getIOInstance } from '../../../models/database';
 import { notificationService } from '../../infra/services/notificationService';
 import { alertNoiseReductionService } from '../services/alertNoiseReductionService';
-import { remediationService } from '../../auto/services/remediationService';
 import { rootCauseAnalysisService } from '../../ai/services/rca/rootCauseAnalysisService';
 import { alertService } from '../services/alertService';
-import { alertAutoAnalyzer } from '../services/alertAutoAnalyzer';
-import { alertWorkflowMappingService } from '../services/alertWorkflowMappingService';
 import { emitToAlerts } from '../../../shared/websocket/handler';
 import { logger } from '../../../utils/logger';
 import { requireRole } from '../../../middleware/auth';
 import { alertProviderRegistry } from '../services/alertProviderRegistry';
+import { alertProcessor } from '../../../core/AlertProcessor';
 
 const router = Router();
 
@@ -324,46 +322,25 @@ async function runAlertProcessingPipeline(ctx: AlertProcessingContext): Promise<
       });
     }
 
-    // ── AI 自动分析 ──
-    if (severity === 'critical' || severity === 'high') {
-      alertAutoAnalyzer.analyzeAlert(id).catch((err: Error) => {
-        logger.error(`Failed to auto-analyze alert ${id}:`, err);
-      });
-    }
-
-    // 数据库告警处理
-    alertService.processDatabaseAlert(id);
-
-    // 匹配修复策略并执行
-    const alertForMatching = { id, source, severity, rawSeverity, title, content, tags };
-    const mappingTask = alertWorkflowMappingService.triggerFirstMatchingWorkflow(alertForMatching);
-    if (mappingTask) {
-      emitToAlerts(io!, 'remediation:result', {
-        alertId: id,
-        policyId: mappingTask.mappingId,
-        policyName: `告警映射: ${mappingTask.workflowName}`,
-        executionId: mappingTask.taskId,
-        status: 'task_created',
-        timestamp: new Date().toISOString()
-      });
-    }
-    const policies = await remediationService.matchAlertToPolicies(alertForMatching);
-    for (const policy of policies) {
-      const result = await remediationService.triggerRemediation(policy, alertForMatching);
-      emitToAlerts(io!, 'remediation:result', {
-        alertId: id,
-        policyId: policy.id,
-        policyName: policy.name,
-        executionId: result.id,
-        status: result.status,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    emitToAlerts(io!, 'remediation:completed', {
+    // ── 统一告警处理入口（AARS + 工作流 智能决策）──
+    alertProcessor.processAlert({
       alertId: id,
-      totalPolicies: policies.length,
-      timestamp: new Date().toISOString()
+      title,
+      content,
+      severity,
+      source,
+      metadata: { tags, rawSeverity }
+    }).then((result) => {
+      emitToAlerts(io!, 'remediation:result', {
+        alertId: id,
+        policyId: result.executionId || result.taskId || '',
+        policyName: `统一处理: ${result.strategy}`,
+        executionId: result.executionId || result.taskId,
+        status: result.success ? 'success' : 'failed',
+        timestamp: new Date().toISOString()
+      });
+    }).catch((err: Error) => {
+      logger.error(`AlertProcessor failed for ${id}:`, err);
     });
   } catch (error) {
     logger.error('Failed to process alert remediation:', error);
@@ -407,80 +384,87 @@ router.post('/:id/process', async (req: Request, res: Response) => {
 
     const ctx: AlertProcessingContext = { id, source, severity, rawSeverity, title, content, tags };
 
-    // 同步匹配：确认有哪些修复策略匹配了
-    let matchedPolicies: Array<{ id: string; name: string; execution_mode: string }> = [];
-    const executionIds: string[] = [];
-    let mappingTasks: Array<{ taskId: string; mappingId: string; workflowId: string; workflowName: string }> = [];
+    // ── 统一告警处理入口（AARS + 工作流 智能决策）──
+    let processResult: { success: boolean; strategy: string; executionId?: string; taskId?: string; errorMessage?: string } | null = null;
     let errorMsg: string | null = null;
 
     try {
-      // 先跑 alertService 的数据库处理
-      alertService.processDatabaseAlert(id);
-
-      const mappingTask = alertWorkflowMappingService.triggerFirstMatchingWorkflow(ctx);
-      if (mappingTask) {
-        mappingTasks = [mappingTask];
-      }
-      const policies = await remediationService.matchAlertToPolicies(ctx);
-      matchedPolicies = policies.map(p => ({
-        id: p.id,
-        name: p.name,
-        execution_mode: p.execution_mode
-      }));
-
-      // 触发执行（后台异步）
-      for (const policy of policies) {
-        const result = await remediationService.triggerRemediation(policy, ctx);
-        executionIds.push(result.id);
-      }
+      processResult = await alertProcessor.processAlert({
+        alertId: id,
+        title,
+        content,
+        severity,
+        source,
+        metadata: { tags, rawSeverity }
+      });
     } catch (e) {
       errorMsg = e instanceof Error ? e.message : String(e);
       logger.error('Manual process alert error:', e);
     }
 
-    // AI 自动分析 + RCA 放在后台不阻塞
+    // 自动根因分析（后台异步）
     setImmediate(() => {
-      // ── AI 自动分析 ──
-      if (severity === 'critical' || severity === 'high') {
-        alertAutoAnalyzer.analyzeAlert(id).catch((err: Error) => {
-          logger.error(`Failed to auto-analyze alert ${id}:`, err);
-        });
-      }
-
       const autoRCAEnabled = db.prepare("SELECT value FROM settings WHERE key = 'auto_root_cause_enabled'").get() as { value: string } | undefined;
       if (autoRCAEnabled?.value === 'true') {
         rootCauseAnalysisService.analyzeByAlert(id, title, content).catch((err) => {
           logger.error('Failed to auto-trigger RCA for alert:', err);
         });
       }
-
-      // 补发 WebSocket 事件
-      const io = getIOInstance();
-      if (io) {
-        emitToAlerts(io, 'remediation:completed', {
-          alertId: id,
-          totalPolicies: matchedPolicies.length,
-          timestamp: new Date().toISOString()
-        });
-      }
     });
 
     res.json({
-      success: true,
+      success: processResult?.success ?? false,
       message: errorMsg
-        ? `告警处理完成，但部分策略执行出错: ${errorMsg}`
-        : `告警处理完成：匹配 ${matchedPolicies.length} 条修复策略，触发 ${mappingTasks.length} 个告警映射任务，创建 ${executionIds.length} 条修复执行记录`,
+        ? `处理出错: ${errorMsg}`
+        : `处理完成：使用 ${processResult?.strategy ?? 'unknown'} 策略`,
       data: {
         alertId: id,
-        matchedPolicies,
-        mappingTasks,
-        executionIds,
-        error: errorMsg
+        strategy: processResult?.strategy ?? 'unknown',
+        executionId: processResult?.executionId || processResult?.taskId,
+        error: errorMsg || processResult?.errorMessage
       }
     });
   } catch (error) {
     logger.error('Failed to trigger manual alert processing:', error);
     res.status(500).json({ success: false, error: '触发告警处理失败' });
+  }
+});
+
+// ── 统一入口：告警处理（自动决策用哪种策略） ──
+router.post('/:id/process-unified', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const alert = db.prepare('SELECT id, title, content, severity, source, metadata FROM alerts WHERE id = ?').get(id) as any;
+    if (!alert) {
+      return res.status(404).json({ success: false, error: '告警不存在' });
+    }
+
+    // 解析 metadata
+    let metadata: Record<string, unknown> = {};
+    try {
+      metadata = alert.metadata ? JSON.parse(alert.metadata) : {};
+    } catch { /* ignore */ }
+
+    const result = await alertProcessor.processAlert({
+      alertId: alert.id,
+      title: alert.title,
+      content: alert.content,
+      severity: alert.severity,
+      source: alert.source,
+      metadata
+    });
+
+    res.status(200).json({
+      success: result.success,
+      message: result.success
+        ? `告警处理成功，策略: ${result.strategy}`
+        : `告警处理失败，策略: ${result.strategy}，错误: ${result.errorMessage}`,
+      data: result
+    });
+  } catch (error) {
+    logger.error('Failed to process alert via unified API:', error);
+    res.status(500).json({ success: false, error: '统一告警处理失败' });
   }
 });
 
@@ -527,6 +511,128 @@ router.post('/providers/fetch', async (req: Request, res: Response) => {
     res.json({ success: true, data: alerts });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch alerts from provider' });
+  }
+});
+
+// === Alert Provider Configs CRUD ===
+router.get('/providers/configs', (req, res) => {
+  try {
+    const configs = db.prepare('SELECT * FROM alert_provider_configs ORDER BY created_at DESC').all();
+    // Parse JSON config
+    const parsedConfigs = configs.map((config: any) => {
+      let parsedConfig;
+      try {
+        parsedConfig = config.config ? JSON.parse(config.config) : null;
+      } catch {
+        parsedConfig = null;
+      }
+      return { ...config, config: parsedConfig };
+    });
+    res.json({ success: true, data: parsedConfigs });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get provider configs' });
+  }
+});
+
+router.get('/providers/configs/:id', (req, res) => {
+  try {
+    const config = db.prepare('SELECT * FROM alert_provider_configs WHERE id = ?').get(req.params.id);
+    if (!config) {
+      return res.status(404).json({ success: false, error: 'Config not found' });
+    }
+    let parsedConfig;
+    try {
+      parsedConfig = (config as any).config ? JSON.parse((config as any).config) : null;
+    } catch {
+      parsedConfig = null;
+    }
+    res.json({ success: true, data: { ...(config as any), config: parsedConfig } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get provider config' });
+  }
+});
+
+router.post('/providers/configs', (req, res) => {
+  try {
+    const { provider_id, name, config, enabled } = req.body;
+    if (!provider_id || !name) {
+      return res.status(400).json({ success: false, error: 'provider_id and name are required' });
+    }
+    const id = randomUUID();
+    db.prepare(`
+      INSERT INTO alert_provider_configs (id, provider_id, name, config, enabled, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now','localtime'), datetime('now','localtime'))
+    `).run(
+      id,
+      provider_id,
+      name,
+      JSON.stringify(config || {}),
+      enabled !== undefined ? (enabled ? 1 : 0) : 1
+    );
+    const newConfig = db.prepare('SELECT * FROM alert_provider_configs WHERE id = ?').get(id);
+    let parsedConfig;
+    try {
+      parsedConfig = (newConfig as any).config ? JSON.parse((newConfig as any).config) : null;
+    } catch {
+      parsedConfig = null;
+    }
+    res.status(201).json({ success: true, data: { ...(newConfig as any), config: parsedConfig } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to create provider config' });
+  }
+});
+
+router.put('/providers/configs/:id', (req, res) => {
+  try {
+    const { name, config, enabled } = req.body;
+    const id = req.params.id;
+    const updates: string[] = [];
+    const values: any[] = [];
+    
+    if (name !== undefined) {
+      updates.push('name = ?');
+      values.push(name);
+    }
+    if (config !== undefined) {
+      updates.push('config = ?');
+      values.push(JSON.stringify(config || {}));
+    }
+    if (enabled !== undefined) {
+      updates.push('enabled = ?');
+      values.push(enabled ? 1 : 0);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, error: 'No fields to update' });
+    }
+    updates.push('updated_at = datetime(\'now\',\'localtime\')');
+    values.push(id);
+    
+    db.prepare(`UPDATE alert_provider_configs SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    
+    const updatedConfig = db.prepare('SELECT * FROM alert_provider_configs WHERE id = ?').get(id);
+    let parsedConfig;
+    try {
+      parsedConfig = (updatedConfig as any).config ? JSON.parse((updatedConfig as any).config) : null;
+    } catch {
+      parsedConfig = null;
+    }
+    res.json({ success: true, data: { ...(updatedConfig as any), config: parsedConfig } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update provider config' });
+  }
+});
+
+router.delete('/providers/configs/:id', (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = db.prepare('DELETE FROM alert_provider_configs WHERE id = ?').run(id);
+    if (result.changes === 0) {
+      return res.status(404).json({ success: false, error: 'Config not found' });
+    }
+    res.json({ success: true, message: 'Config deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to delete provider config' });
   }
 });
 

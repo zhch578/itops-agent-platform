@@ -1,9 +1,9 @@
 import type { Migration } from './migrationFramework';
 import { logger } from '../../utils/logger';
 
-const v007FixUsersIdType: Migration = {
-  id: '20240101000007',
-  version: 7,
+const v008FixUsersIdType: Migration = {
+  id: '20240101000008',
+  version: 8,
   name: 'fix_users_id_type',
   description: 'Change users.id from INTEGER to TEXT to support UUID values consistently',
 
@@ -92,4 +92,4 @@ const v007FixUsersIdType: Migration = {
   }
 };
 
-export default v007FixUsersIdType;
+export default v008FixUsersIdType;

@@ -65,8 +65,8 @@ router.get('/', (_req: Request, res: Response) => {
       rackCounts[slot.rack_id] = (rackCounts[slot.rack_id] || 0) + 1;
       if (slot.server_status === 'online') onlineDevices++;
 
-      // 简单告警模拟
-      if (slot.cpu_cores && slot.cpu_cores > 80) {
+      // 告警检测：按服务器真实状态判断
+      if (slot.server_status && slot.server_status !== 'online' && slot.server_status !== 'offline') {
         rackAlertMap[slot.rack_id] = (rackAlertMap[slot.rack_id] || 0) + 1;
         alertDevices++;
       }
@@ -89,8 +89,8 @@ router.get('/', (_req: Request, res: Response) => {
           alertDevices,
           avgTemp: realRooms.reduce((s, r) => s + (r.current_temperature || 25), 0) / (realRooms.length || 1),
           avgHumidity: realRooms.reduce((s, r) => s + (r.current_humidity || 50), 0) / (realRooms.length || 1),
-          pue: 1.45 + Math.random() * 0.1,
-          totalPowerKw: (totalDevices * 0.35) + Math.random() * 5,
+          pue: realRooms.length > 0 ? (realRooms.reduce((s, r) => s + (r.pue || 1.45), 0) / realRooms.length) : 1.45,
+          totalPowerKw: realRooms.length > 0 ? realRooms.reduce((s, r) => s + (r.total_power_kw || 0), 0) : (totalDevices * 0.35),
         },
         rackData: (rackData as any[]).map(r => ({
           ...r,

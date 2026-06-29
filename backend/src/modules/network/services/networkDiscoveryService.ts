@@ -17,8 +17,35 @@ import db from '../../../models/database';
 import { logger } from '../../../utils/logger';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { decrypt } from '../../auth/services/encryptionService';
 
 const execAsync = promisify(exec);
+const isWindows = process.platform === 'win32';
+
+/**
+ * 跨平台 Ping 命令构建（Windows 和 Linux 语法不同）
+ */
+function buildPingCommand(ip: string): string {
+  if (isWindows) {
+    return `ping -n 1 -w 2000 ${ip}`;
+  }
+  return `ping -c 1 -W 2 ${ip}`;
+}
+
+/**
+ * 跨平台 Ping 输出检测（中英文兼容）
+ */
+function isPingSuccess(stdout: string): boolean {
+  // 通用检测：TTL 值（英文/中文输出都包含）
+  if (/ttl=/i.test(stdout)) return true;
+  // Linux 英文输出
+  if (stdout.includes('1 received') || stdout.includes('1 packets received')) return true;
+  // Windows 中文输出
+  if (stdout.includes('TTL=')) return true;
+  // 通用：收到 = 1
+  if (stdout.includes('已接收 = 1') || stdout.includes('Received = 1')) return true;
+  return false;
+}
 
 // ====================== 接口定义 ======================
 
@@ -109,7 +136,14 @@ class NetworkDiscoveryService {
     const credentialIds: string[] = JSON.parse(job.credential_ids || '[]');
     const credentials = credentialIds.map(id => {
       const cred = db.prepare('SELECT * FROM snmp_credentials WHERE id = ?').get(id) as any;
-      return cred;
+      if (!cred) return null;
+      // 解密凭证字段，否则 SNMP 认证会用密文必然失败
+      return {
+        ...cred,
+        community: cred.community ? decrypt(cred.community) : null,
+        snmp_auth_key: cred.snmp_auth_key ? decrypt(cred.snmp_auth_key) : null,
+        snmp_priv_key: cred.snmp_priv_key ? decrypt(cred.snmp_priv_key) : null,
+      };
     }).filter(Boolean);
 
     logger.info(`📡 Starting scan job ${jobId}: ${ips.length} hosts, ${credentials.length} credentials`);
@@ -128,7 +162,7 @@ class NetworkDiscoveryService {
 
       const batch = ips.slice(i, i + BATCH_SIZE);
       const results = await Promise.allSettled(
-        batch.map(ip => this.pingAndDiscover(ip, credentials, abortController.signal))
+        batch.map(ip => this.pingAndDiscover(jobId, ip, credentials, abortController.signal))
       );
 
       for (const result of results) {
@@ -155,16 +189,16 @@ class NetworkDiscoveryService {
   /**
    * Ping IP 并尝试 SNMP 发现
    */
-  private async pingAndDiscover(ip: string, credentials: any[], signal: AbortSignal): Promise<boolean> {
+  private async pingAndDiscover(jobId: string, ip: string, credentials: any[], signal: AbortSignal): Promise<boolean> {
     if (signal.aborted) return false;
 
     const startTime = Date.now();
     let isOnline = false;
 
     try {
-      // Ping 检测
-      const { stdout } = await execAsync(`ping -c 1 -W 2 ${ip}`, { timeout: 3000 });
-      isOnline = stdout.includes('1 received') || stdout.includes('1 packets received') || stdout.includes('ttl=');
+      // 跨平台 Ping 检测
+      const { stdout } = await execAsync(buildPingCommand(ip), { timeout: 3000 });
+      isOnline = isPingSuccess(stdout);
     } catch {
       isOnline = false;
     }
@@ -175,7 +209,7 @@ class NetworkDiscoveryService {
       db.prepare(`
         INSERT OR IGNORE INTO network_discovery_results (id, job_id, ip_address, status, response_time_ms, created_at)
         VALUES (?, ?, ?, ?, ?, datetime('now','localtime'))
-      `).run(randomUUID(), '', ip, 'offline', responseTimeMs);
+      `).run(randomUUID(), jobId, ip, 'offline', responseTimeMs);
       return false;
     }
 
@@ -205,7 +239,7 @@ class NetworkDiscoveryService {
         snmp_version, community, interface_count, vendor, model, response_time_ms, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now','localtime'))
     `).run(
-      resultId, '', ip,
+      resultId, jobId, ip,
       snmpResult ? 'snmp_ok' : 'online',
       snmpResult?.sysName || null,
       snmpResult?.sysDescr || null,

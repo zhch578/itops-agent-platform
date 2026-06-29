@@ -118,20 +118,23 @@ export class SelfMonitorService {
       clearInterval(this.timer);
     }
 
-    // 立即执行一次初始检查
-    this.runChecks().catch((err) => {
-      logger.error('Initial self-monitor check failed', err);
-    });
-
-    // 定时执行
-    this.timer = setInterval(() => {
+    // 首次执行：等一个周期间隔后再开始，避免启动期误报
+    setTimeout(() => {
       this.runChecks().catch((err) => {
-        logger.error('Scheduled self-monitor check failed', err);
+        logger.error('Initial self-monitor check failed', err);
       });
+
+      // 定时执行
+      this.timer = setInterval(() => {
+        this.runChecks().catch((err) => {
+          logger.error('Scheduled self-monitor check failed', err);
+        });
+      }, this.config.intervalMs);
+
+      if (this.timer) this.timer.unref();
     }, this.config.intervalMs);
 
-    this.timer.unref();
-    logger.info(`✅ Self-monitor service initialized (interval: ${this.config.intervalMs / 1000}s)`);
+    logger.info(`✅ Self-monitor service initialized (first check in ${this.config.intervalMs / 1000}s, interval: ${this.config.intervalMs / 1000}s)`);
   }
 
   /**

@@ -139,6 +139,29 @@ class RegistryService {
     db.prepare('DELETE FROM image_registries WHERE id = ?').run(registryId);
   }
 
+  async updateRegistry(registryId: string, config: {
+    name?: string; type?: string; url?: string; username?: string; password?: string;
+  }): Promise<any> {
+    const existing = this.getRegistry(registryId);
+    if (!existing) throw new Error('仓库不存在');
+    
+    const updates: string[] = [];
+    const params: any[] = [];
+    if (config.name !== undefined) { updates.push('name = ?'); params.push(config.name); }
+    if (config.type !== undefined) { updates.push('type = ?'); params.push(config.type); }
+    if (config.url !== undefined) { updates.push('url = ?'); params.push(config.url); }
+    if (config.username !== undefined) { updates.push('username = ?'); params.push(config.username); }
+    if (config.password !== undefined) { updates.push('password = ?'); params.push(config.password); }
+    
+    if (updates.length > 0) {
+      updates.push("updated_at = datetime('now','localtime')");
+      params.push(registryId);
+      db.prepare(`UPDATE image_registries SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+    }
+    
+    return this.getRegistry(registryId);
+  }
+
   async testConnection(registryId: string): Promise<{ success: boolean; message: string }> {
     const registry = this.getRegistry(registryId);
     if (!registry) throw new Error('仓库不存在');

@@ -69,7 +69,8 @@
     "smartOps": "Smart Ops",
     "kubernetes": "K8s Management",
     "costAnalysis": "Cost Analysis",
-    "autoScale": "Auto Scale"
+    "autoScale": "Auto Scale",
+    "alertProviders": "Alert Providers"
   },
   "toolLinks": {
     "title": "Ops Tool Navigator",

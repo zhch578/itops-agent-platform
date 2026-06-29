@@ -606,10 +606,31 @@ ${rawOutput.substring(0, 8000)}
     }
   }
 
+  /** 检查告警是否已被AARS v2处理 */
+  private isAlreadyProcessedByAARS(alertId: string): boolean {
+    try {
+      const record = db.prepare(`
+        SELECT 1 FROM aars_response_logs 
+        WHERE alert_id = ? 
+        AND status NOT IN ('identifying', 'pending')
+        LIMIT 1
+      `).get(alertId);
+      return !!record;
+    } catch {
+      return false;
+    }
+  }
+
   /** 分析单个告警的完整流程 */
   async analyzeAlert(alertId: string): Promise<AutoAnalysisResult | null> {
     if (this.processingIds.has(alertId)) {
       logger.debug(`Alert ${alertId} is already being analyzed`);
+      return null;
+    }
+    
+    // 检查是否已被AARS v2处理过
+    if (this.isAlreadyProcessedByAARS(alertId)) {
+      logger.debug(`Alert ${alertId} already processed by AARS v2, skipping`);
       return null;
     }
 

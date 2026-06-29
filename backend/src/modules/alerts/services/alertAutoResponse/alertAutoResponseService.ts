@@ -32,8 +32,6 @@ import type {
 } from './types';
 
 class AlertAutoResponseService {
-  private timer: ReturnType<typeof setInterval> | null = null;
-  private readonly POLL_INTERVAL_MS = 15_000;
   private processingIds = new Set<string>();
   private initialized = false;
 
@@ -104,69 +102,46 @@ class AlertAutoResponseService {
   }
 
   /**
-   * 启动服务
+   * 启动服务（仅加载子引擎，不再独立轮询 — 统一由 AlertProcessor 触发）
    */
   start(): void {
     if (this.initialized) return;
     this.initialized = true;
     this.ensureTables();
 
-    logger.info('🤖 [AARS v2] 告警自适应智能响应服务已启动');
+    logger.info('🤖 [AARS v2] 告警自适应智能响应服务已启动（纯执行引擎模式，由 AlertProcessor 统一触发）');
 
     // 启动子引擎
     escalationEngine.ensureTable();
     escalationEngine.start();
 
-    // 延迟 3 秒后开始轮询
-    setTimeout(() => this.poll(), 3000);
-    this.timer = setInterval(() => this.poll(), this.POLL_INTERVAL_MS);
+    // 不再启动独立轮询 — AlertProcessor 统一决定何时调用 AARS
   }
 
   /**
    * 停止服务
    */
   stop(): void {
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
     this.initialized = false;
     escalationEngine.stop();
     logger.info('⏹ [AARS v2] 服务已停止');
   }
 
-  /**
-   * 轮询新告警
-   */
-  private async poll(): Promise<void> {
+  // @deprecated 已由 AlertProcessor 统一接管的旧轮询逻辑
+  // ===== 以下 poll / fetchPendingAlerts / isAlreadyProcessedByAnalyzer 保留供参考 =====
+
+  /** 检查告警是否已被AutoAnalyzer处理 */
+  private isAlreadyProcessedByAnalyzer(alertId: string): boolean {
     try {
-      const config = this.getConfig();
-      if (!config.enabled) return;
-
-      const pending = this.fetchPendingAlerts(config.minSeverity);
-      if (pending.length === 0) return;
-
-      logger.info(`[AARS] Found ${pending.length} new alerts to process`);
-
-      for (const alert of pending) {
-        if (this.processingIds.has(alert.id)) continue;
-
-        // 通过调度器提交（优先级调度）
-        resourceAwareScheduler.submit({
-          alertId: alert.id,
-          priority: this.severityToPriority(alert.severity),
-          severity: alert.severity,
-          createdAt: Date.now(),
-          estimatedDurationMs: 60_000,
-        }).then(() => {
-          return this.processAlert(alert.id);
-        }).catch(err => {
-          logger.error(`[AARS] Scheduled process failed for ${alert.id}: ${err.message}`);
-          this.processingIds.delete(alert.id);
-        });
-      }
-    } catch (err: any) {
-      logger.error(`[AARS] Poll error: ${err.message}`);
+      const record = db.prepare(`
+        SELECT 1 FROM alert_auto_analysis 
+        WHERE alert_id = ? 
+        AND status NOT IN ('pending', 'running')
+        LIMIT 1
+      `).get(alertId);
+      return !!record;
+    } catch {
+      return false;
     }
   }
 
@@ -176,6 +151,12 @@ class AlertAutoResponseService {
   async processAlert(alertId: string): Promise<void> {
     if (this.processingIds.has(alertId)) {
       logger.debug(`[AARS] Alert ${alertId} already being processed`);
+      return;
+    }
+    
+    // 检查是否已被AutoAnalyzer处理过
+    if (this.isAlreadyProcessedByAnalyzer(alertId)) {
+      logger.debug(`[AARS] Alert ${alertId} already processed by AutoAnalyzer, skipping`);
       return;
     }
 
@@ -541,6 +522,11 @@ class AlertAutoResponseService {
     return db.prepare(
       'SELECT * FROM aars_response_logs WHERE alert_id = ? ORDER BY created_at DESC LIMIT 1'
     ).get(alertId) as AlertResponseLog | undefined;
+  }
+
+  /** 统一接口: 获取特定告警的日志 */
+  getByAlertId(alertId: string): AlertResponseLog | undefined {
+    return this.getLogByAlertId(alertId);
   }
 
   /** 获取统计信息 */

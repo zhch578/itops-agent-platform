@@ -1,7 +1,8 @@
+
 /**
  * 数据库迁移注册中心
  * 
- * 版本号已规范化为连续序列 v001-v037
+ * 版本号已规范化为连续序列 v001-v040
  * 迁移执行顺序与版本号一致
  */
 
@@ -68,12 +69,18 @@ import { up as v037Up, down as v037Down } from './v037_dc_cables';
 import v038ToolLinks from './v038_tool_links';
 import v039ToolLinkImage from './v039_tool_link_image';
 
+// === 告警 Provider 配置 v040 ===
+import v040AlertProviderConfigs from './v040_alert_provider_configs';
+
+// === DC 机房能效 v041 ===
+import v041DcRoomEnergy from './v041_dc_room_energy';
+
 // Helper: wrap sync up/down into async
 function wrapAsync(fn: (db: any) => void): (db: any) => Promise<void> {
   return async (db: any) => { fn(db); };
 }
 
-// v009 / v010 导出的不是 Migration 对象，手动包裹
+// v009-v010: 导出的不是 Migration 对象，手动包裹
 const v009NetworkCompleteCoverage: Migration = {
   id: '20240101000009',
   version: 9,
@@ -147,7 +154,7 @@ const v037DcCables: Migration = {
   down: wrapAsync(v037Down),
 };
 
-// 告警自动响应（原 v018，无冲突保留）
+// 告警自动响应（原 v018）
 const v018AlertAutoResponseMigration: Migration = {
   id: '20250101000018',
   version: 18,
@@ -157,7 +164,7 @@ const v018AlertAutoResponseMigration: Migration = {
   down: wrapAsync(v018AlertAutoResponse.down),
 };
 
-// v038-v039: 工具链接（从冲突版本号重新编号）
+// v038-v039: 工具链接
 const v038ToolLinksMigration: Migration = {
   id: '20250101000038',
   version: 38,
@@ -296,6 +303,10 @@ export const ALL_MIGRATIONS: Migration[] = [
   // v038-v039: 工具链接
   v038ToolLinksMigration,
   v039ToolLinkImageMigration,
+  // v040: 告警 Provider 配置
+  v040AlertProviderConfigs,
+  // v041: DC 机房能效（PUE/功耗）
+  v041DcRoomEnergy,
 ];
 
 export function createMigrationManager(db: any): MigrationManager {

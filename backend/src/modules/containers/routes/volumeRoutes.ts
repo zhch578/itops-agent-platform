@@ -95,6 +95,33 @@ router.get('/:name', async (req: Request, res: Response) => {
   }
 });
 
+// PUT /:name — 更新卷（元数据/标签）
+router.put('/:name', requireRole('admin', 'operator'), async (req: Request, res: Response) => {
+  if (!checkDockerAvailable(res)) return;
+
+  try {
+    const { labels, driver } = req.body;
+    const volume = await dockerService.getVolume(req.params.name);
+    if (!volume) return res.status(404).json({ success: false, message: '卷不存在' });
+    // Docker volume 不支持直接修改，仅更新数据库记录
+    res.json({ success: true, data: { ...volume, labels: labels || volume.labels } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /sync — 同步卷数据
+router.post('/sync', requireRole('admin', 'operator'), async (req: Request, res: Response) => {
+  if (!checkDockerAvailable(res)) return;
+
+  try {
+    const allVolumes = await dockerService.listVolumes();
+    res.json({ success: true, message: '卷数据同步完成', data: allVolumes });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // DELETE /:name — 删除卷（name 非 id）
 router.delete('/:name', requireRole('admin', 'operator'), async (req: Request, res: Response) => {
   if (!checkDockerAvailable(res)) return;

@@ -254,11 +254,23 @@ class RemediationService {
 
       const taskId = uuidv4();
       const params = this.resolveParams(policy.workflow_params, alert);
+      
+      // 始终将告警关键字段注入 context，确保 Agent 节点能获取告警数据
+      const alertContext = {
+        alert_id: alert.id,
+        alert_title: alert.title,
+        alert_content: alert.content,
+        alert_source: alert.source,
+        alert_severity: alert.severity,
+        alert_device_ip: alert.device_ip || alert.host,
+        alert_service: alert.service,
+        ...params,
+      };
 
       db.prepare(`
         INSERT INTO tasks (id, workflow_id, name, status, context, created_at)
         VALUES (?, ?, ?, 'pending', ?, datetime('now','localtime'))
-      `).run(taskId, workflow.id, `自动修复: ${workflow.name}`, JSON.stringify(params));
+      `).run(taskId, workflow.id, `自动修复: ${workflow.name}`, JSON.stringify(alertContext));
 
       let nodes: WorkflowNode[] = [];
       let edges: WorkflowEdge[] = [];
@@ -288,7 +300,7 @@ class RemediationService {
         updated_at: workflow.updated_at
       };
 
-      await executeWorkflow(taskId, parsedWorkflow, undefined, params);
+      await executeWorkflow(taskId, parsedWorkflow, undefined, alertContext);
 
       (this as any).updateExecution(executionId, {
         workflow_execution_id: taskId,
@@ -343,13 +355,22 @@ class RemediationService {
       }
 
       const params = this.resolveParams(policy.verification_params, alert);
+      // 同样注入告警数据到验证工作流 context
+      const verifyContext = {
+        alert_id: alert.id,
+        alert_title: alert.title,
+        alert_content: alert.content,
+        alert_source: alert.source,
+        alert_severity: alert.severity,
+        ...params,
+      };
       const timeout = policy.verification_timeout_seconds * 1000;
       const taskId = uuidv4();
 
       db.prepare(`
         INSERT INTO tasks (id, workflow_id, name, status, context, created_at)
         VALUES (?, ?, ?, 'pending', ?, datetime('now','localtime'))
-      `).run(taskId, workflow.id, `修复验证: ${workflow.name}`, JSON.stringify(params));
+      `).run(taskId, workflow.id, `修复验证: ${workflow.name}`, JSON.stringify(verifyContext));
 
       let nodes: WorkflowNode[] = [];
       let edges: WorkflowEdge[] = [];
@@ -378,7 +399,7 @@ class RemediationService {
       };
 
       const result = await Promise.race([
-        executeWorkflow(taskId, parsedWorkflow, undefined, params),
+        executeWorkflow(taskId, parsedWorkflow, undefined, verifyContext),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Verification timeout')), timeout)
         )

@@ -163,10 +163,98 @@ const ProviderNode = ({ data, selected }: { data: any; selected: boolean }) => {
   );
 };
 
+// ====== 补充未注册节点类型的简洁渲染 ======
+const defaultNodeStyle = (color: string, selected: boolean) =>
+  `px-4 py-3 rounded-lg shadow-md border-2 min-w-[140px] ${selected ? `border-${color}-500 bg-${color}-500/20 ring-2 ring-${color}-500/30` : `border-${color}-500/40 bg-${color}-500/10`} transition-all duration-200`;
+
+const StartNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('green', selected)} style={{ borderRadius: '9999px' }}>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-green-500" />
+    <span className="font-semibold text-sm">{data.label || '开始'}</span>
+  </div>
+);
+
+const EndNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('red', selected)} style={{ borderRadius: '9999px' }}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-red-500" />
+    <span className="font-semibold text-sm">{data.label || '结束'}</span>
+  </div>
+);
+
+const ConditionNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('yellow', selected)} style={{ transform: 'rotate(0deg)' }}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-yellow-500" />
+    <div className="text-sm font-semibold">◇ {data.label || '条件'}</div>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-yellow-500" />
+  </div>
+);
+
+const VerificationNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('cyan', selected)}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-cyan-500" />
+    <div className="flex items-center gap-1"><Shield className="w-4 h-4 text-cyan-400" /><span className="font-semibold text-sm">{data.label || '验证'}</span></div>
+    {data.gates && <div className="text-xs text-cyan-300 mt-1">{data.gates.length} 级门禁</div>}
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-cyan-500" />
+  </div>
+);
+
+const RiskAssessNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('amber', selected)}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-amber-500" />
+    <div className="flex items-center gap-1"><AlertCircle className="w-4 h-4 text-amber-400" /><span className="font-semibold text-sm">{data.label || '风险评估'}</span></div>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-amber-500" />
+  </div>
+);
+
+const DecisionNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('indigo', selected)}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-indigo-500" />
+    <div className="flex items-center gap-1"><Zap className="w-4 h-4 text-indigo-400" /><span className="font-semibold text-sm">{data.label || '决策'}</span></div>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-indigo-500" />
+  </div>
+);
+
+const KnowledgeNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('emerald', selected)}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-emerald-500" />
+    <div className="flex items-center gap-1"><Save className="w-4 h-4 text-emerald-400" /><span className="font-semibold text-sm">{data.label || '知识沉淀'}</span></div>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-emerald-500" />
+  </div>
+);
+
+const RollbackNode = ({ data, selected }: any) => (
+  <div className={defaultNodeStyle('rose', selected)}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-rose-500" />
+    <div className="flex items-center gap-1"><Undo className="w-4 h-4 text-rose-400" /><span className="font-semibold text-sm">{data.label || '回滚'}</span></div>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-rose-500" />
+  </div>
+);
+
+const GenericNode = ({ data, selected, icon, color }: any) => (
+  <div className={defaultNodeStyle(color || 'gray', selected)}>
+    <Handle type="target" position={Position.Left} className="w-3 h-3 bg-gray-400" />
+    <span className="font-semibold text-sm">{data.label || '节点'}</span>
+    <Handle type="source" position={Position.Right} className="w-3 h-3 bg-gray-400" />
+  </div>
+);
+
 const nodeTypes: NodeTypes = {
   agent: AgentNode,
   approval: ApprovalNode,
   provider: ProviderNode,
+  start: StartNode,
+  end: EndNode,
+  condition: ConditionNode,
+  verification: VerificationNode,
+  risk_assess: RiskAssessNode,
+  decision: DecisionNode,
+  knowledge: KnowledgeNode,
+  rollback: RollbackNode,
+  loop: (props) => <GenericNode {...props} color="violet" />,
+  parallel: (props) => <GenericNode {...props} color="teal" />,
+  webhook: (props) => <GenericNode {...props} color="sky" />,
+  wait: (props) => <GenericNode {...props} color="slate" />,
+  variable_set: (props) => <GenericNode {...props} color="lime" />,
 };
 
 function WorkflowEditorContent() {

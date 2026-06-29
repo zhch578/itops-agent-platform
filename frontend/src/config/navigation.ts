@@ -51,6 +51,7 @@ import {
   Settings,
   Home,
   ServerCog,
+  Code2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -144,6 +145,17 @@ export const navigationGroups: NavGroup[] = [
       { name: 'nav.aiInsights', href: '/ai-insights', icon: Lightbulb },
       { name: 'nav.alertAutoAnalysis', href: '/alert-auto-analysis', icon: Zap },
       { name: 'nav.inspectionCenter', href: '/inspection-center', icon: Activity },
+      { name: 'nav.alertProviders', href: '/alerts/providers', icon: Radio },
+    ],
+  },
+  {
+    name: 'nav.mcp',
+    icon: Code2,
+    items: [
+      { name: 'nav.mcpOverview', href: '/mcp/overview', icon: LayoutDashboard },
+      { name: 'nav.mcpTools', href: '/mcp/tools', icon: Wrench },
+      { name: 'nav.mcpExternalServers', href: '/mcp/external-servers', icon: Server },
+      { name: 'nav.mcpTester', href: '/mcp/tester', icon: Play },
     ],
   },
   {

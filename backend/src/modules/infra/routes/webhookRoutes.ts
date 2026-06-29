@@ -6,7 +6,6 @@ import { randomUUID } from 'crypto';
 import { createAuditLog } from '../services/auditService';
 import { createNotification } from './notificationRoutes';
 import { alertService } from '../../alerts/services/alertService';
-import { remediationService } from '../../auto/services/remediationService';
 import { env } from '../../../utils/env';
 import crypto from 'crypto';
 import type {
@@ -20,8 +19,7 @@ import {
   detectSourceType
 } from '../../alerts/services/alertSourceAdapters';
 import { alertDeviceResolver } from '../../alerts/services/alertDeviceResolver';
-import { alertAutoAnalyzer } from '../../alerts/services/alertAutoAnalyzer';
-import { alertWorkflowMappingService } from '../../alerts/services/alertWorkflowMappingService';
+import { alertProcessor } from '../../../core/AlertProcessor';
 import { emitToAlerts } from '../../../shared/websocket/handler';
 import { validateBody } from '../../../middleware/validation';
 import { z } from 'zod';
@@ -185,20 +183,6 @@ function processNormalizedAlert(
   const executionIds: string[] = [];
   setImmediate(async () => {
     try {
-      // ── 匹配修复策略并触发执行 ──
-      const alertForMatching = {
-        id,
-        source: alert.source,
-        severity,
-        rawSeverity: alert.raw_severity,
-        title,
-        content: alert.content,
-        tags: [] as string[],
-      };
-      if (alert.metadata?.tags) {
-        alertForMatching.tags = Array.isArray(alert.metadata.tags) ? alert.metadata.tags : [];
-      }
-
       if (io) {
         emitToAlerts(io, 'remediation:started', {
           alertId: id, title, timestamp: new Date().toISOString()
@@ -220,43 +204,22 @@ function processNormalizedAlert(
         logger.error(`[Webhook] 告警设备关联失败: ${error instanceof Error ? error.message : error}`);
       }
 
-      // ── AI 自动分析（高优告警即时触发） ──
-      if (severity === 'critical' || severity === 'high') {
-        alertAutoAnalyzer.analyzeAlert(id).catch((err: Error) => {
-          logger.error(`[Webhook] AI 自动分析失败: ${err.message}`);
-        });
-      }
-
-      // ── 修复策略执行 ──
-      const mappingTask = alertWorkflowMappingService.triggerFirstMatchingWorkflow(alertForMatching);
-      if (mappingTask && io) {
-        emitToAlerts(io, 'remediation:result', {
-          alertId: id,
-          policyId: mappingTask.mappingId,
-          policyName: `告警映射: ${mappingTask.workflowName}`,
-          executionId: mappingTask.taskId,
-          status: 'task_created',
-          timestamp: new Date().toISOString()
-        });
-      }
-      const matchedPolicies = await remediationService.matchAlertToPolicies(alertForMatching);
-      for (const policy of matchedPolicies) {
-        logger.info(`🔧 [Webhook] 匹配到修复策略: ${policy.name}, 自动触发...`);
-        const result = await remediationService.triggerRemediation(policy, alertForMatching);
-        if (result.id) {
-          executionIds.push(result.id);
+      // ── 统一告警处理入口（AARS + 工作流 智能决策）──
+      alertProcessor.processAlert({
+        alertId: id,
+        title,
+        content: alert.content,
+        severity,
+        source: alert.source,
+        metadata: { tags: alert.metadata?.tags || [], host: alert.host, rawSeverity: alert.raw_severity }
+      }).then((result) => {
+        if (result.success && result.executionId) {
+          executionIds.push(result.executionId);
         }
-        if (io) {
-          emitToAlerts(io, 'remediation:result', {
-            alertId: id,
-            policyId: policy.id,
-            policyName: policy.name,
-            executionId: result.id,
-            status: result.status,
-            timestamp: new Date().toISOString()
-          });
-        }
-      }
+        logger.info(`[Webhook] 统一处理完成: ${result.strategy}, success=${result.success}`);
+      }).catch((err: Error) => {
+        logger.error(`[Webhook] AlertProcessor failed for ${id}:`, err);
+      });
 
       if (io) {
         emitToAlerts(io, 'remediation:completed', {

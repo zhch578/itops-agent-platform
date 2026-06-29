@@ -69,7 +69,13 @@
     "smartOps": "智能运维",
     "kubernetes": "K8s管理",
     "costAnalysis": "成本分析",
-    "autoScale": "自动伸缩"
+    "autoScale": "自动伸缩",
+    "mcp": "MCP 协议",
+    "mcpOverview": "MCP 概览",
+    "mcpTools": "工具浏览器",
+    "mcpExternalServers": "外部服务器",
+    "mcpTester": "工具调用测试",
+    "alertProviders": "告警源配置"
   },
   "toolLinks": {
     "title": "运维工具导航",

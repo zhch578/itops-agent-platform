@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, isValidElement } from 'react';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -10,7 +10,7 @@ import ProtectedRoute from './shared/components/ProtectedRoute';
 import Layout from './shared/layouts/Layout';
 
 // 模块路由聚合
-import { protectedRoutes, publicRoutes } from './modules/_routes';
+import { protectedRoutes, publicRoutes } from './modules/_routes.tsx';
 
 const NotFound = lazy(() => import('./shared/pages/NotFound'));
 
@@ -57,6 +57,13 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const resolveElement = (el: any) => {
+    if (!el) return null;
+    if (isValidElement(el)) return el;
+    const Component = el as React.ComponentType;
+    return <Component />;
+  };
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
@@ -71,7 +78,7 @@ function App() {
                     <Route
                       key={route.path}
                       path={route.path}
-                      element={<SuspenseRoute>{route.element ? <route.element /> : null}</SuspenseRoute>}
+                      element={<SuspenseRoute>{resolveElement(route.element)}</SuspenseRoute>}
                     />
                   ))}
 
@@ -85,7 +92,7 @@ function App() {
                         element={
                           <SuspenseRoute>
                             <ProtectedRoute>
-                              <route.element />
+                              {resolveElement(route.element)}
                             </ProtectedRoute>
                           </SuspenseRoute>
                         }

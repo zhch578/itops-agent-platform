@@ -34,6 +34,8 @@ function checkDockerAvailable(res: Response, req?: Request): boolean {
     }
   }
   if (!dockerService.isAvailable()) {
+    // 尝试自动初始化一次
+    dockerService.init().catch(() => {});
     res.status(503).json({ success: false, message: 'Docker 服务不可用，请先配置 Docker 连接' });
     return false;
   }

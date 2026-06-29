@@ -3,6 +3,7 @@ import { logger } from '../../../../utils/logger';
 import { callDoubaoAPI } from '../llm/llmService';
 import type { SpecialistBase } from './SpecialistBase';
 import { specialistRegistry } from './SpecialistRegistry';
+import { agentMcpAdapter } from '../agents/agentMcpAdapter';
 import type {
   CoordinatorConfig,
   TaskContext,
@@ -50,6 +51,10 @@ export class Coordinator {
    */
   private buildSystemPrompt(): string {
     const domainList = Object.values(SpecialistDomain).join(', ');
+    const mcpToolList = agentMcpAdapter.isAvailable()
+      ? `\n可用的 MCP 运维工具（可直接调用查询数据）：\n${agentMcpAdapter.generateToolDescriptions().substring(0, 2000)}`
+      : '';
+
     return `你是一个专业的运维任务协调者（Coordinator）。你的职责是：
 
 1. 理解用户的运维任务需求
@@ -60,12 +65,14 @@ export class Coordinator {
 
 可用的专业领域（Specialist Domains）：
 ${domainList}
+${mcpToolList}
 
 任务分解原则：
 - 复杂任务应该被分解为多个独立的子任务
 - 子任务之间应该有清晰的依赖关系
 - 每个子任务应该能够被单个 Specialist 处理
 - 子任务应该按照优先级排序
+- 如果有可用的 MCP 工具，可以直接调用获取数据
 
 请用专业、清晰的方式进行任务协调。`;
   }

@@ -8,11 +8,27 @@ import path from 'path';
 import fs from 'fs';
 
 const router = Router();
-const uploadDir = path.resolve(process.env.UPLOAD_DIR || '../../../routes/data/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-const upload = multer({ dest: uploadDir });
+// 延迟创建目录，避免启动时路径问题
+let upload: ReturnType<typeof multer>;
+const getUploadDir = () => path.resolve(process.env.UPLOAD_DIR || path.join(__dirname, '../../../../data/uploads'));
+const ensureUploadDir = () => {
+  const uploadDir = getUploadDir();
+  if (!fs.existsSync(uploadDir)) {
+    try {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (e) {
+      logger.warn(`Failed to create upload directory: ${uploadDir}`, e);
+    }
+  }
+  return uploadDir;
+};
+const getUpload = () => {
+  if (!upload) {
+    const uploadDir = ensureUploadDir();
+    upload = multer({ dest: uploadDir });
+  }
+  return upload;
+};
 
 router.get('/status', requireRole('admin'), (req: Request, res: Response) => {
   try {
@@ -125,7 +141,10 @@ router.get('/download/:id', requireRole('admin'), (req: Request, res: Response) 
   }
 });
 
-router.post('/upload', requireRole('admin'), upload.single('backup'), async (req: Request, res: Response) => {
+router.post('/upload', requireRole('admin'), (req: Request, res: Response, next: Function) => {
+  const u = getUpload();
+  u.single('backup')(req, res, next);
+}, async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({

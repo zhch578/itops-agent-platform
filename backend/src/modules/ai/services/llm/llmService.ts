@@ -8,8 +8,37 @@ import * as aiModelService from '../models/aiModelService';
 import type { AIModel } from '../models/aiModelService';
 
 interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+}
+
+/** OpenAI function calling 工具定义 */
+export interface LLMTool {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+/** LLM 返回的工具调用 */
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string; // JSON string
+  };
+}
+
+/** LLM 响应（含工具调用） */
+export interface LLMResponse {
+  content: string;
+  toolCalls?: ToolCall[];
+  finishReason: 'stop' | 'tool_calls' | 'length' | 'content_filter';
 }
 
 
@@ -429,7 +458,179 @@ async function callLLMAPI(
   }
 }
 
-async function callModelWithConfig(
+/**
+ * 调用 LLM API - 支持原生 Function Calling
+ * 
+ * 与 callLLMAPI 的区别：
+ * - 请求中包含 tools 参数（OpenAI function calling 格式）
+ * - 返回 LLMResponse（可能包含 tool_calls）
+ * - LLM 选择调用工具时返回 toolCalls，否则返回 content
+ * 
+ * @param tools OpenAI 格式的工具列表，传 undefined 则退化为纯文本调用
+ */
+async function callLLMAPIWithTools(
+  config: LLMProviderConfig,
+  systemPrompt: string,
+  userInput: string,
+  agentName: string,
+  temperature: number,
+  agentId: string,
+  tools?: LLMTool[],
+  signal?: AbortSignal,
+  previousMessages?: ChatMessage[]
+): Promise<LLMResponse> {
+  const startTime = Date.now();
+  const apiKey = getApiKey(db, config.apiKeySetting, config.apiKeyEnv);
+  const apiBase = getApiBase(db, config.apiBaseSetting, config.apiBaseEnv, config.defaultApiBase);
+  const model = getModelId(db, config.modelSetting, config.modelEnv, config.defaultModel);
+
+  if (config.providerName !== 'LocalAI' && (!apiKey || apiKey === config.placeholderKey)) {
+    const errorMsg = `${config.providerName}_API_KEY not configured`;
+    logger.error(`❌ [${agentName}] ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
+  const breaker = getCircuitBreaker(config.providerName);
+  if (!breaker.canCall()) {
+    throw new Error('Circuit breaker is OPEN');
+  }
+
+  try {
+    logger.info(`🤖 [${agentName}] Calling ${config.providerName} API (tools: ${tools?.length || 0})...`);
+
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...(previousMessages || []),
+      { role: 'user', content: userInput }
+    ];
+
+    const requestBody: Record<string, unknown> = {
+      model,
+      messages,
+      temperature,
+      max_tokens: 2048,
+    };
+
+    // 如果有工具定义，加入请求
+    if (tools && tools.length > 0) {
+      requestBody.tools = tools;
+      requestBody.tool_choice = 'auto';
+    }
+
+    let finalApiBase = apiBase;
+    if (finalApiBase.includes('/chat/completions')) {
+      finalApiBase = finalApiBase.replace('/chat/completions', '');
+    }
+
+    const response = await callWithRetry(
+      (s?: AbortSignal) =>
+        axios.post(
+          buildApiEndpoint(finalApiBase, 'chat/completions'),
+          requestBody,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            timeout: 60000,
+            signal: s,
+          }
+        ),
+      3,
+      1000,
+      10000,
+      breaker,
+      signal
+    );
+
+    circuitBreakers.get(config.providerName)?.recordSuccess();
+
+    if (response.data.choices && response.data.choices.length > 0) {
+      const choice = response.data.choices[0];
+      const message = choice.message;
+      const finishReason = choice.finish_reason || 'stop';
+
+      // 检查是否有 tool_calls
+      const toolCalls: ToolCall[] | undefined = message.tool_calls?.length > 0
+        ? message.tool_calls.map((tc: any) => ({
+            id: tc.id,
+            type: 'function' as const,
+            function: {
+              name: tc.function.name,
+              arguments: tc.function.arguments,
+            },
+          }))
+        : undefined;
+
+      const content = message.content || '';
+
+      logger.info(
+        `✅ [${agentName}] API success, finish: ${finishReason}, ` +
+        `content: ${content.length} chars, toolCalls: ${toolCalls?.length || 0}`
+      );
+
+      recordAgentExecution(
+        agentId,
+        agentName,
+        userInput,
+        toolCalls ? `[tool_calls: ${toolCalls.map(t => t.function.name).join(', ')}]` : content,
+        'success',
+        undefined,
+        Date.now() - startTime,
+        { tokens: response.data.usage }
+      );
+
+      return {
+        content,
+        toolCalls,
+        finishReason: finishReason as LLMResponse['finishReason'],
+      };
+    } else {
+      throw new Error('API returned empty choices');
+    }
+  } catch (error: unknown) {
+    circuitBreakers.get(config.providerName)?.recordFailure();
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`❌ [${agentName}] API with tools failed:`, errorMessage);
+    throw error;
+  }
+}
+
+/* ─────── Public API: Native Function Calling ─────── */
+
+/**
+ * 调用豆包 API（支持 Function Calling）
+ */
+export async function callDoubaoAPIWithTools(
+  systemPrompt: string,
+  userInput: string,
+  agentName = 'Agent',
+  temperature = 0.7,
+  agentId = '',
+  tools?: LLMTool[],
+  signal?: AbortSignal,
+  previousMessages?: ChatMessage[]
+): Promise<LLMResponse> {
+  return callLLMAPIWithTools(DOUBAO_CONFIG, systemPrompt, userInput, agentName, temperature, agentId, tools, signal, previousMessages);
+}
+
+/**
+ * 调用 OpenAI API（支持 Function Calling）
+ */
+export async function callOpenAIAPIWithTools(
+  systemPrompt: string,
+  userInput: string,
+  agentName = 'Agent',
+  temperature = 0.7,
+  agentId = '',
+  tools?: LLMTool[],
+  signal?: AbortSignal,
+  previousMessages?: ChatMessage[]
+): Promise<LLMResponse> {
+  return callLLMAPIWithTools(OPENAI_CONFIG, systemPrompt, userInput, agentName, temperature, agentId, tools, signal, previousMessages);
+}
+
+/**
   model: AIModel,
   systemPrompt: string,
   userInput: string,

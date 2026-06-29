@@ -28,6 +28,8 @@ import { snmpPollingService } from './modules/network/services/snmpPollingServic
 import { alertAutoAnalyzer } from './modules/alerts/services/alertAutoAnalyzer';
 import { alertCorrelationService } from './modules/alerts/services/alertCorrelationService';
 import { alertAutoResponseService } from './modules/alerts/services/alertAutoResponse/alertAutoResponseService';
+import { alertProcessor } from './core/AlertProcessor';
+import { knowledgeEngine } from './core/KnowledgeEngine';
 import { dockerService } from './modules/containers/services/dockerService';
 import { configTemplateService } from './modules/infra/services/configTemplateService';
 import { composeService } from './modules/infra/services/composeService';
@@ -41,11 +43,15 @@ import { initTokenBlacklist } from './modules/auth/services/tokenBlacklist';
 import { startCircuitBreakerCleanup } from './modules/ai/services/llm/llmService';
 import { startDCStatusPush, stopDCStatusPush } from './modules/dc/services/dcStatusService';
 import { initializeProviders } from './modules/ai/services/providers';
+import { registerAllPlatformTools } from './services/mcp';
 
 /**
  * 注册所有服务到容器
  */
 export function registerAllServices(): void {
+  // === MCP 工具注册（最先执行，供后续服务使用） ===
+  registerAllPlatformTools();
+
   // === 无依赖的基础服务 ===
 
   container.register('credentialService', () => {
@@ -155,6 +161,16 @@ export function registerAllServices(): void {
   container.register('alertAutoResponseService', () => {
     alertAutoResponseService.start();
     return alertAutoResponseService;
+  });
+
+  container.register('alertProcessor', () => {
+    alertProcessor.init();
+    return alertProcessor;
+  });
+  
+  container.register('knowledgeEngine', () => {
+    knowledgeEngine.init();
+    return knowledgeEngine;
   });
 
   // === 容器与虚拟化服务 ===

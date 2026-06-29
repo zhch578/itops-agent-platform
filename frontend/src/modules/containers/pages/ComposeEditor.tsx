@@ -88,7 +88,7 @@ export default function ComposeEditor() {
     if (!yaml) { message.warning('请输入 YAML 内容'); return; }
     setValidating(true);
     try {
-      const res = await api.post('/api/compose/validate', { yaml_content: yaml });
+      const res = await api.post('/api/compose/validate', { content: yaml });
       if (res.data.valid) {
         message.success('YAML 语法验证通过');
       } else {

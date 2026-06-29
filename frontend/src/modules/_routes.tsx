@@ -16,13 +16,15 @@ import { databaseRoutes } from './database/routes';
 import { dcRoutes } from './dc/routes';
 import { infraRoutes } from './infra/routes';
 import { kubernetesRoutes } from './kubernetes/routes';
+import { mcpRoutes } from './mcp/routes';
 import { monitorRoutes } from './monitor/routes';
 import { networkRoutes } from './network/routes';
 import { serverRoutes } from './servers/routes';
 import { workflowRoutes } from './workflow/routes';
 
+// === 共享页面路由 ===
 import { lazy } from 'react';
-const FrontendTests = lazy(() => import('./shared/pages/FrontendTests'));
+const FrontendTests = lazy(() => import('../shared/pages/FrontendTests'));
 
 /**
  * 受保护的路由（需要登录）
@@ -37,11 +39,12 @@ export const protectedRoutes = [
   ...dcRoutes,
   ...infraRoutes,
   ...kubernetesRoutes,
+  ...mcpRoutes,
   ...monitorRoutes,
   ...networkRoutes,
   ...serverRoutes,
   ...workflowRoutes,
-  { path: 'frontend-tests', element: FrontendTests },
+  { path: 'frontend-tests', element: <FrontendTests /> },
 ];
 
 /**

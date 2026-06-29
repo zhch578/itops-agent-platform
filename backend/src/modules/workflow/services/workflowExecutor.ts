@@ -5,6 +5,20 @@ import { executeAgentNode, getThinkingSteps } from '../../ai/services/agents/age
 import { reportService } from '../../infra/services/reportService';
 import { notificationService } from '../../infra/services/notificationService';
 import { createAuditLog } from '../../infra/services/auditService';
+import {
+  executeVerificationNode,
+  executeRiskAssessNode,
+  executeDecisionNode,
+  executeKnowledgeNode,
+  executeRollbackNode,
+} from './enhancedNodeExecutor';
+import type {
+  VerificationNodeConfig,
+  RiskAssessNodeConfig,
+  DecisionNodeConfig,
+  KnowledgeNodeConfig,
+  RollbackNodeConfig,
+} from './enhancedNodeTypes';
 import type {
   WorkflowNode,
   WorkflowEdge,
@@ -236,7 +250,206 @@ async function executeFromIndex(
       return 'paused';
     }
 
-    // ---- Agent 节点处理（原有逻辑） ----
+    // ── verification 节点：5级验证门禁链 ──
+    if (node.type === 'verification') {
+      const vConfig = (node.data as unknown) as VerificationNodeConfig;
+      const serverId = vConfig.server_id || executionContext.variables.server_id as string | undefined;
+      logger.info(`🔍 Processing verification node ${nodeId}`);
+
+      io?.to(`task:${taskId}`).emit('task:node:started', { nodeId, nodeName: node.data.label });
+      addTaskLog(taskId, { type: 'output', content: '🔍 开始验证...', nodeId });
+
+      try {
+        const result = await executeVerificationNode(vConfig, serverId);
+        nodeResults[nodeId] = result;
+        io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: result.status, output: result.output });
+        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+
+        if (result.status === 'failed' && !node.data.allowFailure) {
+          throw new Error(`验证失败: ${result.error || '未知错误'}`);
+        }
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        nodeResults[nodeId] = { status: 'failed', error: errorMessage };
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'failed', error: errorMessage });
+        addTaskLog(taskId, { type: 'error', content: errorMessage, nodeId });
+        if (!node.data.allowFailure) throw error;
+      }
+      continue;
+    }
+
+    // ── risk_assess 节点：三维风险量化评分 ──
+    if (node.type === 'risk_assess') {
+      const rConfig = (node.data as unknown) as RiskAssessNodeConfig;
+      logger.info(`📊 Processing risk_assess node ${nodeId}`);
+
+      io?.to(`task:${taskId}`).emit('task:node:started', { nodeId, nodeName: node.data.label });
+      addTaskLog(taskId, { type: 'output', content: '📊 正在评估风险...', nodeId });
+
+      try {
+        const previousOutputs = Object.values(nodeResults).map(r => r.output).filter(Boolean) as string[];
+        const result = executeRiskAssessNode(rConfig, executionContext, previousOutputs);
+        nodeResults[nodeId] = result;
+        executionContext.variables.risk_assessment = result.metadata;
+
+        io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'success', output: result.output });
+        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        nodeResults[nodeId] = { status: 'failed', error: errorMessage };
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'failed', error: errorMessage });
+        addTaskLog(taskId, { type: 'error', content: errorMessage, nodeId });
+        if (!node.data.allowFailure) throw error;
+      }
+      continue;
+    }
+
+    // ── decision 节点：自适应决策引擎 ──
+    if (node.type === 'decision') {
+      const dConfig = (node.data as unknown) as DecisionNodeConfig;
+      logger.info(`🎯 Processing decision node ${nodeId}`);
+
+      io?.to(`task:${taskId}`).emit('task:node:started', { nodeId, nodeName: node.data.label });
+      addTaskLog(taskId, { type: 'output', content: '🎯 正在决策...', nodeId });
+
+      try {
+        const decision = executeDecisionNode(dConfig, nodeResults);
+        nodeResults[nodeId] = {
+          status: 'success',
+          output: decision.output,
+          metadata: { action: decision.action, reason: decision.reason },
+        };
+
+        io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: decision.output });
+        addTaskLog(taskId, { type: 'output', content: decision.output, nodeId });
+
+        // 如果决策结果要求审批，动态插入审批暂停
+        if (decision.action === 'request_approval') {
+          logger.info(`🛑 Decision node requested approval, pausing workflow`);
+
+          const approvalId = randomUUID();
+          db.prepare(`
+            INSERT INTO approval_requests (id, task_id, node_id, node_label, description, status, timeout_at, timeout_action)
+            VALUES (?, ?, ?, ?, ?, 'pending', datetime('now', '+3600 seconds'), 'reject')
+          `).run(approvalId, taskId, nodeId, node.data.label, decision.reason || '决策引擎要求审批');
+
+          const persistedState: PersistedExecutionState = {
+            workflowId: workflow.id,
+            workflowName: workflow.name,
+            initialInput,
+            executionOrder,
+            nodes,
+            edges,
+            nodeResults: { ...nodeResults },
+            executionContext: {
+              ...executionContext,
+              previousResults: [...executionContext.previousResults],
+              metadata: { ...executionContext.metadata }
+            },
+            pausedAtIndex: i
+          };
+          db.prepare('UPDATE tasks SET status = ?, current_node_id = ?, context = ? WHERE id = ?')
+            .run('waiting_approval', nodeId, JSON.stringify(persistedState), taskId);
+
+          io?.to(`task:${taskId}`).emit('task:approval:requested', {
+            taskId, approvalId, nodeId, nodeLabel: node.data.label,
+            description: decision.reason, timeout: 3600,
+          });
+          io?.emit('approval:new', { approvalId, taskId, nodeLabel: node.data.label, description: decision.reason });
+
+          addTaskLog(taskId, { type: 'output', content: `⏸️ 决策要求审批: ${decision.reason}`, nodeId });
+
+          try {
+            await notificationService.sendNotification({
+              type: 'approval_request',
+              title: `⏸️ 工作流决策审批: ${node.data.label}`,
+              content: `**工作流**: ${workflow.name}\n**决策**: ${decision.reason}\n**任务ID**: ${taskId}`,
+              related_task_id: taskId,
+            });
+          } catch (notifyError) {
+            logger.warn('⚠️ 决策审批通知发送失败:', notifyError);
+          }
+          return 'paused';
+        }
+
+        // 如果决策结果是 block，终止流程
+        if (decision.action === 'block') {
+          nodeResults[nodeId] = { ...nodeResults[nodeId], status: 'failed', error: `决策引擎阻止执行: ${decision.reason}` };
+          await finalizeWorkflow(taskId, workflow, nodes, nodeResults, executionOrder, 'failed', `决策阻止: ${decision.reason}`);
+          return 'completed';
+        }
+
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'success', output: decision.output });
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        nodeResults[nodeId] = { status: 'failed', error: errorMessage };
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'failed', error: errorMessage });
+        addTaskLog(taskId, { type: 'error', content: errorMessage, nodeId });
+        if (!node.data.allowFailure) throw error;
+      }
+      continue;
+    }
+
+    // ── knowledge 节点：知识沉淀闭环 ──
+    if (node.type === 'knowledge') {
+      const kConfig = (node.data as unknown) as KnowledgeNodeConfig;
+      logger.info(`📚 Processing knowledge node ${nodeId}`);
+
+      io?.to(`task:${taskId}`).emit('task:node:started', { nodeId, nodeName: node.data.label });
+      addTaskLog(taskId, { type: 'output', content: '📚 正在沉淀知识...', nodeId });
+
+      try {
+        const allPrevSuccess = Object.values(nodeResults).every(r => r.status === 'success');
+        const result = executeKnowledgeNode(
+          kConfig, workflow.name, taskId, workflow.id,
+          nodeResults, allPrevSuccess
+        );
+        nodeResults[nodeId] = result;
+
+        io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'success', output: result.output });
+        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        nodeResults[nodeId] = { status: 'failed', error: errorMessage };
+        addTaskLog(taskId, { type: 'error', content: errorMessage, nodeId });
+        // 知识节点失败不阻塞流程
+      }
+      continue;
+    }
+
+    // ── rollback 节点：自动回滚 ──
+    if (node.type === 'rollback') {
+      const rbConfig = (node.data as unknown) as RollbackNodeConfig;
+      logger.info(`🔄 Processing rollback node ${nodeId}`);
+
+      io?.to(`task:${taskId}`).emit('task:node:started', { nodeId, nodeName: node.data.label });
+      addTaskLog(taskId, { type: 'output', content: '🔄 正在执行回滚...', nodeId });
+
+      try {
+        const result = await executeRollbackNode(rbConfig, nodeResults);
+        nodeResults[nodeId] = result;
+
+        io?.to(`task:${taskId}`).emit('task:node:output', { taskId, nodeId, output: result.output });
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: result.status, output: result.output });
+        addTaskLog(taskId, { type: 'output', content: result.output, nodeId });
+
+        if (result.status === 'failed' && !node.data.allowFailure) {
+          throw new Error(`回滚失败: ${result.error || '未知错误'}`);
+        }
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        nodeResults[nodeId] = { status: 'failed', error: errorMessage };
+        io?.to(`task:${taskId}`).emit('task:node:completed', { taskId, nodeId, status: 'failed', error: errorMessage });
+        addTaskLog(taskId, { type: 'error', content: errorMessage, nodeId });
+        if (!node.data.allowFailure) throw error;
+      }
+      continue;
+    }
+
+    // ── Agent 节点处理（原有逻辑）──
     if (node.type !== 'agent') continue;
 
     logger.info(`🤖 Processing node ${nodeId}:`, node.data);
@@ -248,7 +461,17 @@ async function executeFromIndex(
 
     try {
       const previousResults = Object.values(nodeResults).map((r) => r.output).filter(Boolean).join('\n\n');
-      const input = previousResults || initialInput || '请开始执行任务';
+      let input = previousResults || initialInput || '请开始执行任务';
+      
+      // 将 context 中的告警/任务数据注入到 Agent 的输入中
+      const contextEntries = Object.entries(executionContext.variables || {})
+        .filter(([_, v]) => v !== undefined && v !== null && v !== '');
+      if (contextEntries.length > 0) {
+        const contextStr = contextEntries
+          .map(([k, v]) => `${k}: ${v}`)
+          .join('\n');
+        input = `【上下文信息】\n${contextStr}\n\n【任务】\n${input}`;
+      }
 
       executionContext.metadata.currentNodeId = nodeId;
       executionContext.metadata.executionDepth = executionDepth;

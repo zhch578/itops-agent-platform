@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button, Modal, Form, Input, Select, Tag, Space, Popconfirm, Card, Tabs, InputNumber, Badge, Table } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus, Edit, Trash2, Server, Monitor, Wifi, LayoutGrid, CuboidIcon as Cube,
   Search, Download, Upload, Database, Clock, AlertTriangle, Thermometer,
@@ -14,6 +15,7 @@ import SlotsPanel from './SlotsPanel';
 
 export default function DataCenterManage() {
   const dc = useDataCenter();
+  const navigate = useNavigate();
 
   // ===== 打开添加机房的 Modal 快捷方式 =====
   const handleAddRoom = () => {
@@ -532,6 +534,12 @@ export default function DataCenterManage() {
       <Button type="primary" size="small" icon={<Plus size={14} />}
         onClick={() => { dc.setEditingCable(null); dc.cableForm.resetFields(); dc.setCableModalOpen(true); }}>
         添加线缆
+      </Button>
+    ),
+    devices: (
+      <Button type="primary" size="small" icon={<Server size={14} />}
+        onClick={() => navigate('/servers')}>
+        管理服务器/设备
       </Button>
     ),
     slots: dc.selectedRack ? (

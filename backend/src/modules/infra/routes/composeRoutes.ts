@@ -5,11 +5,23 @@ import { requireRole } from '../../../middleware/auth';
 
 const router = Router();
 
-// GET / — 列出所有项目
-router.get('/', (_req: Request, res: Response) => {
+// GET / — 列出所有项目（支持分页和搜索）
+router.get('/', (req: Request, res: Response) => {
   try {
-    const projects = composeService.listProjects();
-    res.json({ success: true, data: projects });
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 20;
+    const search = (req.query.search as string || '').toLowerCase();
+
+    let projects = composeService.listProjects();
+    if (search) {
+      projects = projects.filter(p =>
+        p.name.toLowerCase().includes(search) ||
+        (p.description || '').toLowerCase().includes(search)
+      );
+    }
+    const total = projects.length;
+    const data = projects.slice((page - 1) * pageSize, page * pageSize);
+    res.json({ success: true, data, total });
   } catch (err: any) {
     res.status(500).json({ success: false, message: err.message });
   }
