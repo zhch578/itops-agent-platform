@@ -5,17 +5,17 @@ import { logger } from '../../utils/logger';
 function getUserConfiguredModel(): string | null {
   try {
     const doubaoKeyResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('DOUBAO_API_KEY') as { value: string } | undefined;
-    if (doubaoKeyResult && doubaoKeyResult.value && doubaoKeyResult.value !== 'your-doubao-api-key-here') {
+    if (doubaoKeyResult?.value && doubaoKeyResult.value !== 'your-doubao-api-key-here') {
       const doubaoModelResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('DOUBAO_MODEL') as { value: string } | undefined;
-      if (doubaoModelResult && doubaoModelResult.value) {
+      if (doubaoModelResult?.value) {
         return doubaoModelResult.value;
       }
       return 'doubao-4o';
     }
     const openaiKeyResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('OPENAI_API_KEY') as { value: string } | undefined;
-    if (openaiKeyResult && openaiKeyResult.value && openaiKeyResult.value !== 'your-openai-api-key-here') {
+    if (openaiKeyResult?.value && openaiKeyResult.value !== 'your-openai-api-key-here') {
       const openaiModelResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('OPENAI_MODEL') as { value: string } | undefined;
-      if (openaiModelResult && openaiModelResult.value) {
+      if (openaiModelResult?.value) {
         return openaiModelResult.value;
       }
       return 'gpt-4o';

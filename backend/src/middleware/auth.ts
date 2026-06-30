@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import db from '../models/database';
 import { env } from '../utils/env';
-import { tokenBlacklist } from '../services/tokenBlacklist';
+import { tokenBlacklist } from '../modules/auth/services/tokenBlacklist';
 
 interface AuthUser {
   id: string;
@@ -74,7 +74,7 @@ export function invalidateUserCache(userId: string): void {
 export function authenticateToken(req: Request & { user?: AuthUser }, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
       message: '未提供认证token'
@@ -153,7 +153,7 @@ export function requireRole(...allowedRoles: string[]) {
 }
 
 export function requirePasswordChange(req: Request & { user?: AuthUser }, res: Response, next: NextFunction) {
-  if (req.user && req.user.password_must_change) {
+  if (req.user?.password_must_change) {
     return res.status(403).json({
       success: false,
       message: '请先修改初始密码',

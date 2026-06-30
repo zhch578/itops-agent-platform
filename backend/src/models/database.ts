@@ -15,6 +15,9 @@ import { initializeAlertMappings } from './presets/initAlertMappings';
 import { initializePresetScheduledTasks } from './presets/initScheduledTasks';
 import { initRemediationPolicies } from './presets/initRemediationPolicies';
 import { linkRemediationWorkflows } from './presets/linkRemediationWorkflows';
+import { initConfigTemplates } from './presets/initConfigTemplates';
+import { initializeEnhancedWorkflows } from './presets/initEnhancedWorkflows';
+import { initializeVMManagementTables } from './presets/initVMManagement';
 import type { Server as SocketIOServer } from 'socket.io';
 
 let ioInstance: SocketIOServer | null = null;
@@ -335,7 +338,7 @@ export async function initializeDatabase(): Promise<void> {
 
   // Run AI model migration (delayed to avoid circular import)
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { migrateOldConfigToAIModels, migrateOldAgents } = await import('../services/aiModelService');
+  const { migrateOldConfigToAIModels, migrateOldAgents } = await import('../modules/ai/services/models/aiModelService');
   migrateOldConfigToAIModels();
   migrateOldAgents();
 
@@ -391,23 +394,23 @@ function initializeDefaultData(): void {
     const localAiApiBaseResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('LOCAL_AI_API_BASE') as { value: string } | undefined;
     const localAiModelResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('LOCAL_AI_MODEL') as { value: string } | undefined;
     
-    if (localAiApiBaseResult && localAiApiBaseResult.value && 
+    if (localAiApiBaseResult?.value && 
         localAiApiBaseResult.value !== 'http://host.docker.internal:11434/v1') {
-      configuredModel = localAiModelResult && localAiModelResult.value ? localAiModelResult.value : 'qwen2.5:7b';
+      configuredModel = localAiModelResult?.value ? localAiModelResult.value : 'qwen2.5:7b';
     } else {
       // 检查豆包
       const doubaoKeyResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('DOUBAO_API_KEY') as { value: string } | undefined;
       const doubaoModelResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('DOUBAO_MODEL') as { value: string } | undefined;
       
-      if (doubaoKeyResult && doubaoKeyResult.value && doubaoKeyResult.value !== 'your-doubao-api-key-here') {
-        configuredModel = doubaoModelResult && doubaoModelResult.value ? doubaoModelResult.value : 'doubao-4o';
+      if (doubaoKeyResult?.value && doubaoKeyResult.value !== 'your-doubao-api-key-here') {
+        configuredModel = doubaoModelResult?.value ? doubaoModelResult.value : 'doubao-4o';
       } else {
         // 检查 OpenAI
         const openaiKeyResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('OPENAI_API_KEY') as { value: string } | undefined;
         const openaiModelResult = db.prepare('SELECT value FROM settings WHERE key = ?').get('OPENAI_MODEL') as { value: string } | undefined;
         
-        if (openaiKeyResult && openaiKeyResult.value && openaiKeyResult.value !== 'your-openai-api-key-here') {
-          configuredModel = openaiModelResult && openaiModelResult.value ? openaiModelResult.value : 'gpt-4o';
+        if (openaiKeyResult?.value && openaiKeyResult.value !== 'your-openai-api-key-here') {
+          configuredModel = openaiModelResult?.value ? openaiModelResult.value : 'gpt-4o';
         }
       }
     }
@@ -475,6 +478,18 @@ function initializeDefaultData(): void {
   }
   // 关联策略 → 工作流（智能匹配，创建额外高级策略）
   linkRemediationWorkflows();
+
+  // 预设配置模板
+  const configTemplateCount = db.prepare('SELECT COUNT(*) as count FROM config_templates').get() as { count: number };
+  if (configTemplateCount.count === 0) {
+    initConfigTemplates();
+  }
+
+  // 增强工作流
+  initializeEnhancedWorkflows();
+
+  // 虚拟机管理预设
+  initializeVMManagementTables();
 }
 
 /**
@@ -482,7 +497,7 @@ function initializeDefaultData(): void {
  * @param length - 密码长度，默认16位
  * @returns 包含大小写字母、数字和特殊字符的强密码
  */
-function generateStrongPassword(length: number = 16): string {
+function generateStrongPassword(length = 16): string {
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const digits = '0123456789';

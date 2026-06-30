@@ -11,7 +11,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 # Vite dev server port
-EXPOSE 5173
+EXPOSE 3000
 
 # Vite requires host to be 0.0.0.0 for Docker
 ENV HOST=0.0.0.0

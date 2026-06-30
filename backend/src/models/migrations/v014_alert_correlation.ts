@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 
 /**
  * v014 — 告警关联聚合

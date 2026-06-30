@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 
 /**
  * v016: 创建数据库连接管理表

@@ -60,7 +60,7 @@ class Logger {
   private performanceMetrics: Map<string, number[]> = new Map();
   private maxMetricKeys = 500;
 
-  constructor(service: string = 'itops-agent') {
+  constructor(service = 'itops-agent') {
     this.service = service;
     const configLevel = env.LOG_LEVEL as LogLevel;
     if (configLevel && this.levels[configLevel] !== undefined) {
@@ -402,7 +402,7 @@ class Logger {
   startTimer(message: string, meta?: unknown): { end: (success?: boolean) => void } {
     const startTime = Date.now();
     return {
-      end: (success: boolean = true) => {
+      end: (success = true) => {
         const duration = Date.now() - startTime;
         this.log(success ? 'info' : 'warn', `${message} ${success ? 'completed' : 'failed'}`, {
           durationMs: duration,

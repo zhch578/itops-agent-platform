@@ -38,6 +38,7 @@ services:
     volumes:
       - dev-data:/app/data                          # 数据库持久化
       - dev-backups:/app/backups                    # 备份文件持久化
+      - /var/run/docker.sock:/var/run/docker.sock   # Docker 引擎通信
       - ../backend/src:/app/src                     # 挂载源码用于热重载
       - ../backend/package.json:/app/package.json
       - ../backend/tsconfig.json:/app/tsconfig.json

@@ -1,37 +1,38 @@
 import { describe, it, expect } from 'vitest';
 
+// Page routing component existence test (updated paths after refactoring)
+
+const pageMap: Record<string, string> = {
+  Login: '../../modules/auth/pages/Login',
+  Dashboard: '../../modules/monitor/pages/Dashboard',
+  Servers: '../../modules/servers/pages/Servers',
+  Agents: '../../modules/ai/pages/Agents',
+  Workflows: '../../modules/workflow/pages/Workflows',
+  Tasks: '../../modules/workflow/pages/Tasks',
+  Alerts: '../../modules/alerts/pages/Alerts',
+  AlertMappings: '../../modules/alerts/pages/AlertMappings',
+  Knowledge: '../../modules/ai/pages/Knowledge',
+  Scripts: '../../modules/infra/pages/Scripts',
+  AuditLogs: '../../modules/infra/pages/AuditLogs',
+  Notifications: '../../modules/infra/pages/Notifications',
+  Reports: '../../modules/monitor/pages/Reports',
+  Users: '../../modules/auth/pages/Users',
+  Settings: '../../modules/infra/pages/Settings',
+  NetworkDevices: '../../modules/network/pages/NetworkDevices',
+  SSHKeys: '../../modules/servers/pages/SSHKeys',
+  AIModels: '../../modules/ai/pages/AIModels',
+  NotFound: '../../shared/pages/NotFound',
+};
+
 describe('App Routing', () => {
   it('should lazy load all page components', async () => {
-    const pages = [
-      'Login',
-      'Dashboard',
-      'Servers',
-      'Agents',
-      'Workflows',
-      'Tasks',
-      'Alerts',
-      'AlertMappings',
-      'Knowledge',
-      'Scripts',
-      'AuditLogs',
-      'Notifications',
-      'Reports',
-      'Users',
-      'Settings',
-      'NetworkDevices',
-      'SSHKeys',
-      'AIModels',
-      'NotFound',
-    ];
-
-    for (const page of pages) {
+    for (const [page, path] of Object.entries(pageMap)) {
       let mod;
       try {
-        mod = await import(`../../pages/${page}`);
+        mod = await import(path);
       } catch {
-        // some pages might have different export names
         try {
-          mod = await import(`../../pages/${page}.tsx`);
+          mod = await import(path + '.tsx');
         } catch {
           // skip
         }
@@ -44,38 +45,10 @@ describe('App Routing', () => {
 });
 
 describe('Page Structure Exports', () => {
-  it('should have default export for Login page', async () => {
-    const mod = await import('../../pages/Login');
-    expect(mod.default).toBeDefined();
-  });
-
-  it('should have default export for Dashboard page', async () => {
-    const mod = await import('../../pages/Dashboard');
-    expect(mod.default).toBeDefined();
-  });
-
-  it('should have default export for Settings page', async () => {
-    const mod = await import('../../pages/Settings');
-    expect(mod.default).toBeDefined();
-  });
-
-  it('should have default export for Servers page', async () => {
-    const mod = await import('../../pages/Servers');
-    expect(mod.default).toBeDefined();
-  });
-
-  it('should have default export for Agents page', async () => {
-    const mod = await import('../../pages/Agents');
-    expect(mod.default).toBeDefined();
-  });
-
-  it('should have default export for Tasks page', async () => {
-    const mod = await import('../../pages/Tasks');
-    expect(mod.default).toBeDefined();
-  });
-
-  it('should have default export for NotFound page', async () => {
-    const mod = await import('../../pages/NotFound');
-    expect(mod.default).toBeDefined();
-  });
+  for (const [page, path] of Object.entries(pageMap)) {
+    it(`should have default export for ${page} page`, async () => {
+      const mod = await import(path);
+      expect(mod.default).toBeDefined();
+    });
+  }
 });

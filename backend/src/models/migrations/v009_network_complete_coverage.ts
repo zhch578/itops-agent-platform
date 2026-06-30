@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
 
 /**
  * v009 — 补充网络设备/平台/告警关联的完整覆盖

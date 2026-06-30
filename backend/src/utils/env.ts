@@ -114,7 +114,7 @@ function validateEnv(): EnvConfig {
     LOCAL_AI_API_KEY: process.env.LOCAL_AI_API_KEY,
     LOCAL_AI_API_BASE: process.env.LOCAL_AI_API_BASE,
     LOCAL_AI_MODEL: process.env.LOCAL_AI_MODEL,
-    WEBHOOK_VERIFY_ENABLED: process.env.WEBHOOK_VERIFY_ENABLED === 'true',
+    WEBHOOK_VERIFY_ENABLED: process.env.WEBHOOK_VERIFY_ENABLED !== 'false',
     WEBHOOK_SECRET: process.env.WEBHOOK_SECRET,
     ALERT_WEBHOOK_URL: process.env.ALERT_WEBHOOK_URL,
     ALERT_EMAIL_HOST: process.env.ALERT_EMAIL_HOST,

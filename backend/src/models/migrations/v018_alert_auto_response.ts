@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 
 /**
  * Migration v018 — AARS v2 自适应告警响应系统 数据表

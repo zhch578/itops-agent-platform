@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 
 /**
  * v012 — 数据库时区迁移至 UTC+8 (Asia/Shanghai)

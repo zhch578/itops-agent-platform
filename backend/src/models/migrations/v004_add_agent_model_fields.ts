@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 import { logger } from '../../utils/logger';
 
 const v004AddAgentModelFields: Migration = {

@@ -191,25 +191,13 @@ Vite 开发服务器会自动热重载，你可以直接在 <http://localhost:51
 
 测试没问题后，需要重新构建前端 Docker 镜像。先停止本地开发环境：
 
-Thought
-
-本地开发环境已停止。现在可以部署到生产环境了。
-
-## 需要执行的命令
-
-在项目根目录执行：
-
-如果使用 docker-compose.simple.yml ：
-
-```
-docker compose -f docker-compose.
-simple.yml up -d --build frontend
+```bash
+.\stop-dev.bat
 ```
 
-## 修复总结
+然后在项目根目录执行：
 
-共修复了 3 个 bug ：
-
-问题 文件 修复内容 Web 终端 WebSocket 连接失败 WebTerminal.tsx Socket.IO 连接改为相对路径 服务器管理导入导出功能失败 ImportExport.tsx API 路径添加 /api 前缀 Web 终端输入字符重复 WebTerminal.tsx 移除重复的 terminal:data 事件注册
-
-是否要我帮你提交这些修改并生成 commit message？
+```bash
+# 使用 docker-compose.simple.yml 部署
+docker-compose -f docker-compose.simple.yml up -d --build
+```

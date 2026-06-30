@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 

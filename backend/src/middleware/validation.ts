@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodSchema } from 'zod';
+import type { Request, Response, NextFunction } from 'express';
+import type { ZodSchema } from 'zod';
 import { logger } from '../utils/logger';
 
 export function validateBody(schema: ZodSchema) {

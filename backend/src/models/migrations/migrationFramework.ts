@@ -201,7 +201,7 @@ export class MigrationManager {
     return this.migrateTo(latestVersion);
   }
 
-  async rollback(steps: number = 1): Promise<MigrationResult> {
+  async rollback(steps = 1): Promise<MigrationResult> {
     const applied = this.getAppliedMigrations()
       .filter(m => m.success)
       .sort((a, b) => b.version - a.version)

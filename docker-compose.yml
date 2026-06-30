@@ -50,6 +50,7 @@ services:
     volumes:
       - app-data:/app/data
       - app-backups:/app/backups
+      - /var/run/docker.sock:/var/run/docker.sock
     # Resource limits
     deploy:
       resources:

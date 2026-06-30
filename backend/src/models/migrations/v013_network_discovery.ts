@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 
 /**
  * v013 — 网络设备主动发现（IP 扫描）

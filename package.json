@@ -10,6 +10,13 @@
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "check:arch": "node scripts/check-architecture.js",
+    "check:arch:backend": "node scripts/check-architecture.js backend",
+    "check:arch:frontend": "node scripts/check-architecture.js frontend",
+    "check:deps": "npx depcruise --config .dependency-cruiser.json backend/src",
+    "check:deps:graph": "npx depcruise --config .dependency-cruiser.json backend/src --output-type dot | dot -T svg > deps-graph.svg",
+    "check:circular": "npx madge --circular --extensions ts backend/src",
+    "precommit": "npm run check:arch",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -19,10 +26,17 @@
     "docker:status": "docker-compose ps",
     "docker:clean": "docker system prune -f"
   },
-  "keywords": ["itops", "agent", "automation", "devops"],
+  "keywords": [
+    "itops",
+    "agent",
+    "automation",
+    "devops"
+  ],
   "author": "",
   "license": "MPL-2.0",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "dependency-cruiser": "^18.0.0",
+    "madge": "^8.0.0"
   }
 }

@@ -1,4 +1,4 @@
-import { Migration } from './migrationFramework';
+import type { Migration } from './migrationFramework';
 
 const v017ApprovalRequests: Migration = {
   id: '20260614000017',

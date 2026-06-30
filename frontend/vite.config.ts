@@ -11,6 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    hmr: {
+      clientPort: 5173,
+    },
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
     proxy: {
       '/api': {
         target: process.env.DOCKER_MODE ? 'http://backend:3001' : 'http://localhost:3001',

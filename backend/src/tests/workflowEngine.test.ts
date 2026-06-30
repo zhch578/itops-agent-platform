@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { evaluateExpression, resolveExpression } from '../workflowExpressionEvaluator';
+import { evaluateExpression, resolveExpression } from '../modules/workflow/services/workflowExpressionEvaluator';
 
 /**
  * 工作流引擎增强功能集成测试

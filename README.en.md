@@ -1,520 +1,518 @@
-[English](README.en.md) | [中文](README.md)
+[English](README.en.md) | [中文](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [Deutsch](README.de.md) | [Français](README.fr.md)
+
+***
+
+**Important License Change Notice (2026-05-27)**
+
+Effective May 27, 2026, all new code contributions to this project are licensed under the **Mozilla Public License 2.0 (MPL-2.0)**. This project prohibits closed-source secondary development, repackaging for sale, SaaS commercialization, and other commercial uses. Permanently open source. This project belongs to the thousands of engineers who embrace the open-source spirit, not to a single corporation.
+
+***
+
+<br />
+
+<h1 align="center">⚡ ITOps Agent Platform</h1>
+<p align="center">
+  <strong>Enterprise-grade AIOps Automation Platform with Multi-Agent AI Collaboration</strong>
+  <br/>
+  Open Source from China · Alternative to PagerDuty + Rundeck + Portainer + vCenter
+  <br/>
+  <em>One platform for the full loop: Alert → Diagnose → Remediate → Approve → Verify</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/qinshihu/itops-agent-platform/actions/workflows/ci.yml"><img src="https://github.com/qinshihu/itops-agent-platform/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/qinshihu/itops-agent-platform/releases/latest"><img src="https://img.shields.io/github/v/release/qinshihu/itops-agent-platform?sort=semver" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MPL--2.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/qinshihu/itops-agent-platform"><img src="https://img.shields.io/github/stars/qinshihu/itops-agent-platform?style=social" alt="Stars"></a>
+  <a href="https://github.com/qinshihu/itops-agent-platform/issues"><img src="https://img.shields.io/github/issues/qinshihu/itops-agent-platform" alt="Issues"></a>
+  <br/>
+  <a href="https://gitee.com/IT_Oline/itops-agent-platform"><img src="https://img.shields.io/badge/Gitee-Repo-C71D23?logo=gitee" alt="Gitee"></a>
+  <a href="https://gitcode.com/gcw_IM7aAihp/itops-agent-platform"><img src="https://img.shields.io/badge/GitCode-Repo-FF6600?logo=git" alt="GitCode"></a>
+  <br/>
+  <img src="https://img.shields.io/badge/Agents-12-blueviolet" alt="12 Agents">
+  <img src="https://img.shields.io/badge/API_Routes-68-success" alt="68 API Routes">
+  <img src="https://img.shields.io/badge/Services-72-blue" alt="72 Services">
+  <img src="https://img.shields.io/badge/Frontend_Pages-63-orange" alt="63 Pages">
+  <img src="https://img.shields.io/badge/Workflows-10-teal" alt="10 Workflows">
+  <br/>
+  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react" alt="React 18">
+  <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs" alt="Node.js">
+  <img src="https://img.shields.io/badge/Docker-🐳-2496ED?logo=docker" alt="Docker">
+  <br/>
+  <a href="https://star-history.com/#qinshihu/itops-agent-platform&Date">
+    <img src="https://api.star-history.com/svg?repos=qinshihu/itops-agent-platform&type=Date" alt="Star History Chart" width="480" />
+  </a>
+</p>
+
+🎮 [Live Demo](https://agentdemo-0mwug01t6.maozi.io/) &emsp;|&emsp; 📝[Vision & Community](项目愿景与社区共建.md) &emsp;|&emsp; 📝[AI Coding Skill](SKILL.md) &emsp;|&emsp; 📝[Documentation Book](https://aiopsdoc-0mwug01t6.maozi.io/book/) &emsp;|&emsp; 📖[Project Docs](https://aiopsdoc-0mwug01t6.maozi.io/) &emsp;|&emsp; ✍️[Author's Note](https://mp.weixin.qq.com/s/NDqYrfqR0RZEvSESyVD2hg)
+
+🌐 Official Website: <https://www.zjzwfw.cloud/ITOpsAgentinfo>
+
+📦 Repositories: [GitHub](https://github.com/qinshihu/itops-agent-platform)  |  [Gitee](https://gitee.com/IT_Oline/itops-agent-platform)  |  [GitCode](https://gitcode.com/gcw_IM7aAihp/itops-agent-platform)
+
+---------------------------------------------------------------
+
+
+## 🎯 Who Is Using / Who Should Use?
+
+| Role | Typical Pain Points | How This Platform Solves Them |
+| ---------------- | --------------------------- | -------------------------- |
+| **Operations Engineers** | Woken up by alerts at midnight, manually SSH to troubleshoot | AI auto-diagnoses root cause → pushes for approval → one-tap fix on mobile |
+| **SRE / DevOps** | Switching between multiple tools, information silos | One-stop closed loop for alerts + diagnosis + execution + approval |
+| **IT Managers / CTOs** | Operations rely entirely on people, incident response is a gamble | Automated inspection + self-healing strategies, freeing people from repetitive work |
+| **SMB IT Teams** | Can't afford commercial software like PagerDuty/Rundeck | Feature parity, open source and free, data stays on-premise |
+| **Security & Compliance** | Remediation actions without approval or audit trail | HITL human approval + full-chain audit + command security filtering |
+
+***
+
+## Why Do You Need This Project?
+
+It's 3 AM. Server CPU spikes to 99%. The traditional workflow is:
+
+```
+Alert notification → Get woken up → Log in to VPN → SSH into server → Run commands to troubleshoot → Check docs → Fix → Write report → Go back to sleep
+```
+
+**The whole process takes 30-60 minutes. You could have kept sleeping.**
+
+ITOps Agent Platform transforms this into:
+
+```
+Alert triggered → AI auto-diagnoses root cause → Generates remediation commands → Pushes to mobile for approval → One-tap execution → Auto-verification → Report generated
+```
+
+**The entire process takes 3 minutes. You only need to tap "Approve" on your phone.**
+
+***
+
+## 🚀 The Ultimate Form of Operations: From Automation to Autonomy
+
+ITOps Agent Platform is not just an operations tool. It targets the **ultimate evolution of IT operations** — AI fully autonomous operations.
+
+```
+Manual Ops  →  Script Automation  →  Platformization  →  AI Assisted  →  🤖 Autonomous Ops (This Project)
+ 2000s        2010s        2020s       2024+         Now & Future
+```
+
+| Evolution Stage | Characteristics | Human Role |
+|---------|------|---------|
+| Manual Ops | Type commands, log into servers | Executor |
+| Script Automation | Shell / Python semi-automation | Script maintainer |
+| Platformization | Ansible / Prometheus / Terraform | Platform operator |
+| AI Assisted | Copilot suggestions, alert analysis | Decision maker |
+| **AI Autonomous Ops** | **AI Agent full loop: Perceive → Diagnose → Decide → Execute → Verify** | **Supervisor** |
+
+### Why Is This the Ultimate Form?
+
+| Dimension | Traditional Approach | ITOps Agent Platform |
+|------|---------|---------------------|
+| Incident Response | Human: discover → locate → fix (30-60 min) | AI: auto-perceive → diagnose → fix (< 3 min) |
+| Operations Scale | 1 person manages 20-50 nodes | **1 person manages 500+ nodes, AI handles 80%+ workload** |
+| Knowledge Retention | In senior engineers' heads, scattered docs | **Knowledge base + RAG, AI continuously learns, never lost** |
+| Decision Quality | Depends on personal experience, unstable | **Multi-Agent collaborative reasoning, full reasoning chain auditable** |
+| Marginal Cost | Add machines ≈ add people | **Add machines ≈ add Agents, marginal cost approaches zero** |
+
+> **This is not an operations tool. This is the next-generation operating system for operations.** When AI Agents can autonomously complete the full chain of alert ingestion, root cause diagnosis, remediation decision, command execution, and result verification, operations is no longer "people watching systems" but "people designing strategies, AI executing strategies."
+
+### Industry Trends: AI Autonomous Operations Is an Irreversible Direction
+
+- **Gartner** lists AIOps as a strategic IT operations technology trend, predicting AI-driven autonomous operations will become standard for enterprises
+- **CNCF** cloud-native + AI convergence is the core direction of next-generation infrastructure
+- Operations labor costs are rising year by year. **AI Agents are the only solution that can support 10x business growth without increasing headcount**
+- **Open source + AI Agent collaboration** is the key path to breaking commercial software monopolies and achieving technology democratization
+
+### Our Positioning
+
+**ITOps Agent Platform is currently the only open-source AIOps project that has engineered the full-chain AI autonomous closed loop of "Alert → Diagnose → Decide → Execute → Verify" into production.**
+
+Our long-term goal: Let 80% of daily operations work be fully completed by AI Agents autonomously, while human operations engineers focus on architecture design, strategy formulation, and innovative work. **This is not just an open-source project. This is the starting point of the operations engineers' liberation movement.**
 
 ---
 
-**Important License⚠️ Change Notice (2026-05-27)**
+## ⏰ Why Now?
 
-Effective today, all new code submissions in this project will be open-sourced under the **Mozilla Public License 2.0 (MPL-2.0)** license.
-- All code submitted before 16:00, May 27, 2026, remains under the original MIT license
-- Any derivative works based on versions of this project after 2026-05-27 must comply with the MPL-2.0 license
-- This project does not allow commercial use such as **closed-source secondary development, packaged sales, SaaS operations**, and commits to being permanently open-source!
+Three trends converge at the same point in time, making AI autonomous operations transform from "concept" to "inevitability":
 
-👤 Author: Tan Ce | IT Online
+| Trend | Explanation |
+|------|------|
+| **LLM Capability Crosses the Threshold** | GPT-4o / DeepSeek / Doubao / Qwen and other models now have production-grade reasoning capabilities, suitable for serious scenarios like fault diagnosis and command generation |
+| **Irreversible Rise in Operations Labor Costs** | Enterprise IT scales 10x, but operations teams cannot expand proportionally. The only way out is AI handling 80%+ of daily workload |
+| **Mature Open Source Ecosystem** | Docker / K8s / React / TypeScript / Node.js stacks are mature enough to support enterprise-grade products. Open source is no longer synonymous with "crude" |
 
+> **2026 is the inaugural year of AI autonomous operations.** When LLM capability + operations pain points + open source ecosystem converge, ITOps Agent Platform stands at this historical node. Missing this window means missing an era.
 
+---
 
-# ITOps Agent Platform
+### A $40 Billion Market Being Rewritten by AI
 
-Enterprise-grade IT Operations Multi-Agent Automation Platform — A fully open-source intelligent IT operations solution powered by Large Language Models.
+The global IT operations market is **$40 billion (2025)**, expected to exceed **$70 billion by 2030**. Every paradigm shift creates new leaders:
 
-📝[Project Vision & Community Co-creation](项目愿景与社区共建.md) 📝[Project Documentation Website](https://aiopsdoc-0mwug01t6.maozi.io/)
+- Cloud computing shift → AWS ($2 trillion market cap)
+- Cloud monitoring shift → Datadog ($40 billion market cap)
+- Dev tools shift → GitLab ($14 billion IPO)
+- **Operations automation shift → ?**
 
-[![CI](https://github.com/qinshihu/itops-agent-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/qinshihu/itops-agent-platform/actions/workflows/ci.yml)
-[![Release](https://github.com/qinshihu/itops-agent-platform/actions/workflows/release.yml/badge.svg)](https://github.com/qinshihu/itops-agent-platform/actions/workflows/release.yml)
-[![GitHub release](https://img.shields.io/github/v/release/qinshihu/itops-agent-platform?include_prereleases&sort=semver)](https://github.com/qinshihu/itops-agent-platform/releases/latest)
-[![License](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
+> **The question is not "will it happen" but "who will become the GitLab of this space."** The open-source AIOps leader position is currently vacant — this is a winner-takes-most market.
 
-🌐 **Official Website**: <https://www.zjzwfw.cloud/ITOpsAgentinfo>
+| GitLab Back Then | ITOps Agent Platform Today |
+|------------|--------------------------|
+| Open source alternative to GitHub | Open source alternative to PagerDuty + Rundeck + Portainer |
+| Initially only basic CI/CD | 12 AI Agents + 68 API routes |
+| No one believed code hosting was worth $10 billion | **No one believes an operations platform is worth $10 billion** |
 
-<img alt="0cpuy-fbfi3" src="docs-assets/0-3.gif" style="max-width: 100%; height: auto;" />
+> ITOps Agent Platform stands at an earlier stage of a larger market.
 
-<img alt="0cpuy-fbfi3" src="docs-assets/screenshot-2026-05-25-143839.png" style="max-width: 100%; height: auto;" />
+### Three Irreversible Tailwinds
 
-<img alt="0cpuy-fbfi3" src="docs-assets/images/q (18).png" style="max-width: 100%; height: auto;" />
+| Tailwind | Why It's Irreversible |
+|------|------------|
+| **AI Capability Explosion** | LLM went from "toy" to "production-grade" in just 2 years. Next step is "autonomous decision-making" |
+| **Operations Talent Gap** | Wave of 70s-generation ops experts retiring + young people unwilling to do 7×24 on-call = AI is the only way out |
+| **Open Source Eating Enterprise Software** | GitLab, Confluent, Grafana, HashiCorp — open source IPOs have happened 5 times, each proving open source has more commercial explosive power than closed source |
 
-## Overview
+> **This is not a choice of whether to do it, but who to do it with.** When the above three curves intersect, AI autonomous operations is a mathematical inevitability.
 
-ITOps Agent Platform is an enterprise-grade full-stack IT operations automation platform. Through visual workflow orchestration, multiple AI Agents collaborate to automate server inspection, alert handling, fault diagnosis, compliance checks, and other IT operations tasks.
+***
+
+<img alt="platform-screenshot" src="docs-assets/01.png" style="max-width: 100%;" />
+
+<img alt="platform-screenshot" src="docs-assets/0-3.gif" style="max-width: 100%;" />
+
+<img alt="platform-screenshot" src="docs-assets/22.png" style="max-width: 100%;" />
+
+***
+
+## Experience the Full Loop in 5 Minutes
+
+```bash
+# 1. One-line deployment (requires Docker)
+curl -sL https://gitee.com/IT_Oline/itops-agent-platform/raw/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && ./deploy.sh
+
+# 2. Open browser at http://localhost:8080, default account admin/admin
+# 3. Add a server → System auto-discovers containers and resources on the host
+# 4. Configure alert Webhook → Trigger a test alert → Watch AI auto-analysis
+# 5. Click "Auto Remediate" → Mobile approval → Done!
+```
+
+**5 minutes, from zero to a complete AI operations closed-loop experience.**
+
+***
+
+## What Can This Platform Do?
+
+### Path 1️⃣  Intelligent Alert → AI Diagnosis → Auto Remediation
+
+```
+Prometheus / Zabbix alert → Webhook ingestion
+  → AI root cause analysis (natural language diagnosis report)
+    → Auto-generate remediation commands + risk assessment
+      → WeCom/DingTalk push for approval → One-tap approval on mobile
+        → SSH auto-execution → Verify results → Generate report
+```
+
+<details>
+<summary><b>Expand to see what pain points this workflow solves</b></summary>
+
+| Traditional Approach | This Platform |
+| -------------- | -------------------- |
+| Alert storm, woken up at midnight | AI auto-deduplication and noise reduction, similar alerts aggregated |
+| Manual SSH troubleshooting, guessing by experience | AI analyzes logs + metrics, gives natural language diagnosis |
+| Check docs for remediation steps | Auto-generates structured remediation commands (JSON) |
+| No approval for remediation, no one takes responsibility | Human approval node, one-tap approval on mobile |
+| Worried about remediation errors with no rollback | Auto-verification of results, failure alerts |
+
+</details>
+
+### Path 2️⃣  Visual Workflow → Scheduled Auto Inspection
+
+```
+Drag-and-drop workflow orchestration (Agent + Approval + Conditional branches)
+  → Configure Cron scheduled trigger
+    → Auto-execute multi-server inspection
+      → Generate compliance check report
+        → Auto-create alert for anomalies → Enter Path 1️⃣
+```
+
+### Path 3️⃣  Container & Virtualization Unified Management
+
+```
+One-click add Docker host / VMware vCenter / Proxmox VE / KVM node
+  → Auto-discover all containers and VMs
+    → Real-time monitor CPU / Memory / Network (WebSocket push)
+      → Stream container logs
+        → Docker Compose visual orchestration
+          → K8s cluster import and management (kubeconfig import + cluster status monitoring)
+            → Image registry integration (Harbor / ACR / Docker Hub)
+```
+
+### Path 4️⃣  Data Center & Network Infrastructure Management
+
+```
+Network planning → IP subnet and VLAN management → IP auto-allocation / reservation / reclamation
+  → Data center room modeling (rack / PDU / device lifecycle / power management)
+    → Room 3D digital twin monitoring (WebGL real-time rendering)
+      → Network topology auto-discovery (SNMP / LLDP / ARP)
+```
+
+***
+
+## How Is It Different from Similar Open Source Projects?
+
+| Capability | ITOps Agent | GrafanaOnCall | Portainer | UptimeKuma | Rundeck | Coolify |
+| ----------------- | :---------: | :-----------: | :-------: | :--------: | :-----: | :-----: |
+| Alert ingestion + noise reduction | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| **AI Multi-Agent Collaboration** | **✅** | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Alert → Auto-remediation closed loop** | **✅** | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Human-in-the-loop (HITL) Approval** | **✅** | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Docker/VM visual management | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| K8s cluster management | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| IP subnet / VLAN management | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Data center room modeling | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Room 3D digital twin | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Workflow drag-and-drop orchestration | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Web SSH terminal | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Knowledge base + RAG | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Scheduled inspection + auto-report | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Cost analysis + auto-scaling | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Local AI · Data stays on-premise** | **✅** | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Domestic tech (Xinchuang) friendly** | **✅** | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+> **One-sentence summary**: Existing open-source tools each manage one segment — OnCall for alerts, Portainer for containers, Rundeck for execution. ITOps Agent connects all of this, adds an **AI multi-Agent collaborative brain**, and achieves true "alert comes in, remediation is done."
+
+### vs Commercial Solutions
+
+Being free and open source is not the only advantage. Head-to-head comparison with paid commercial products:
+
+| Capability | PagerDuty + Rundeck | ServiceNow ITOM | **ITOps Agent (Open Source Free)** |
+|------|:---:|:---:|:---:|
+| Annual cost (100 nodes) | $50,000+ | $100,000+ | **$0** |
+| AI autonomous diagnosis | ❌ Alert routing only | ⚠️ Requires additional modules | **✅ Multi-Agent collaborative reasoning** |
+| Auto-remediation closed loop | ❌ Requires manual execution | ⚠️ Requires custom development | **✅ Built-in full chain** |
+| Human-in-the-loop (HITL) | ❌ | ⚠️ Requires customization | **✅ Native WeCom/DingTalk push** |
+| Container/VM/K8s management | ❌ | ❌ | **✅ Built-in visualization** |
+| Data stays on-premise | ❌ SaaS forced cloud | ❌ SaaS forced cloud | **✅ 100% on-premise deployment** |
+| Open source and controllable | ❌ Closed source lock-in | ❌ Closed source lock-in | **✅ MPL-2.0 open source** |
+| Community driven | ❌ | ❌ | **✅** |
+
+> **One open-source project achieves what three commercial products (PagerDuty + Rundeck + Portainer) combined cannot do.** And it's free.
+
+***
+
+## Architecture Overview
 
 ```mermaid
 graph TB
-    Browser["Browser"] --> Nginx["Nginx Reverse Proxy"]
-    Nginx --> React["React Frontend<br/>45+ Pages | Zustand | @xyflow/react"]
-    Nginx --> Express["Express Backend<br/>47 Routes | 50+ Services | JWT Auth"]
-    React <-->|"WebSocket Real-time"| Express
-    Express --> SQLite[("SQLite Database<br/>44 Tables | AES-256 Encryption")]
-    Express --> LLM["🤖 LLM Model Pool<br/>Doubao | DeepSeek | Qwen<br/>OpenAI | ZhiPu | Local Models"]
+    Browser["🌐 Browser"] --> Nginx["Nginx Reverse Proxy"]
+    Nginx --> React["React Frontend<br/>63 pages | @xyflow/react workflow editor"]
+    Nginx --> Express["Express Backend<br/>68 routes | 72 services | JWT auth"]
+    React <-->|"WebSocket real-time communication"| Express
+    Express --> SQLite[("SQLite Database<br/>WAL mode | AES-256 encryption")]
+    Express --> LLM["🤖 LLM Model Pool<br/>Doubao | DeepSeek | Qwen<br/>OpenAI | Zhipu | Local models"]
     Express --> SSH["🖥️ SSH Remote Servers"]
-    Express --> Webhook["🚨 Alert Webhook<br/>Prometheus | Zabbix"]
-    Express --> Notify["📬 Notifications<br/>Email | WeCom | DingTalk"]
+    Express --> Docker["🐳 Docker Engine API"]
+    Express --> K8s["☸️ Kubernetes API"]
+    Express --> VMware["💻 VMware vSphere / KVM"]
+    Express --> Webhook["🚨 Alert Webhook<br/>Prometheus | Zabbix | Grafana"]
+    Express --> Notify["📬 Notification Channels<br/>WeCom | DingTalk | Email"]
 ```
 
-> 📐 [View Full Architecture Diagram →](./docs/ARCHITECTURE_DIAGRAM.md)
+> 📐 [View full architecture diagram →](./docs/ARCHITECTURE_DIAGRAM.md)
 
-### Core Features
+***
 
-- **Multi-Agent Collaboration** — 9 preset IT operations Agents with custom creation support, covering alerts, diagnostics, inspection, compliance, and more
-- **Visual Workflow** — Drag-and-drop orchestration with serial/parallel/conditional branching and real-time WebSocket progress pushing
-- **HITL Human Approval** — Workflow supports approval nodes, pauses execution for human confirmation, supports auto-reject/wait on timeout, approval requests auto-push to WeCom/DingTalk/Email
-- **AI Intelligent Remediation Loop** — Alerts trigger AI analysis → Auto-generate structured remediation commands → Approval node confirmation → Auto-execute remediation → Verify results and feedback
-- **Web SSH Terminal** — Interactive remote terminal based on xterm.js with real-time I/O, window auto-resize, and bidirectional communication
-- **Host Management Enhancement** — Multi-level group tree structure, CSV/JSON bulk import, automatic SSH information collection (CPU/Memory/Disk/OS)
-- **Data Import/Export** — Bulk server import via CSV/JSON, export alerts, audit logs, and report data
-- **Backup & Recovery** — Complete database backup and recovery with compression, integrity verification, and graceful restart
-- **Auto Remediation** — Automatic trigger of remediation strategies from alerts with custom workflows and approval processes
-- **Root Cause Analysis** — AI-driven alert root cause analysis for quick problem identification
-- **Alert Noise Reduction** — Intelligent alert deduplication and suppression to reduce alert storms
-- **Server Management** — SSH remote connections, command execution, historical audits, and 14 compliance checks
-- **Alert Center** — Webhook reception for Prometheus/Zabbix/Generic alerts with automatic noise reduction and workflow triggering
-- **Knowledge Base + RAG** — 22 preset knowledge entries with intelligent retrieval injected into LLM context
-- **AI Copilot** — Natural language conversational IT operations assistant with automatic system state awareness
-- **Multi-Model Support** — Supports Doubao, OpenAI, and locally deployed models (Ollama/LM Studio/vLLM) for complete data privacy
-- **Enterprise Security** — AES-256-GCM encryption, JWT authentication, rate limiting, audit logs, and memory leak protection
-- **Docker One-Click Deployment** — Containerized frontend/backend, 5-minute deployment, Alibaba Cloud image registry support
-- **CI/CD Automation** — Complete GitHub Actions pipeline for automatic build, test, release, and image push
+| Barrier | Explanation |
+|------|------|
+| **12 Agent collaborative scheduling** | Not a single AI API call, but a complex distributed system of multi-Agent division of labor + collaboration + arbitration |
+| **Full-chain state machine** | Alert → Diagnose → Decide → Approve → Execute → Verify, 7-node state transitions engineered and polished |
+| **Command security engine** | 7 categories of dangerous command policies + role permission matrix, ensuring AI-generated commands execute safely in production |
+| **Multi-model degradation chain** | Automatic failover to backup models when primary model fails, ensuring AI service high availability, no single point of failure |
+| **32-version database migrations** | 32 schema iterations of stable evolution, engineering maturity far beyond demo-level projects |
 
-## Security Features
+### Scale Economics: The Commercial Explosive Power of Open Source
 
-Multi-layered security design to protect your servers and data:
+| Metric | Traditional Operations SaaS | ITOps Agent Open Source Model |
+|------|:---:|:---:|
+| Customer acquisition cost | Sales-driven, single enterprise customer $10,000+ | **≈ $0 (community-driven + developer self-propagation)** |
+| Marginal service cost | Grows linearly with user count | **Approaches zero (user self-hosted)** |
+| Network effects | Weak | **Strong (more Agents → stronger platform → larger community)** |
+| Ecosystem lock-in | Movable when contract expires | **Knowledge base + Agent marketplace + workflow templates (deeply bound)** |
+| Commercialization flexibility | Can only sell subscriptions | **Enterprise edition / managed cloud / tech support / Agent marketplace / training certification** |
 
-| Security Measure | Description |
-|---------|------|
-| **🔐 AES-256-GCM Encryption** | Bank-level encryption for server passwords and SSH keys |
-| **🎫 JWT Dual-Token Auth** | Access Token + Refresh Token with auto-refresh and blacklist logout |
-| **🔒 Login Failure Lock** | Account locked for 30 minutes after 5 failed attempts |
-| **💪 Password Complexity** | Enforces 8+ chars with uppercase, lowercase, numbers, and special chars |
-| **📜 Complete Audit Trail** | All logins, commands, and configuration changes are logged |
-| **🚫 Sensitive Info Masking** | Passwords and API keys automatically masked in logs |
-| **🛡️ Non-Root Execution** | Docker containers run as non-root with least privilege |
-| **🧱 Nginx Security Headers** | HSTS, CSP, X-Frame-Options, XSS Protection |
-| **⚡ API Rate Limiting** | Prevents malicious requests and brute force attacks |
-| **🌐 Webhook IP Whitelist** | Configurable IP whitelist for alert webhooks |
-| **✍️ Webhook Signature** | HMAC-SHA256 signature verification for trusted alerts |
-| **🏠 Local AI Support** | Ollama, LM Studio, vLLM support for 100% on-premise data |
-| **🔑 Forced Password Change** | Mandatory password change on first login |
+> The core advantage of the open-source model lies in customer acquisition efficiency and scaling capability, validated by mainstream open-source projects in the industry. This provides a solid foundation for the project's long-term sustainable development.
 
-> **Data Security Goal**: All server credentials are only stored locally encrypted and never sent to third-party AI. Agent execution commands and outputs stay within your server environment.
+## 🗺️ Future Roadmap
+
+| Phase | Core Goal |
+|------|---------|
+| **v3.x Engineering** (Current) | Multi-host container/VM/K8s unified management, alert → remediation full-chain closed loop |
+| **v4.x Intelligence** | Multi-Agent autonomous negotiation and decision-making, cross-system correlation analysis, AI self-learning strategy optimization |
+| **v5.x Autonomy** | Zero human intervention autonomous operations, AI-driven capacity planning and cost optimization |
+| **v6.x Ecosystem** | Agent marketplace (community-shared Agents), multi-cluster federation, operations digital twin |
+
+> **The roadmap is not just a timeline; it is a commitment to the future of the operations industry.** The project will continue to iterate, with each step advancing toward the ultimate goal of "fully AI autonomous operations."
+
+***
+
+## Core Features
+
+### 🤖 AI Intelligent Operations
+
+- **12 preset Agents**: Alert handling, fault diagnosis, log analysis, system inspection, change execution, document generation, compliance checking, command execution, auto-inspection, command generation expert, network inspection expert, database operations
+- **AI remediation closed loop**: Alert → AI analysis → remediation command generation → approval → execution → verification
+- **Root cause analysis**: AI-driven alert analysis, natural language diagnosis reports, full reasoning chains
+- **AI Copilot**: Natural language operations assistant, automatically senses system status
+- **Knowledge base + RAG**: 21 preset knowledge entries, semantic retrieval injects LLM context
+
+### 🔧 Visual Management
+
+- **Workflow editor**: Drag-and-drop orchestration, serial/parallel/conditional branches, 10 preset templates
+- **Web SSH terminal**: xterm.js interactive terminal, window auto-resize, session management
+- **Container management**: Multi-host Docker visualization (start/stop/logs/monitoring/Compose orchestration)
+- **VM management**: VMware vSphere / Proxmox VE / KVM multi-platform, snapshot management, live migration
+- **K8s management**: kubeconfig cluster import, Pod / Deployment / Service / Node full lifecycle
+- **Network management**: IP subnet / VLAN planning, auto-generate IP address pools, allocation / reservation / reclamation, batch operations
+- **Data center management**: Room rack modeling, device lifecycle tracking, PDU/UPS power management
+- **Room 3D monitoring**: Three.js WebGL digital twin, real-time device status visualization
+- **Large screen dashboard**: Full-screen NOC monitoring center
+
+### 🏢 Enterprise-grade Capabilities
+
+- **HITL approval**: Workflow human approval nodes, WeCom/DingTalk push, mobile approval
+- **Alert noise reduction**: Intelligent deduplication + suppression + correlation analysis
+- **Auto-scaling**: CPU/memory metric-driven, cooldown windows, scaling history
+- **Cost analysis**: Container/VM cost estimation + optimization suggestions
+- **Scheduled tasks**: Cron expressions, auto-execute specified workflows
+- **Reporting system**: Auto-generate Markdown reports
+
+### 🔒 Security & Compliance
+
+- **AES-256-GCM encryption**: Server passwords, SSH keys bank-grade encryption
+- **JWT dual-token authentication**: Access Token (24h) + Refresh Token (7d), auto-refresh
+- **SSH command security filtering**: 7 categories of dangerous command policies (rm -rf / mkfs / iptables -F etc.), intercepted by role
+- **Login protection**: 5 failed attempts lock for 30 minutes, mandatory password complexity
+- **Audit logs**: Full operation traceability
+- **Non-root execution**: Docker container least privilege principle
+- **Local AI**: Supports Ollama / LM Studio / vLLM, data stays on-premise
+
+***
 
 ## Supported AI Models
 
-The project supports most mainstream large language models worldwide, managed through a unified AI model pool with primary-backup degradation chains.
+Managed through a unified AI model pool, supports primary/backup degradation chains, independent circuit breakers for each provider.
 
-| Type | Provider/Model | Integration | Recommended Scenario |
-|------|------------|---------|---------|
-| **Domestic Cloud API** | VolcEngine · Doubao | Native API | Recommended for users in China |
-| **Domestic Cloud API** | Alibaba Cloud · Qwen | OpenAI Compatible | Enterprise applications in China |
-| **Domestic Cloud API** | DeepSeek | OpenAI Compatible | Strong code generation and reasoning |
-| **Domestic Cloud API** | ZhiPu AI (GLM-4) | OpenAI Compatible | Excellent Chinese understanding |
-| **Domestic Cloud API** | Moonshot · Kimi | OpenAI Compatible | Long text processing |
-| **Domestic Cloud API** | Baidu · Wenxin | OpenAI Compatible | Enterprise applications in China |
-| **Domestic Cloud API** | 01.AI (Yi) | OpenAI Compatible | Open source models |
-| **Domestic Cloud API** | Baichuan | OpenAI Compatible | Open source models |
-| **International Cloud API** | OpenAI (GPT-4o, o1, o3) | Native API | Users with external network access |
-| **International Cloud API** | Anthropic Claude | OpenAI Compatible Layer | Complex reasoning tasks |
-| **International Cloud API** | Meta Llama | Ollama/vLLM | Open source models |
-| **International Cloud API** | Mistral | OpenAI Compatible | Open source models |
-| **Local Deployment** | Ollama | OpenAI Compatible | High data security requirements |
-| **Local Deployment** | LM Studio | OpenAI Compatible | Desktop local models |
-| **Local Deployment** | vLLM | OpenAI Compatible | High-performance inference |
-| **Local Deployment** | Other OpenAI Compatible | OpenAI Compatible | Any compatible service |
+| Type | Provider/Model | Access Method | Recommended Scenario |
+| -------- | ---------------------------------- | --------- | --------------- |
+| **Domestic Cloud** | Volcano Engine · Doubao | Native API | Recommended for China, stable and fast |
+| **Domestic Cloud** | Alibaba Cloud · Qwen | OpenAI compatible | Enterprise applications |
+| **Domestic Cloud** | DeepSeek | OpenAI compatible | Code generation, reasoning |
+| **Domestic Cloud** | Zhipu AI (GLM-4) | OpenAI compatible | Excellent Chinese comprehension |
+| **Domestic Cloud** | Moonshot · Kimi | OpenAI compatible | Long text processing |
+| **Domestic Cloud** | Baidu · Wenxin Yiyan | OpenAI compatible | Domestic enterprises |
+| **Domestic Cloud** | 01.AI (Yi) / Baichuan | OpenAI compatible | Open source models |
+| **International Cloud** | OpenAI (GPT-4o) / Anthropic Claude | Native API | External network environments |
+| **Local Deployment** | Ollama / LM Studio / vLLM | OpenAI compatible | **Data 100% stays on-premise** |
 
-**Recommended Local Models**: Qwen2.5, Llama3, DeepSeek-Coder, Yi, ChatGLM, Phi-3, Mistral, etc.
+> ✅ Unified model pool management ✅ Primary/backup degradation chain ✅ Independent circuit breakers ✅ Drag-and-drop sorting ✅ Connectivity test
 
-**Features**:
-- ✅ Unified AI model pool management, support adding unlimited models
-- ✅ Primary-backup model degradation chain (primary_model_id + fallback_model_id)
-- ✅ Independent circuit breaker per provider, preventing single point of failure
-- ✅ Drag-and-drop sorting to define priority
-- ✅ Model connectivity testing
-- ✅ API Key inheritance mechanism to reduce duplicate configuration
-
-## Tech Stack
-
-| Layer      | Technology                                  |
-| ------ | ------------------------------------------- |
-| Frontend | React 18 + TypeScript + Tailwind CSS + Vite |
-| State Management | Zustand + React Query               |
-| Workflow Editor | @xyflow/react                        |
-| Backend  | Node.js + Express + TypeScript              |
-| Database | SQLite (better-sqlite3)                     |
-| Real-time Communication | Socket.io                      |
-| Remote Connection | SSH2                                 |
-| Deployment | Docker + Docker Compose + Nginx           |
+***
 
 ## Quick Start
 
-### Option 1: One-Click Script Deployment (Recommended)
+### Option 1: One-click Script Deployment (Recommended)
 
 ```bash
-# Windows
+# Linux/Mac
+curl -sL https://gitee.com/IT_Oline/itops-agent-platform/raw/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && ./deploy.sh
+
+# Windows PowerShell
 .\deploy.ps1
-
-# Linux/Mac
-chmod +x deploy.sh && ./deploy.sh
 ```
 
-The script will automatically pull the Alibaba Cloud image, generate configuration, start services, and verify health status.
-
-### Option 2: Docker Compose Deployment
+### Option 2: Docker Compose
 
 ```bash
-# 1. Configure environment variables
 cp .env.example .env
-
-# 2. Build and start (local source build)
-docker-compose up -d --build
-
-# 3. Access
+docker compose up -d --build
 # Frontend: http://localhost:8080
-# Backend: http://localhost:3001
-# Health: http://localhost:3001/health
+# Health check: http://localhost:3001/health
 ```
 
-### Option 3: Pull Alibaba Cloud Image Deployment
+### Option 3: Local Development (Hot Reload)
 
 ```bash
-# Pull images
-docker pull registry.cn-hangzhou.aliyuncs.com/huluwa666/tsq-images-hub:IT_Onlin-ITOps-backend-latest
-docker pull registry.cn-hangzhou.aliyuncs.com/huluwa666/tsq-images-hub:IT_Onlin-ITOps-frontend-latest
-
-# Start services
-docker-compose up -d
-```
-
-Or use the simplified version:
-
-```bash
-docker-compose -f docker-compose.simple.yml up -d --build
-```
-
-Or one-click script:
-
-```bash
-# Windows
-.\start.ps1
-
-# Linux/Mac
-chmod +x start.sh stop.sh && ./start.sh
-```
-
-### Local Development
-
-#### Option 1: Docker Local Development (Recommended, Hot Reload)
-
-```bash
-# Windows
+# Docker local development environment
 cd local-dev
-.\start-dev.bat
+# Windows: .\start-dev.bat
+# Linux/Mac: ./start-dev.sh
 
-# Linux/Mac
-cd local-dev
-./start-dev.sh
-```
-
-**Features:**
-- Frontend: Vite hot reload, instant refresh on code change http://localhost:5173
-- Backend: tsx watch hot reload, automatic restart on code change http://localhost:3001
-- Database: Docker volume persistence, data preserved on container stop
-- Debug: Node.js debug port (localhost:9229)
-
-#### Option 2: Traditional Local Development
-
-```bash
-# Start frontend and backend development servers
+# Or traditional way
 npm run dev
+# Frontend: http://localhost:3000
+# Backend: http://localhost:3001
 ```
 
-- Frontend: Vite hot reload http://localhost:3000
-- Backend: tsx watch hot reload http://localhost:3001
-- Database: SQLite file persisted at `backend/data/app.db`
+**Default admin**: `admin` / `admin` (forced password change on first login)
 
-**Default Admin**: `admin` / `admin`
+***
 
-> ⚠️ First login will force password change
+## Tech Stack
 
-<img alt="image" src="docs-assets/a0f8974f7fd227711675a3075121fd5a.png" style="max-width: 100%; height: auto;" />
+| Layer | Technology |
+| ------ | ----------------------------------------------- |
+| Frontend | React 18 + TypeScript + Vite 5 + Tailwind CSS 3 |
+| State Management | Zustand + React Query |
+| Workflow Editor | @xyflow/react |
+| Backend | Node.js + Express 4 + TypeScript |
+| Database | SQLite (better-sqlite3, WAL mode) |
+| Real-time Communication | Socket.io 4 |
+| Remote Connection | SSH2 |
+| Container Operations | Dockerode |
+| Deployment | Docker + Docker Compose + Nginx |
 
-## Feature Modules
-
-### Dashboard
-
-System overview displaying servers, alerts, tasks, and other core metrics.
-
-<img alt="Screenshot 2026-05-18 144450" src="docs-assets/images/q (1).png" style="max-width: 100%; height: auto;" />
-
-### Web SSH Terminal
-
-- Interactive SSH terminal based on xterm.js
-- Real-time bidirectional communication (WebSocket)
-- Window size auto-adaptation
-- Connection status visualization
-- Terminal session management (30 min TTL auto-cleanup)
-
-<img alt="image" src="docs-assets/fdsfz.png" style="max-width: 100%; height: auto;" />
-<img alt="image" src="docs-assets/images/w (2).png" style="max-width: 100%; height: auto;" />
-
-### Host Management
-
-- Multi-level group tree structure with filtering
-- CSV/JSON bulk import with automatic SSH validation and deduplication
-- One-click host information collection (OS/CPU/Memory/Disk/IP)
-- Server cards with group tags and hardware info
-- CSV/JSON export support
-
-<img alt="image" src="docs-assets/0-3.png" style="max-width: 100%; height: auto;" />
-
-### Server Management
-
-- Add/Edit/Delete servers with SSH password or key authentication
-- Tag filtering and connection testing
-- Online shell command execution with command history audit
-- 14 system compliance checks (CPU/Memory/Disk/Network/Service/Security)
-- Command and compliance history JSON export
-
-<img alt="Screenshot 2026-05-18 144417" src="docs-assets/0-1.gif" style="max-width: 100%; height: auto;" />
-
-### Agent Management
-
-- 9 preset Agents: Alert Handling, Fault Diagnosis, Log Analysis, System Inspection, Change Execution, Document Generation, Compliance Check, Server Command Execution, Auto Inspection
-- Custom Agent creation with system prompts, models, and temperature parameters
-- Agent testing and execution history tracking
-
-<img alt="image" src="docs-assets/0-2.png" style="max-width: 100%; height: auto;" />
-
-### Workflow Orchestration
-
-- Visual drag-and-drop editor
-- 6 preset workflow templates
-- Context passing and server selection support
-- Execution order topological sorting with visual position priority
-
-<img alt="Screenshot 2026-05-18 144326" src="docs-assets/0-7.png" style="max-width: 100%; height: auto;" />
-
-### Task Execution
-
-- Real-time WebSocket progress pushing
-- Node highlighting and thinking process display
-- Pause/Resume/Cancel support
-- Automatic Markdown execution report generation
-
-<img alt="image" src="docs-assets/images/q (2).jpg" style="max-width: 100%; height: auto;" />
-
-### Alert Center
-
-- Webhook reception: Prometheus Alertmanager / Zabbix / Generic format
-- Automatic alert noise reduction and deduplication
-- Alert→Workflow automatic mapping and triggering
-- Status management: New/Confirmed/Resolved
-
-<img alt="image" src="docs-assets/images/q (8).png" style="max-width: 100%; height: auto;" />
-
-### Notification System
-
-- Webhook, email, WeCom, and DingTalk notifications
-- Notification configuration management
-- Automatic system notification pushing
-
-<img alt="image" src="docs-assets/images/q (17).png" style="max-width: 100%; height: auto;" />
-
-### Data Import/Export
-
-- CSV bulk server import with standard template
-- Intelligent deduplication: hostname+name combined deduplication
-- Detailed error reporting for easy troubleshooting
-- Transaction guarantee: all or nothing import
-- Export: server list, alerts, audit logs, reports
-- Export formats: CSV and JSON
-
-### Backup & Recovery
-
-- Automatic/manual database backup with gzip compression
-- Backup integrity verification (file size validation)
-- Graceful restart after recovery for data consistency
-- Backup history management and cleanup policies
-- Scheduled automatic backup support
-
-<img alt="image" src="docs-assets/images/q (9).png" style="max-width: 100%; height: auto;" />
-
-### Knowledge Base
-
-- 22 preset knowledge entries
-- Enhanced RAG retrieval with keyword+semantic relevance ranking
-- Automatic injection into LLM conversation context
-- Bulk import/export
-
-<img alt="image" src="docs-assets/images/q (11).png" style="max-width: 100%; height: auto;" />
-
-### AI Copilot
-
-- Natural language conversational IT operations assistant
-- Automatic awareness of system alerts, servers, and task status
-- Rule-based quick response + LLM deep analysis
-
-<img alt="image" src="docs-assets/images/q (13).png" style="max-width: 100%; height: auto;" />
-
-### Scheduled Tasks
-
-- 4 preset scheduled tasks
-- Cron expression configuration
-- Automatic execution of specified workflows
-
-### Users & Audit
-
-- User management (admin/operator/viewer roles)
-- JWT authentication + Token blacklist
-- Complete operation audit trail
-
-### Report System
-
-- Automatic Markdown report generation from workflow execution
-- Report template management
-- Report viewing and download
-
-### Approval Center (HITL)
-
-- Workflow supports human approval nodes, can be drag-and-dropped in workflow editor
-- Approval node configuration: approval description, timeout, timeout behavior (auto-reject/continue waiting)
-- Unified approval center page showing pending, approved, and rejected approval requests
-- Approval actions: approve/reject (with reason required)
-- Approval requests auto-push notifications (WeCom, DingTalk, Email)
-- Support quick approval from mobile devices
-- WebSocket real-time push of approval status changes
-
-### AI Remediation Records
-
-- AI analysis of alerts auto-generates structured remediation commands (JSON format)
-- Auto-creates remediation workflow: [Approval Node] → [Execute Remediation Agent Node]
-- Auto-sets approval timeout based on risk level (low: 30min, medium: 1hr, high: 2hr)
-- Displays complete remediation process: diagnosis report, remediation commands, risk level, execution status
-- Supports viewing execution results and error information
-- Deep integration with alert and task systems
+***
 
 ## Project Structure
 
 ```
-├── backend/
-│   └── src/
-│       ├── app.ts                  # Express application entry
-│       ├── models/database.ts      # SQLite database initialization and preset data
-│       ├── routes/                 # API routes (47 modules)
-│       ├── services/               # Business logic (50+ services)
-│       ├── middleware/             # Middleware (6: auth, errorHandler, rateLimiter, validation, trace, commandFilter)
-│       ├── websocket/              # WebSocket real-time communication
-│       └── utils/                  # Utility functions
-├── frontend/
-│   └── src/
-│       ├── App.tsx                 # React application entry
-│       ├── pages/                  # Page components (45+)
-│       ├── components/             # Common components
-│       ├── contexts/               # React Context
-│       ├── hooks/                  # Custom Hooks
-│       └── lib/                    # Utility library
-├── docker/                         # Docker production configuration
-├── docs/                           # Technical documentation
-├── examples/                       # Test scripts and examples
-├── .github/workflows/              # GitHub Actions CI/CD configuration
-├── docker-compose.yml              # Production Docker Compose
-├── docker-compose.simple.yml       # Simplified Docker Compose
-├── deploy.ps1 / deploy.sh          # One-click deployment scripts
-├── start.ps1 / start.sh            # One-click start scripts
-├── stop.ps1 / stop.sh              # One-click stop scripts
-└── .env.example                    # Environment variable example
+├── backend/src/
+│   ├── app.ts                    # Express entry
+│   ├── routes/                   # 68 API route modules
+│   ├── services/                 # 72 business services
+│   ├── models/                   # Database + migrations (32 versions)
+│   ├── presets/                  # Preset data (Agents / workflows / knowledge base etc.)
+│   ├── middleware/               # 6 middlewares (auth / rateLimiter / validation etc.)
+│   ├── websocket/                # Socket.io real-time communication
+│   └── utils/                    # Utility functions
+├── frontend/src/
+│   ├── pages/                    # 63 page components
+│   ├── components/               # Common components (DataRoom3D / WorkflowEditor etc.)
+│   ├── contexts/                 # React Context (Auth / Theme / Toast)
+│   └── lib/                      # Axios wrapper / utility library
+├── docker/                       # Production Docker config + Nginx
+├── docs/                         # Technical documentation
+├── .github/workflows/            # CI/CD (ci.yml + release.yml)
+├── docker-compose.yml            # Production orchestration
+└── deploy.sh / deploy.ps1        # One-click deployment scripts
 ```
+
+***
 
 ## Documentation Navigation
 
-| Document | Description |
-| -------- | ----------- |
-| [Deployment Guide](./docs/DEPLOYMENT.md) | Detailed deployment instructions |
-| [Technical Specification](./docs/SPEC.md) | Feature specs and interface definitions |
-| [API Documentation](./docs/API.md) | Complete API reference |
-| [Architecture Design](./docs/ARCHITECTURE.md) | System architecture overview |
+| Document | Explanation |
+| --------------------------------------------- | --------- |
+| [Deployment Guide](./docs/DEPLOYMENT.md) | Detailed deployment operations |
+| [API Docs](./docs/API.md) | Complete API interfaces |
+| [Architecture Design](./docs/ARCHITECTURE.md) | System architecture explanation |
 | [Development Guide](./docs/DEVELOPMENT.md) | Local development setup |
-| [Production Guide](./docs/PRODUCTION.md) | Production best practices |
-| [Web Terminal](./docs/WEB_TERMINAL.md) | Web SSH terminal docs |
-| [Host Management](./docs/SERVER_MANAGEMENT.md) | Host management features |
-| [Network Device Inspection](./docs/NETWORK_DEVICE_INSPECTION.md) | Network inspection features |
-| [Changelog](./docs/CHANGELOG.md) | Version update history |
-| [Test Guide](./docs/TEST_GUIDE.md) | Testing instructions |
-| [QAnything Integration](./docs/QANYTHING_INTEGRATION.md) | Knowledge base integration |
-| [Workflow Guide](./docs/WORKFLOW_GUIDE.md) | Workflow orchestration guide |
-| [Auto Remediation](./docs/AUTO_REMEDIATION_DESIGN.md) | Alert auto remediation design |
+| [Workflow Guide](./docs/WORKFLOW_GUIDE.md) | Workflow orchestration usage |
+| [Auto-remediation Design](./docs/AUTO_REMEDIATION_DESIGN.md) | Alert auto-remediation |
+| [Network Device Inspection](./docs/NETWORK_DEVICE_INSPECTION.md) | Network device features |
+| [Test Guide](./docs/TEST_GUIDE.md) | Functional testing explanation |
+| [Project Vision](./项目愿景与社区共建.md) | Vision and community building |
 
-## Environment Variables
-
-| Variable | Description | Default |
-| -------- | ----------- | ------- |
-| `NODE_ENV` | Runtime environment | production |
-| `PORT` | Backend port | 3001 |
-| `DATABASE_PATH` | Database path | ./data/app.db |
-| `JWT_SECRET` | JWT signing key (must change in production) | Auto-generated in dev |
-| `JWT_EXPIRES_IN` | Access Token validity | 24h |
-| `ADMIN_INITIAL_PASSWORD` | Admin initial password (optional) | admin (default) |
-| `ALLOWED_ORIGINS` | CORS allowed origins (comma-separated) | http://localhost:3000,http://localhost:80,http://localhost:8080 |
-| `DOUBAO_API_KEY` | Doubao API key (can also set in UI) | - |
-| `DOUBAO_API_BASE` | Doubao API base URL | https://ark.cn-beijing.volces.com/api/v3 |
-| `DOUBAO_MODEL` | Doubao model name | doubao-4o |
-| `OPENAI_API_KEY` | OpenAI API key (can also set in UI) | - |
-| `OPENAI_API_BASE` | OpenAI API base URL | https://api.openai.com/v1 |
-| `OPENAI_MODEL` | OpenAI model name | gpt-4o |
-| `LOCAL_AI_API_BASE` | Local AI API base URL (Ollama, etc.) | - |
-| `LOCAL_AI_MODEL` | Local AI model name | - |
-| `WEBHOOK_VERIFY_ENABLED` | Enable Webhook signature verification | false |
-| `WEBHOOK_SECRET` | Webhook signing key (required if verification enabled) | - |
-| `WEBHOOK_IP_WHITELIST` | Webhook IP whitelist (comma-separated, empty for all) | - |
-| `LOG_LEVEL` | Log level | info |
-
-## Security Features Detail
-
-### Authentication & Access Control
-
-- **JWT Dual-Token**: Access Token (24h) + Refresh Token (7d), auto-refresh, blacklist logout
-- **Login Failure Lock**: 5 failed attempts lock account for 30 minutes
-- **Forced Password Change**: Mandatory on first login
-- **Password Complexity**: 8+ chars with uppercase, lowercase, numbers, special chars
-
-### Data Encryption & Security
-
-- **AES-256-GCM Encrypted Storage**: Bank-level encryption with auto-generated keys
-- **bcrypt Password Hashing**: Cost factor 12, rainbow table resistant
-- **Automatic Sensitive Info Masking**: Passwords and API keys masked in logs
-- **Email Template XSS Protection**: HTML auto-escaped
-
-### API & Network Security
-
-- **API Rate Limiting**: Different limits per endpoint
-- **Nginx Security Headers**: HSTS/CSP/X-Frame-Options/XSS-Protection/Referrer-Policy/Permissions-Policy
-- **CORS Whitelist**: Configurable allowed cross-origin sources
-- **Webhook Security**:
-  - HMAC-SHA256 signature verification
-  - IP whitelist for alert sources
-  - Rate limiting to prevent DoS
-
-### Container & Deployment Security
-
-- **Non-Root Execution**: Containers run as non-root with least privilege
-- **Graceful Shutdown**: SIGTERM/SIGINT handling, 30s timeout
-- **Global Exception Handling**: uncaughtException/unhandledRejection captured
-- **Automatic Cleanup**: Token blacklist, terminal sessions, user cache with TTL
-
-### Audit & Traceability
-
-- **Complete Audit Trail**: All logins, commands, configuration changes logged
-- **User Lock Audit**: Login failures, account locks, unlocks all logged
-
-> 🔒 **Zero-Trust Security Model**: All server credentials only stored locally encrypted, never sent to third-party AI. Agent execution commands and outputs stay within your server environment.
-
-## 🚀 CI/CD Automation
-
-Complete GitHub Actions CI/CD pipeline configuration:
-
-| Pipeline | Trigger | Function |
-| -------- | ------- | -------- |
-| [CI](.github/workflows/ci.yml) | Push/PR to main | Lint + TypeScript check + Test + Docker build verification |
-| [Release](.github/workflows/release.yml) | Tag (`v*`) or manual | Build Docker image → Push to Alibaba Cloud → Auto create GitHub Release |
-| [Mirror](.github/workflows/mirror.yml) | Push to main or manual | Auto sync to Gitee/Gitcode |
-
-> 📖 Detailed configuration guide: [docs/CICD_SETUP.md](docs/CICD_SETUP.md)
+***
 
 ## Author
 
@@ -529,46 +527,80 @@ Complete GitHub Actions CI/CD pipeline configuration:
   <img src="./frontend/public/wechaterweima.png" width="200" alt="IT Online WeChat Official Account">
 </p>
 
-## 🙏 Special Thanks
+***
 
-A heartfelt thank you to all contributors of this project!
+## 🙏 Acknowledging Contributors
 
-| Avatar | Name / Username | Role | Main Contributions |
-|:---:|:---:|:---:|:---|
-| <img src="./docs-assets/contributors/1.jpg" width="60" height="60" style="border-radius:50%;" /> | **Tan Ce** ([@qinshihu](https://github.com/qinshihu)) | Project Author | Architecture design, core feature development, documentation |
-| <img src="./docs-assets/contributors/微信图片_2026-06-12_143259_183.jpg" width="60" height="60" style="border-radius:50%;" /> | **热心市民高先生** | WeChat Contributor | Project testing and feedback |
-| <img src="./docs-assets/contributors/微信图片_2026-06-12_143226_852.jpg" width="60" height="60" style="border-radius:50%;" /> | **@林** | WeChat Contributor | Project testing and feedback |
-| <img src="./docs-assets/contributors/11.jpg" width="60" height="60" style="border-radius:50%;" /> | **尔东辰** | WeChat Contributor | Project testing |
-
-> 💡 **How to add contributors**:
-> 1. Place avatar images in [`./docs-assets/contributors/`](./docs-assets/contributors/) folder
-> 2. Naming format: `username.png` (e.g. `qinshihu.png`) or `wechat-nickname.png` (WeChat contributors)
-> 3. Replace `placeholder-X.svg` in the table above with the actual image filename
-> 4. Update names, links, and contribution descriptions
-> 5. See [contributor avatars folder guide](./docs-assets/contributors/README.md) for details
->
-> **Supported contributor types**:
-> - ✅ GitHub developers (auto-fetch or manual upload)
-> - ✅ WeChat friends/group members (save WeChat avatar and upload)
-> - ✅ Community members, testers, documentation contributors
-> - ✅ Organizations/companies (Logo images)
-
-### Community Contributors
+| Avatar | Name / Username | Role | Main Contribution |
+| :-----------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------: | :--------: | :----------- |
+| <img src="./docs-assets/contributors/微信图片_2026-06-12_143259_183.jpg" width="60" height="60" style="border-radius:50%;" /> | **Mr. Gao (Enthusiastic Citizen)** | WeChat Contributor | Testing feedback |
+| <img src="./docs-assets/contributors/微信图片_2026-06-12_143226_852.jpg" width="60" height="60" style="border-radius:50%;" /> | **@Lin** | WeChat Contributor | Testing feedback |
+| <img src="./docs-assets/contributors/11.jpg" width="60" height="60" style="border-radius:50%;" /> | **Er Dongchen** | WeChat Contributor | Testing |
+| <img src="https://avatars.githubusercontent.com/u/68582645?v=4" width="60" height="60" style="border-radius:50%;" /> | **xiezhiliang89** | GitHub Contributor | Testing |
 
 <a href="https://github.com/qinshihu/itops-agent-platform/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=qinshihu/itops-agent-platform" />
 </a>
 
-> Auto-generated contributor avatars wall, powered by [contributors-img](https://contrib.rocks)
+***
+
+## 🌍 Community Vision: This Is Not Just Code, It's a Movement
+
+ITOps Agent Platform is not just an open-source project. It is an **Operations Engineers' Liberation Movement**.
+
+We believe:
+
+- **Operations should not be 7×24 manual labor**, but strategy design and architecture innovation
+- **AI should not replace operations engineers**, but should replace the repetitive work that operations engineers don't want to do
+- **The power of the open-source community** can build better products than commercial software
+- **Every operations engineer deserves to be freed from the alert storm**, to spend time with family, to pursue what they truly love
+
+> If you also believe that the future of operations is AI autonomy, welcome to join us. **A Star is the greatest recognition of the project. Every feedback on Issues brings this vision one step closer.**
+
+---
+
+## 🔭 Long-term Vision
+
+> **"We are building the autonomous operating system for the operations domain."**
+>
+> 50 million operations engineers worldwide manage $40 billion of IT infrastructure. Today, they are still getting up at 3 AM to manually fix servers.
+>
+> What we are doing is transforming operations from "people operating tools" to "people designing strategies, AI autonomously executing." This is not a feature enhancement; it is a paradigm shift.
+>
+> The project is under continuous iteration. Welcome to follow. Every Star is a vote for the future.
+
+***
 
 ## 🤝 Contributing
 
-We welcome contributions in any form! Please see the [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions of any kind!
 
-- [🐛 Report Bug](https://github.com/qinshihu/itops-agent-platform/issues/new?template=bug_report.yml)
-- [💡 Request Feature](https://github.com/qinshihu/itops-agent-platform/issues/new?template=feature_request.yml)
-- [📝 Improve Docs](https://github.com/qinshihu/itops-agent-platform/issues/new?template=docs_update.yml)
-- [🔒 Report Security Issue](SECURITY.md)
+- 🐛 [Submit a Bug](https://github.com/qinshihu/itops-agent-platform/issues/new?template=bug_report.yml)
+- 💡 [Request a Feature](https://github.com/qinshihu/itops-agent-platform/issues/new?template=feature_request.yml)
+- 📝 [Improve Documentation](https://github.com/qinshihu/itops-agent-platform/issues/new?template=docs_update.yml)
+- 🔒 [Report a Security Issue](SECURITY.md)
+
+See [Contributing Guide](CONTRIBUTING.md) for details.
+
+***
+
+## ⭐ Support the Project
+
+If this project has helped you, please give us a **Star** ⭐ to let more people see it!
+
+<p align="center">
+  <a href="https://github.com/qinshihu/itops-agent-platform">
+    <img src="https://img.shields.io/github/stars/qinshihu/itops-agent-platform?style=for-the-badge&color=blueviolet" alt="Star this repo" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/qinshihu/itops-agent-platform/fork">
+    <img src="https://img.shields.io/github/forks/qinshihu/itops-agent-platform?style=for-the-badge" alt="Fork this repo" />
+  </a>
+</p>
+
+> 🌟 **More Stars make the project more likely to be recommended by GitHub Trending, and also attract more developers to join the co-building. Every Star is the greatest encouragement for the project!**
+
+***
 
 ## 📄 License
 

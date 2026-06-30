@@ -122,9 +122,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-${{ steps.version.outputs.version }}
             ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-latest
-            ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-${{ github.sha }}
           labels: |
             org.opencontainers.image.title=ITOps Agent Platform Backend
             org.opencontainers.image.description=Enterprise IT Operations Multi-Agent Automation Platform - Backend API Server
@@ -139,7 +137,6 @@ jobs:
       - name: Verify backend image
         run: |
           echo "Backend image pushed:"
-          echo "  - ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-${{ steps.version.outputs.version }}"
           echo "  - ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-latest"
 
   # Phase 3: Build and Push Frontend
@@ -182,9 +179,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-${{ steps.version.outputs.version }}
             ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-latest
-            ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-${{ github.sha }}
           labels: |
             org.opencontainers.image.title=ITOps Agent Platform Frontend
             org.opencontainers.image.description=Enterprise IT Operations Multi-Agent Automation Platform - Web UI
@@ -197,7 +192,6 @@ jobs:
       - name: Verify frontend image
         run: |
           echo "Frontend image pushed:"
-          echo "  - ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-${{ steps.version.outputs.version }}"
           echo "  - ${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-latest"
 
   # Phase 4: Release Notes (only on tag)
@@ -222,8 +216,15 @@ jobs:
           echo "" >> release_notes.md
           echo "| Component | Image |" >> release_notes.md
           echo "|-----------|-------|" >> release_notes.md
-          echo "| Backend | \`${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-${VERSION}\` |" >> release_notes.md
-          echo "| Frontend | \`${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-${VERSION}\` |" >> release_notes.md
+          echo "| Backend | \`${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-backend-latest\` |" >> release_notes.md
+          echo "| Frontend | \`${{ env.ALIYUN_REGISTRY }}/${{ env.ALIYUN_NAMESPACE }}/${{ env.ALIYUN_REPO }}:${{ env.IMAGE_PREFIX }}-frontend-latest\` |" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🚀 一键部署" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "\`\`\`bash" >> release_notes.md
+          echo "# 前提是已有docker环境，直接执行下面一键部署命令（2分钟即可自动完成部署）" >> release_notes.md
+          echo "curl -sL https://gitee.com/IT_Oline/itops-agent-platform/raw/main/deploy.sh -o deploy.sh && chmod +x deploy.sh && ./deploy.sh" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 📝 Changes" >> release_notes.md
           echo "" >> release_notes.md
